@@ -4,7 +4,17 @@
 <?php $isEdit = request()->query('edit') == 1; $hasImage = Auth::user()->profile_image; ?>
 <div style="background:#222; min-height:100vh; padding:0; margin:0; display:flex; flex-direction:column; align-items:center;">
     <div style="width:100vw; background:#fff; display:flex; align-items:center; justify-content:space-between; padding:0 2.5rem; height:64px; box-shadow:0 2px 8px #0001; position:sticky; top:0; z-index:10;">
-        <div style="font-size:1.5rem; font-weight:900; color:#19c2b8; letter-spacing:2px;">PWESTO!</div>
+        <div style="display:flex; align-items:center; gap:2rem;">
+            @if(Auth::user()->role === 'admin')
+            <a href="{{ route('admin.dashboard') }}" style="display:inline-flex; align-items:center; gap:0.5rem; background:#19c2b8; color:#fff; padding:0.5rem 1rem; border-radius:6px; text-decoration:none; font-weight:600; font-size:0.9rem; transition:background-color 0.2s;" onmouseover="this.style.background='#17a8a0'" onmouseout="this.style.background='#19c2b8'">
+                <svg style="width:14px; height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                </svg>
+                Admin Dashboard
+            </a>
+            @endif
+            <div style="font-size:1.5rem; font-weight:900; color:#19c2b8; letter-spacing:2px;">PWESTO!</div>
+        </div>
         <div style="display:flex; align-items:center; gap:2rem;">
             <a href="{{ route('dashboard') }}" style="font-weight:700; color:#111; text-decoration:none;">Home</a>
             <a href="#" style="color:#222; text-decoration:none;">Booking History</a>
@@ -12,7 +22,7 @@
             <a href="#" style="color:#222; text-decoration:none;">About</a>
             <a href="#" style="color:#222; text-decoration:none;">Location</a>
             <a href="{{ route('profile.edit') }}">
-                <img src="{{ $hasImage ? asset('storage/' . Auth::user()->profile_image) : asset('images/avatar.png') }}" alt="User" style="width:44px; height:44px; border-radius:50%; object-fit:cover; border:2px solid #eee;">
+                <img src="{{ $hasImage ? asset('storage/' . Auth::user()->profile_image) : asset('images/avatar.svg') }}" alt="User" style="width:44px; height:44px; border-radius:50%; object-fit:cover; border:2px solid #eee; {{ !$hasImage ? 'background:#f3f4f6; padding:8px;' : '' }}">
             </a>
         </div>
     </div>
@@ -30,13 +40,7 @@
                 </div>
             @endif
             <div style="position:relative; display:inline-block;">
-                @if($hasImage)
-                    <img src="{{ asset('storage/' . Auth::user()->profile_image) }}" alt="Profile" style="width:110px; height:110px; border-radius:50%; object-fit:cover; border:4px solid #19c2b8; background:#f3f6f9;">
-                @else
-                    <!-- Default avatar placeholder -->
-                    <div style="width:110px; height:110px; border-radius:50%; border:4px solid #19c2b8; background:#f3f6f9; display:flex; align-items:center; justify-content:center; font-size:2rem; color:#19c2b8;">Profile</div>
-                    <!-- If you want a default image, add 'avatar.png' to public/images and use: <img src='{{ asset('images/avatar.png') }}' ... > -->
-                @endif
+                <img src="{{ $hasImage ? asset('storage/' . Auth::user()->profile_image) : asset('images/avatar.svg') }}" alt="Profile" style="width:110px; height:110px; border-radius:50%; object-fit:cover; border:4px solid #19c2b8; background:#f3f6f9; {{ !$hasImage ? 'padding:2rem;' : '' }}">
                 @if($hasImage)
                 <span style="position:absolute; bottom:6px; right:6px; background:#19c2b8; color:#fff; border-radius:50%; width:28px; height:28px; display:flex; align-items:center; justify-content:center; border:2px solid #fff; font-size:1.2rem;">
                     &#10003;

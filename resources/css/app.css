@@ -1,3 +1,213 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Professional styles for services page */
+@layer components {
+    .service-card {
+        @apply relative overflow-hidden rounded-2xl shadow-2xl transform transition-all duration-500 hover:scale-105 bg-white;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    }
+    
+    .service-card:hover {
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+    }
+    
+    .service-image {
+        @apply w-full h-full object-cover transition-transform duration-700;
+    }
+    
+    .service-card:hover .service-image {
+        @apply scale-110;
+    }
+    
+    .service-overlay {
+        @apply absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent;
+    }
+    
+    .service-title {
+        @apply text-4xl font-bold text-white mb-3 tracking-wide;
+        text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
+    
+    .service-subtitle {
+        @apply text-gray-200 text-sm font-medium tracking-wide;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    }
+    
+    .service-content {
+        @apply bg-white p-8;
+    }
+    
+    .service-content h4 {
+        @apply text-xl font-bold text-gray-900 mb-4 tracking-wide;
+    }
+    
+    .service-content p {
+        @apply text-gray-600 text-sm leading-relaxed mb-6;
+        line-height: 1.7;
+    }
+    
+    .service-footer {
+        @apply flex items-center justify-between pt-4 border-t border-gray-100;
+    }
+    
+    .service-status {
+        @apply text-teal-600 font-semibold text-sm tracking-wide;
+    }
+    
+    .service-button {
+        @apply bg-teal-600 text-white px-6 py-3 rounded-lg hover:bg-teal-700 transition-all duration-300 font-semibold text-sm tracking-wide shadow-lg hover:shadow-xl;
+    }
+    
+    .service-button:hover {
+        @apply transform -translate-y-1;
+    }
+    
+    /* Professional animations */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(40px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .animate-fade-in-up {
+        animation: fadeInUp 0.8s ease-out;
+    }
+    
+    /* Stagger animation for service cards */
+    .service-card:nth-child(1) { animation-delay: 0.1s; }
+    .service-card:nth-child(2) { animation-delay: 0.2s; }
+    .service-card:nth-child(3) { animation-delay: 0.3s; }
+    .service-card:nth-child(4) { animation-delay: 0.4s; }
+    .service-card:nth-child(5) { animation-delay: 0.5s; }
+    .service-card:nth-child(6) { animation-delay: 0.6s; }
+    
+    /* Professional typography */
+    .hero-title {
+        @apply text-6xl md:text-7xl font-black text-white mb-6 tracking-tight;
+        text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    }
+    
+    .hero-subtitle {
+        @apply text-xl md:text-2xl text-gray-300 max-w-3xl mx-auto leading-relaxed font-light;
+        line-height: 1.6;
+    }
+    
+    .section-title {
+        @apply text-4xl md:text-5xl font-bold text-white mb-8 tracking-tight;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+    
+    .cta-section {
+        @apply bg-gradient-to-r from-teal-600 via-teal-700 to-teal-800 rounded-3xl p-12 text-white shadow-2xl;
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
+    }
+    
+    .cta-title {
+        @apply text-4xl font-bold mb-6 tracking-tight;
+    }
+    
+    .cta-subtitle {
+        @apply text-xl mb-8 text-teal-100 leading-relaxed;
+        line-height: 1.6;
+    }
+    
+    .cta-button {
+        @apply bg-yellow-400 text-gray-900 px-10 py-4 rounded-xl font-bold text-lg hover:bg-yellow-300 transition-all duration-300 shadow-xl hover:shadow-2xl inline-block;
+    }
+    
+    .cta-button:hover {
+        @apply transform -translate-y-1;
+    }
+    
+    /* Professional navigation */
+    .nav-link {
+        @apply text-gray-700 hover:text-teal-600 font-medium transition-all duration-300 tracking-wide;
+    }
+    
+    .nav-link.active {
+        @apply text-teal-600 font-bold border-b-2 border-teal-600 pb-1;
+    }
+    
+    .admin-button {
+        @apply bg-teal-600 text-white px-6 py-3 rounded-xl hover:bg-teal-700 transition-all duration-300 font-bold text-sm tracking-wide shadow-lg hover:shadow-xl;
+    }
+    
+    .admin-button:hover {
+        @apply transform -translate-y-1;
+    }
+    
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+        width: 10px;
+    }
+    
+    ::-webkit-scrollbar-track {
+        @apply bg-gray-100;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+        @apply bg-teal-600 rounded-full;
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+        @apply bg-teal-700;
+    }
+    
+    /* Loading animation for images */
+    .image-loading {
+        @apply animate-pulse bg-gray-300;
+    }
+    
+    /* Custom focus styles */
+    .service-button:focus,
+    .cta-button:focus,
+    .admin-button:focus {
+        @apply outline-none ring-4 ring-teal-500 ring-offset-2;
+    }
+    
+    /* Mobile responsive improvements */
+    @media (max-width: 768px) {
+        .service-card {
+            @apply mx-4;
+        }
+        
+        .service-title {
+            @apply text-3xl;
+        }
+        
+        .hero-title {
+            @apply text-4xl;
+        }
+        
+        .hero-subtitle {
+            @apply text-lg;
+        }
+        
+        .cta-section {
+            @apply p-8;
+        }
+        
+        .cta-title {
+            @apply text-3xl;
+        }
+    }
+    
+    /* Professional gradients and backgrounds */
+    .bg-professional {
+        background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+    }
+    
+    .text-gradient {
+        background: linear-gradient(135deg, #f6e05e 0%, #fbbf24 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+}
