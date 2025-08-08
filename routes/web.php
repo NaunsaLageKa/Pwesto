@@ -29,12 +29,33 @@ Route::middleware('auth')->group(function () {
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/admin/dashboard', function () {
-        $totalUsers = \App\Models\User::count();
-        $totalHubOwners = \App\Models\User::where('role', 'hub_owner')->count();
-        $pendingHubOwners = \App\Models\User::where('role', 'hub_owner')->where('status', 'pending')->count();
-        return view('admin.dashboard', compact('totalUsers', 'totalHubOwners', 'pendingHubOwners'));
-    })->name('admin.dashboard');
+    // Admin routes
+    Route::middleware(['admin'])->group(function () {
+        Route::get('/admin/dashboard', [UserController::class, 'dashboard'])->name('admin.dashboard');
+        Route::get('/admin/users', [UserController::class, 'index'])->name('admin.users');
+        Route::post('/admin/users/{id}/role', [UserController::class, 'updateRole'])->name('admin.users.updateRole');
+        Route::post('/admin/users/{id}/ban', [UserController::class, 'toggleBan'])->name('admin.users.toggleBan');
+        Route::post('/admin/users/{id}/approve', [UserController::class, 'approve'])->name('admin.users.approve');
+        Route::post('/admin/users/{id}/reject', [UserController::class, 'reject'])->name('admin.users.reject');
+        
+        // Review Management
+        Route::get('/admin/reviews', [App\Http\Controllers\Admin\ReviewController::class, 'index'])->name('admin.reviews.index');
+        Route::post('/admin/reviews/{id}/approve', [App\Http\Controllers\Admin\ReviewController::class, 'approve'])->name('admin.reviews.approve');
+        Route::post('/admin/reviews/{id}/reject', [App\Http\Controllers\Admin\ReviewController::class, 'reject'])->name('admin.reviews.reject');
+        Route::delete('/admin/reviews/{id}', [App\Http\Controllers\Admin\ReviewController::class, 'delete'])->name('admin.reviews.delete');
+        
+        // Reports and Analytics
+        Route::get('/admin/reports', [App\Http\Controllers\Admin\ReportController::class, 'index'])->name('admin.reports.index');
+        Route::get('/admin/reports/users/export', [App\Http\Controllers\Admin\ReportController::class, 'exportUsers'])->name('admin.reports.export-users');
+        Route::get('/admin/reports/bookings/export', [App\Http\Controllers\Admin\ReportController::class, 'exportBookings'])->name('admin.reports.export-bookings');
+        
+        // Dispute Resolution
+        Route::get('/admin/disputes', [App\Http\Controllers\Admin\DisputeController::class, 'index'])->name('admin.disputes.index');
+        Route::get('/admin/disputes/{id}', [App\Http\Controllers\Admin\DisputeController::class, 'show'])->name('admin.disputes.show');
+        Route::post('/admin/disputes/{id}/resolve', [App\Http\Controllers\Admin\DisputeController::class, 'resolve'])->name('admin.disputes.resolve');
+        Route::post('/admin/disputes/{id}/escalate', [App\Http\Controllers\Admin\DisputeController::class, 'escalate'])->name('admin.disputes.escalate');
+        Route::post('/admin/disputes', [App\Http\Controllers\Admin\DisputeController::class, 'create'])->name('admin.disputes.create');
+    });
     // Hub Owner Dashboard
     Route::get('/hub-owner/dashboard', function () {
         $totalBookings = \App\Models\Booking::where('hub_owner_id', auth()->id())->count();

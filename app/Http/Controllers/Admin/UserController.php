@@ -5,9 +5,30 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
+use App\Models\Booking;
+use App\Models\FloorPlan;
 
 class UserController extends Controller
 {
+    public function dashboard()
+    {
+        $totalUsers = User::where('role', 'user')->count();
+        $totalHubOwners = User::where('role', 'hub_owner')->count();
+        $pendingHubOwners = User::where('role', 'hub_owner')->where('status', 'pending')->count();
+        $totalBookings = Booking::count();
+        $totalFloorPlans = FloorPlan::count();
+        $recentUsers = User::latest()->take(5)->get();
+        
+        return view('admin.dashboard', compact(
+            'totalUsers', 
+            'totalHubOwners', 
+            'pendingHubOwners',
+            'totalBookings',
+            'totalFloorPlans',
+            'recentUsers'
+        ));
+    }
+
     public function index(Request $request)
     {
         $query = User::query();
