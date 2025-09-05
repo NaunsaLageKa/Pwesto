@@ -15,7 +15,7 @@
         </div>
         <div style="display:flex; align-items:center; gap:2rem;">
             <a href="#" style="font-weight:700; color:#111; text-decoration:none; border-bottom:2px solid #111; padding-bottom:2px;">Home</a>
-            <a href="#" style="color:#222; text-decoration:none;">Booking History</a>
+            <a href="{{ route('booking-history') }}" style="color:#222; text-decoration:none;">Booking History</a>
             <a href="{{ route('services.index') }}" style="color:#222; text-decoration:none;">Services</a>
             <a href="#" style="color:#222; text-decoration:none;">About</a>
             <a href="#" style="color:#222; text-decoration:none;">Location</a>
@@ -48,13 +48,13 @@
                     Welcome to Pwesto<br>Choose to Book
                 </div>
                 <div style="display:flex; gap:4rem; justify-content:center; align-items:center;">
-                    <a href="#" style="display:inline-block;">
+                    <a href="{{ route('services.booking') }}" style="display:inline-block; transition: transform 0.2s ease;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
                         <img src="{{ asset('images/produktiv.png') }}" alt="Produktivo" style="height:240px; width:240px; border-radius:32px; background:#111; padding:0.5rem; object-fit:contain; box-shadow:0 4px 24px #0006;">
                     </a>
-                    <a href="#" style="display:inline-block;">
+                    <a href="#" style="display:inline-block; transition: transform 0.2s ease;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
                         <img src="{{ asset('images/nest.png') }}" alt="Nest" style="height:240px; width:240px; border-radius:32px; background:#111; padding:0.5rem; object-fit:contain; box-shadow:0 4px 24px #0006;">
                     </a>
-                    <a href="#" style="display:inline-block;">
+                    <a href="#" style="display:inline-block; transition: transform 0.2s ease;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
                         <img src="{{ asset('images/media.jpg') }}" alt="Mesh Media" style="height:240px; width:240px; border-radius:32px; background:#111; padding:0.5rem; object-fit:contain; box-shadow:0 4px 24px #0006;">
                     </a>
                 </div>

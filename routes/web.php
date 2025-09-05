@@ -21,11 +21,33 @@ Route::get('/dashboard-copy', function () {
 })->name('dashboard.copy');
 
 Route::get('/services', [App\Http\Controllers\ServiceController::class, 'index'])->name('services.index');
+Route::get('/services/booking', [App\Http\Controllers\ServiceController::class, 'booking'])->name('services.booking');
+Route::get('/services/select-seat', [App\Http\Controllers\ServiceController::class, 'selectSeat'])->name('services.select-seat');
+Route::post('/services/create-booking', [App\Http\Controllers\ServiceController::class, 'createBooking'])->name('services.create-booking');
+Route::get('/booking-history', [App\Http\Controllers\BookingHistoryController::class, 'index'])
+    ->middleware(['auth', 'verified'])
+    ->name('booking-history');
+
+Route::post('/booking-history/{id}/cancel', [App\Http\Controllers\BookingHistoryController::class, 'cancel'])
+    ->middleware(['auth', 'verified'])
+    ->name('booking-history.cancel');
+
+Route::post('/booking-history/{id}/rebook', [App\Http\Controllers\BookingHistoryController::class, 'rebook'])
+    ->middleware(['auth', 'verified'])
+    ->name('booking-history.rebook');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+});
+
+// Hub Owner Routes
+Route::middleware(['auth', 'hub.owner'])->prefix('hub-owner')->name('hub-owner.')->group(function () {
+    Route::get('/booking-approvals', [App\Http\Controllers\HubOwner\BookingApprovalController::class, 'index'])->name('booking-approvals');
+    Route::post('/booking-approvals/{id}/approve', [App\Http\Controllers\HubOwner\BookingApprovalController::class, 'approve'])->name('booking-approvals.approve');
+    Route::post('/booking-approvals/{id}/reject', [App\Http\Controllers\HubOwner\BookingApprovalController::class, 'reject'])->name('booking-approvals.reject');
+    Route::post('/booking-approvals/{id}/complete', [App\Http\Controllers\HubOwner\BookingApprovalController::class, 'complete'])->name('booking-approvals.complete');
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {

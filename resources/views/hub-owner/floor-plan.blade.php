@@ -218,9 +218,10 @@
     user-select: none;
     z-index: 20;
     border: 2px solid #333;
-    transition: none;
+    transition: all 0.1s ease;
     min-width: 20px;
     min-height: 20px;
+    will-change: transform, width, height;
 }
 
 .canvas-item.dragging {
@@ -233,96 +234,157 @@
     outline: 2px solid #3b82f6;
 }
 
+.canvas-item.selected .delete-btn,
+.canvas-item.selected .rotate-btn,
+.canvas-item.selected .copy-btn,
+.canvas-item.selected .resize-handle {
+    opacity: 1;
+    transform: scale(1);
+    animation: buttonPulse 0.6s ease-out;
+}
+
+@keyframes buttonPulse {
+    0% { transform: scale(0.8); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
 .canvas-item.resizing {
-    opacity: 0.9;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    opacity: 0.95;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+    transform: scale(1.01);
+    transition: none !important;
+    border-color: #3b82f6;
+    border-width: 3px;
 }
 
 .canvas-item .delete-btn {
     position: absolute;
-    top: -12px;
-    right: -12px;
-    width: 20px;
-    height: 20px;
+    top: -15px;
+    right: -15px;
+    width: 24px;
+    height: 24px;
     background: #ef4444;
     color: white;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 12px;
+    font-size: 14px;
+    font-weight: bold;
     cursor: pointer;
     opacity: 0;
-    transition: opacity 0.2s;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     z-index: 40;
-    border: 1px solid #fff;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    border: 2px solid #fff;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.4);
+    user-select: none;
+    transform: scale(0.8);
 }
 
 .canvas-item .rotate-btn {
     position: absolute;
-    top: -8px;
-    left: -8px;
-    width: 16px;
-    height: 16px;
+    top: -15px;
+    left: -15px;
+    width: 24px;
+    height: 24px;
     background: #3b82f6;
     color: white;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 10px;
+    font-size: 14px;
+    font-weight: bold;
     cursor: pointer;
     opacity: 0;
-    transition: opacity 0.2s;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     z-index: 40;
+    border: 2px solid #fff;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.4);
+    user-select: none;
+    transform: scale(0.8);
 }
 
 .canvas-item .copy-btn {
     position: absolute;
-    top: -8px;
-    left: 20px;
-    width: 16px;
-    height: 16px;
+    top: -15px;
+    left: 15px;
+    width: 24px;
+    height: 24px;
     background: #10b981;
     color: white;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 8px;
+    font-size: 12px;
+    font-weight: bold;
     cursor: pointer;
     opacity: 0;
-    transition: opacity 0.2s;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     z-index: 40;
+    border: 2px solid #fff;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.4);
+    user-select: none;
+    transform: scale(0.8);
 }
 
 .canvas-item .resize-handle {
     position: absolute;
-    width: 8px;
-    height: 8px;
+    width: 14px;
+    height: 14px;
     background: #10b981;
-    border: 1px solid #333;
+    border: 2px solid #fff;
     border-radius: 50%;
     opacity: 0;
-    transition: opacity 0.2s;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     z-index: 30;
+    cursor: pointer;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.3);
+    user-select: none;
+    transform: scale(0.8);
 }
 
-.canvas-item .resize-handle.nw { top: -4px; left: 8px; cursor: nw-resize; }
-.canvas-item .resize-handle.ne { top: -4px; right: 8px; cursor: ne-resize; }
-.canvas-item .resize-handle.sw { bottom: -4px; left: 8px; cursor: sw-resize; }
-.canvas-item .resize-handle.se { bottom: -4px; right: 8px; cursor: se-resize; }
-.canvas-item .resize-handle.n { top: -4px; left: 50%; transform: translateX(-50%); cursor: n-resize; }
-.canvas-item .resize-handle.s { bottom: -4px; left: 50%; transform: translateX(-50%); cursor: s-resize; }
-.canvas-item .resize-handle.w { left: -4px; top: 50%; transform: translateY(-50%); cursor: w-resize; }
-.canvas-item .resize-handle.e { right: -4px; top: 50%; transform: translateY(-50%); cursor: e-resize; }
+.canvas-item .resize-handle.nw { top: -7px; left: -7px; cursor: nw-resize; }
+.canvas-item .resize-handle.ne { top: -7px; right: -7px; cursor: ne-resize; }
+.canvas-item .resize-handle.sw { bottom: -7px; left: -7px; cursor: sw-resize; }
+.canvas-item .resize-handle.se { bottom: -7px; right: -7px; cursor: se-resize; }
+.canvas-item .resize-handle.n { top: -7px; left: 50%; transform: translateX(-50%); cursor: n-resize; }
+.canvas-item .resize-handle.s { bottom: -7px; left: 50%; transform: translateX(-50%); cursor: s-resize; }
+.canvas-item .resize-handle.w { left: -7px; top: 50%; transform: translateY(-50%); cursor: w-resize; }
+.canvas-item .resize-handle.e { right: -7px; top: 50%; transform: translateY(-50%); cursor: e-resize; }
 
 .canvas-item:hover .delete-btn,
 .canvas-item:hover .rotate-btn,
 .canvas-item:hover .copy-btn,
 .canvas-item:hover .resize-handle {
     opacity: 1;
+    transform: scale(1);
+}
+
+.canvas-item .delete-btn:hover {
+    background: #dc2626;
+    transform: scale(1.2);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+}
+
+.canvas-item .rotate-btn:hover {
+    background: #2563eb;
+    transform: scale(1.2);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+}
+
+.canvas-item .copy-btn:hover {
+    background: #059669;
+    transform: scale(1.2);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+}
+
+.canvas-item .resize-handle:hover {
+    background: #059669;
+    transform: scale(1.2);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.5);
 }
 
 .drag-ghost {
@@ -404,6 +466,8 @@ document.addEventListener('DOMContentLoaded', function() {
     let dragGhost = null;
     let currentDragShape = null;
     let clipboard = null; // Store copied item data
+    let isProcessingDrop = false; // Flag to prevent duplicate drops
+    let resizeThrottle = null; // For smooth resizing
     
     // Shape definitions
     const shapes = {
@@ -411,7 +475,7 @@ document.addEventListener('DOMContentLoaded', function() {
         chair: { width: 40, height: 40, bg: '#9CA3AF', type: 'chair', label: 'Chair' },
         table: { width: 80, height: 80, bg: '#A0522D', type: 'table', label: 'Table' },
         sofa: { width: 120, height: 60, bg: '#FBBF24', type: 'sofa', label: 'Sofa' },
-        wall: { width: 80, height: 20, bg: '#374151', type: 'drawing-wall', label: 'Wall' },
+        wall: { width: 80, height: 20, bg: '#000000', type: 'drawing-wall', label: 'Wall' },
         door: { width: 60, height: 40, bg: '#D2691E', type: 'door', label: 'Door' },
         window: { width: 60, height: 30, bg: '#BFDBFE', type: 'window', label: 'Window' },
         sink: { width: 60, height: 40, bg: '#9CA3AF', type: 'sink', label: 'Sink' },
@@ -423,11 +487,21 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Make shape items draggable
     document.querySelectorAll('.shape-item').forEach(item => {
+        // Remove existing listeners to prevent duplicates
+        item.removeEventListener('dragstart', handleDragStart);
+        item.removeEventListener('dragend', handleDragEnd);
+        
         item.addEventListener('dragstart', handleDragStart);
         item.addEventListener('dragend', handleDragEnd);
     });
     
     // Canvas drop zone
+    canvas.removeEventListener('dragover', handleDragOver);
+    canvas.removeEventListener('drop', handleDrop);
+    canvas.removeEventListener('dragenter', handleDragEnter);
+    canvas.removeEventListener('dragleave', handleDragLeave);
+    canvas.removeEventListener('click', handleCanvasClick);
+    
     canvas.addEventListener('dragover', handleDragOver);
     canvas.addEventListener('drop', handleDrop);
     canvas.addEventListener('dragenter', handleDragEnter);
@@ -436,6 +510,11 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Also add drop listeners to the canvas container
     const canvasContainer = canvas.parentElement;
+    canvasContainer.removeEventListener('dragover', handleDragOver);
+    canvasContainer.removeEventListener('drop', handleDrop);
+    canvasContainer.removeEventListener('dragenter', handleDragEnter);
+    canvasContainer.removeEventListener('dragleave', handleDragLeave);
+    
     canvasContainer.addEventListener('dragover', handleDragOver);
     canvasContainer.addEventListener('drop', handleDrop);
     canvasContainer.addEventListener('dragenter', handleDragEnter);
@@ -517,6 +596,9 @@ document.addEventListener('DOMContentLoaded', function() {
         // Ensure the resizing item stays on top
         item.style.zIndex = '1000';
         
+        // Add cursor feedback
+        document.body.style.cursor = 'crosshair';
+        
         document.addEventListener('mousemove', handleResize);
         document.addEventListener('mouseup', stopResizing);
         
@@ -526,9 +608,15 @@ document.addEventListener('DOMContentLoaded', function() {
     function handleResize(e) {
         if (!isResizing || !selectedItem) return;
         
-        const canvasRect = canvas.getBoundingClientRect();
-        const mouseX = e.clientX - canvasRect.left;
-        const mouseY = e.clientY - canvasRect.top;
+        // Throttle resize updates for smoother performance
+        if (resizeThrottle) {
+            clearTimeout(resizeThrottle);
+        }
+        
+        resizeThrottle = setTimeout(() => {
+            const canvasRect = canvas.getBoundingClientRect();
+            const mouseX = e.clientX - canvasRect.left;
+            const mouseY = e.clientY - canvasRect.top;
         
         let newWidth, newHeight, newX, newY;
         
@@ -583,21 +671,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 break;
         }
         
-        // Apply new size and position
+        // Apply new size and position with smooth transitions
+        selectedItem.style.transition = 'none'; // Disable transitions during resize for smoothness
         selectedItem.style.width = newWidth + 'px';
         selectedItem.style.height = newHeight + 'px';
         selectedItem.style.left = newX + 'px';
         selectedItem.style.top = newY + 'px';
         
-        console.log('=== RESIZE ===');
-        console.log('Handle:', resizeHandle);
-        console.log('Mouse position:', e.clientX, e.clientY);
-        console.log('Canvas rect:', canvasRect.left, canvasRect.top);
-        console.log('Original size:', originalSize.width, originalSize.height);
-        console.log('Original position:', originalPosition.x, originalPosition.y);
-        console.log('New size:', newWidth, newHeight);
-        console.log('New position:', newX, newY);
-        console.log('Resizing:', resizeHandle, 'New size:', newWidth, 'x', newHeight, 'Position:', newX, newY);
+        // Re-enable transitions after resize
+        requestAnimationFrame(() => {
+            selectedItem.style.transition = '';
+        });
+        }, 16); // ~60fps for smooth resizing
     }
     
     function stopResizing() {
@@ -605,6 +690,15 @@ document.addEventListener('DOMContentLoaded', function() {
             // Reset z-index and remove resizing class
             selectedItem.style.zIndex = '20';
             selectedItem.classList.remove('resizing');
+        }
+        
+        // Reset cursor
+        document.body.style.cursor = '';
+        
+        // Clear throttle
+        if (resizeThrottle) {
+            clearTimeout(resizeThrottle);
+            resizeThrottle = null;
         }
         
         isResizing = false;
@@ -695,7 +789,15 @@ document.addEventListener('DOMContentLoaded', function() {
     
     function handleDrop(e) {
         e.preventDefault();
-        console.log('Drop event triggered!');
+        console.log('Drop event triggered!', new Date().getTime());
+        
+        // Prevent duplicate drops
+        if (isProcessingDrop) {
+            console.log('Drop already processing, skipping');
+            return;
+        }
+        
+        isProcessingDrop = true;
         
         // Get shape type from data transfer or current drag shape
         let shapeType = e.dataTransfer.getData('text/plain');
@@ -705,6 +807,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if (!shapeType) {
             console.log('No shape type found for drop');
+            isProcessingDrop = false;
             return;
         }
         
@@ -723,6 +826,11 @@ document.addEventListener('DOMContentLoaded', function() {
             dragGhost = null;
         }
         
+        // Reset the flag after a short delay
+        setTimeout(() => {
+            isProcessingDrop = false;
+        }, 100);
+        
         console.log('Shape created successfully');
     }
     
@@ -733,13 +841,14 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        console.log('Creating shape:', shapeType, 'with properties:', shape);
+        console.log('Creating shape:', shapeType, 'with properties:', shape, 'at time:', new Date().getTime());
         console.log('Position coordinates:', x, y);
         
         const item = document.createElement('div');
         item.className = 'canvas-item';
         item.dataset.shape = shapeType;
         item.dataset.id = ++itemCounter;
+        item.dataset.createdAt = new Date().getTime();
         
         // Set position BEFORE adding any child elements
         item.style.position = 'absolute';
@@ -1037,13 +1146,27 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         
         // Add click handler for selection
-        item.addEventListener('click', (e) => {
+        item.addEventListener('click', function(e) {
             e.stopPropagation();
             selectItem(item);
         });
         
         // Add drag functionality for moving items
         item.addEventListener('mousedown', startDragging);
+        
+        // Add label
+        const itemLabel = document.createElement('div');
+        itemLabel.className = 'canvas-item-label';
+        itemLabel.style.position = 'absolute';
+        itemLabel.style.bottom = '-20px';
+        itemLabel.style.left = '50%';
+        itemLabel.style.transform = 'translateX(-50%)';
+        itemLabel.style.fontSize = '10px';
+        itemLabel.style.color = 'white';
+        itemLabel.style.textShadow = '1px 1px 1px rgba(0,0,0,0.8)';
+        itemLabel.style.whiteSpace = 'nowrap';
+        itemLabel.textContent = shape.label;
+        item.appendChild(itemLabel);
         
         // Add to canvas
         canvasItems.appendChild(item);
@@ -1156,15 +1279,33 @@ document.addEventListener('DOMContentLoaded', function() {
     function saveFloorPlan() {
         const items = [];
         document.querySelectorAll('.canvas-item').forEach(item => {
-            items.push({
-                shape: item.dataset.shape,
-                x: parseInt(item.style.left),
-                y: parseInt(item.style.top),
-                id: item.dataset.id,
-                rotation: parseInt(item.dataset.rotation || '0'),
-                width: parseInt(item.style.width),
-                height: parseInt(item.style.height)
-            });
+            // Get the proper label for the shape type
+            const shapeType = item.dataset.shape;
+            const shapeConfig = shapes[shapeType];
+            const itemLabel = shapeConfig ? shapeConfig.label : shapeType;
+            
+                    // Get the actual rotation from transform or dataset
+        let actualRotation = parseInt(item.dataset.rotation || '0');
+        
+        // Check if there's a CSS transform rotation (for walls)
+        if (item.style.transform && item.style.transform.includes('rotate')) {
+            const transformMatch = item.style.transform.match(/rotate\(([^)]+)deg\)/);
+            if (transformMatch) {
+                actualRotation = parseInt(transformMatch[1]);
+            }
+        }
+        
+        items.push({
+            shape: shapeType,
+            x: parseInt(item.style.left),
+            y: parseInt(item.style.top),
+            id: item.dataset.id,
+            rotation: actualRotation,
+            width: parseInt(item.style.width),
+            height: parseInt(item.style.height),
+            label: itemLabel,
+            backgroundColor: item.style.backgroundColor
+        });
         });
         
         // Save to localStorage for immediate backup
@@ -1255,7 +1396,8 @@ document.addEventListener('DOMContentLoaded', function() {
             newItem.style.top = itemData.y + 'px';
             newItem.style.width = (itemData.width || shapes[itemData.shape].width) + 'px';
             newItem.style.height = (itemData.height || shapes[itemData.shape].height) + 'px';
-            newItem.style.backgroundColor = shapes[itemData.shape].bg;
+            // Use saved background color if available, otherwise use default
+            newItem.style.backgroundColor = itemData.backgroundColor || shapes[itemData.shape].bg;
             newItem.style.border = '2px solid #333';
             newItem.style.cursor = 'move';
             newItem.style.zIndex = '10';
@@ -1263,24 +1405,27 @@ document.addEventListener('DOMContentLoaded', function() {
             // Apply rotation if any
             if (itemData.rotation) {
                 newItem.style.transform = `rotate(${itemData.rotation}deg)`;
+                // Also update the dataset for consistency
+                newItem.dataset.rotation = itemData.rotation.toString();
             }
             
             // Recreate the shape based on type
             recreateShape(newItem, itemData.shape);
             
             // Add label
-            const label = document.createElement('div');
-            label.className = 'canvas-item-label';
-            label.style.position = 'absolute';
-            label.style.bottom = '-20px';
-            label.style.left = '50%';
-            label.style.transform = 'translateX(-50%)';
-            label.style.fontSize = '10px';
-            label.style.color = 'white';
-            label.style.textShadow = '1px 1px 1px rgba(0,0,0,0.8)';
-            label.style.whiteSpace = 'nowrap';
-            label.textContent = shapes[itemData.shape].label;
-            newItem.appendChild(label);
+            const savedItemLabel = document.createElement('div');
+            savedItemLabel.className = 'canvas-item-label';
+            savedItemLabel.style.position = 'absolute';
+            savedItemLabel.style.bottom = '-20px';
+            savedItemLabel.style.left = '50%';
+            savedItemLabel.style.transform = 'translateX(-50%)';
+            savedItemLabel.style.fontSize = '10px';
+            savedItemLabel.style.color = 'white';
+            savedItemLabel.style.textShadow = '1px 1px 1px rgba(0,0,0,0.8)';
+            savedItemLabel.style.whiteSpace = 'nowrap';
+            // Use saved label if available, otherwise use default
+            savedItemLabel.textContent = itemData.label || shapes[itemData.shape].label;
+            newItem.appendChild(savedItemLabel);
             
             // Add delete button
             const deleteBtn = document.createElement('button');
@@ -1382,7 +1527,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             
             // Add event listeners
-            newItem.addEventListener('click', () => selectItem(newItem));
+            newItem.addEventListener('click', function() { selectItem(newItem); });
             newItem.addEventListener('mousedown', startDragging);
             
             // Add hover effects
@@ -1871,19 +2016,19 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         // Add label
-        const label = document.createElement('div');
-        label.className = 'canvas-item-label'; // Added class for easy selection
-        label.style.position = 'absolute';
-        label.style.bottom = '-20px';
-        label.style.left = '50%';
-        label.style.transform = 'translateX(-50%)';
-        label.style.fontSize = '10px';
-        label.style.color = '#374151';
-        label.style.fontWeight = 'bold';
-        label.style.textAlign = 'center';
-        label.style.whiteSpace = 'nowrap';
-        label.textContent = clipboard.label;
-        newItem.appendChild(label);
+        const pasteItemLabel = document.createElement('div');
+        pasteItemLabel.className = 'canvas-item-label'; // Added class for easy selection
+        pasteItemLabel.style.position = 'absolute';
+        pasteItemLabel.style.bottom = '-20px';
+        pasteItemLabel.style.left = '50%';
+        pasteItemLabel.style.transform = 'translateX(-50%)';
+        pasteItemLabel.style.fontSize = '10px';
+        pasteItemLabel.style.color = '#374151';
+        pasteItemLabel.style.fontWeight = 'bold';
+        pasteItemLabel.style.textAlign = 'center';
+        pasteItemLabel.style.whiteSpace = 'nowrap';
+        pasteItemLabel.textContent = clipboard.label;
+        newItem.appendChild(pasteItemLabel);
         
         // Add delete button
         const deleteBtn = document.createElement('div');
@@ -1929,7 +2074,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         
         // Add click handler for selection
-        newItem.addEventListener('click', (e) => {
+        newItem.addEventListener('click', function(e) {
             e.stopPropagation();
             selectItem(newItem);
         });
@@ -2029,8 +2174,29 @@ document.addEventListener('DOMContentLoaded', function() {
         document.removeEventListener('mouseup', stopDrawingWall);
     }
     
-    // Load saved floor plan on page load
-    loadFloorPlan();
+    // Delete item function
+    function deleteItem(item) {
+        if (item && item.parentNode) {
+            // Remove from canvas
+            item.parentNode.removeChild(item);
+            
+            // Clear selection if this was the selected item
+            if (selectedItem === item) {
+                selectedItem = null;
+                hideSelectionControls();
+            }
+            
+            console.log('Item deleted:', item);
+        }
+    }
+    
+    // Load saved floor plan on page load (only once)
+    if (!window.floorPlanLoaded) {
+        setTimeout(() => {
+            loadFloorPlan();
+            window.floorPlanLoaded = true;
+        }, 100);
+    }
 });
 </script>
 @endsection 
