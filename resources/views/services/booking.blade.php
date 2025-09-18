@@ -18,7 +18,7 @@
                     <a href="{{ route('dashboard') }}" class="nav-link">Home</a>
                     <a href="{{ route('booking-history') }}" class="nav-link">Booking History</a>
                     <a href="{{ route('services.index') }}" class="nav-link">Services</a>
-                    <a href="#" class="nav-link">About</a>
+                    <a href="{{ route('about') }}" class="nav-link">About</a>
                     <a href="#" class="nav-link">Location</a>
                     <div class="flex items-center space-x-2">
                         <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -58,9 +58,9 @@
                 <div class="flex gap-12 items-start">
                     <!-- Left - Text Information -->
                     <div class="flex-1 text-white">
-                        <h3 class="text-2xl font-bold text-yellow-500 mb-3">Hot Desk</h3>
+                        <h3 class="text-2xl font-bold text-yellow-500 mb-3">Hot Table</h3>
                         <p class="text-white text-lg mb-6">
-                            Flexible desk space in a shared area. Perfect for individuals.
+                            Flexible table space in a shared area. Perfect for individuals.
                         </p>
                         <div class="flex space-x-4">
                             <button class="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition-colors">
@@ -75,7 +75,7 @@
                                          <!-- Right - Image -->
                      <div class="w-96">
                          <div class="h-56 rounded-lg overflow-hidden bg-black flex items-center justify-center p-1">
-                             <img src="{{ asset('images/produktiv.png') }}" alt="Hot Desk Space" class="max-w-full max-h-full object-contain" style="max-height: 200px;">
+                             <img src="{{ asset('images/produktiv123.jpg') }}" alt="Hot Desk Space" class="max-w-full max-h-full object-contain" style="max-height: 200px;">
                          </div>
                      </div>
                 </div>
@@ -101,7 +101,7 @@
                                          <!-- Right - Image -->
                      <div class="w-96">
                          <div class="h-56 rounded-lg overflow-hidden bg-black flex items-center justify-center p-1">
-                             <img src="{{ asset('images/nest.png') }}" alt="Napping Room" class="max-w-full max-h-full object-contain" style="max-height: 200px;">
+                             <img src="{{ asset('images/produktivenapping.jpg') }}" alt="Napping Room" class="max-w-full max-h-full object-contain" style="max-height: 200px;">
                          </div>
                      </div>
                 </div>
@@ -127,7 +127,7 @@
                                          <!-- Right - Image -->
                      <div class="w-96">
                          <div class="h-56 rounded-lg overflow-hidden bg-black flex items-center justify-center p-1">
-                             <img src="{{ asset('images/media.jpg') }}" alt="Hot Desk Space" class="max-w-full max-h-full object-contain" style="max-height: 200px;">
+                             <img src="{{ asset('images/produktiv1234.jpg') }}" alt="Hot Desk Space" class="max-w-full max-h-full object-contain" style="max-height: 200px;">
                          </div>
                      </div>
                 </div>

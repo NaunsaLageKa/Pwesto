@@ -18,7 +18,7 @@
                     <a href="{{ route('dashboard') }}" class="nav-link">Home</a>
                     <a href="{{ route('booking-history') }}" class="nav-link">Booking History</a>
                     <a href="{{ route('services.index') }}" class="nav-link">Services</a>
-                    <a href="#" class="nav-link">About</a>
+                    <a href="{{ route('about') }}" class="nav-link">About</a>
                     <a href="#" class="nav-link">Location</a>
                     <div class="flex items-center space-x-2">
                         <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -75,12 +75,12 @@
         <div class="bg-white rounded-lg shadow-xl p-6 mb-8">
             <div class="text-center mb-6">
                 <h2 class="text-2xl font-bold text-gray-800 mb-2">Floor Plan</h2>
-                                 <p class="text-gray-600">Click on a <strong>desk or chair</strong> to select it for booking</p>
+                                 <p class="text-gray-600">Click on a <strong>chair</strong> to select it for booking</p>
             </div>
             
                          <!-- Floor Plan Canvas -->
              <div class="flex justify-center">
-                 <div id="floor-plan-canvas" class="bg-white border-2 border-gray-300 relative h-[600px] w-[900px] mx-auto overflow-auto" style="position: relative;">
+                 <div id="floor-plan-canvas" class="bg-white border-2 border-gray-300 relative h-[3000px] w-[4000px] mx-auto overflow-auto" style="position: relative; padding: 200px;">
                     <!-- Grid lines -->
                     <div class="absolute inset-0 grid-pattern"></div>
                     
@@ -92,38 +92,9 @@
                         </div>
                     </div>
                     
-                    <!-- Floor plan items will be loaded here -->
-                                         <div id="canvas-items" class="relative z-10 w-full h-full" style="position: relative; width: 100%; height: 100%; min-height: 500px;"></div>
-                    
-                                         <!-- Room labels -->
-                     <div class="absolute top-4 left-4 text-sm text-gray-500">
-                         <div>Conference Room</div>
-                         <div>Open Area</div>
-                         <div>Kitchen</div>
-                         <div>Offices</div>
-                         <div>Restrooms</div>
-                     </div>
+                     <!-- Floor plan items will be loaded here -->
+                                          <div id="canvas-items" class="relative z-10 w-full h-full" style="position: relative; width: 100%; height: 100%; min-height: 500px;"></div>
                      
-                     <!-- Legend -->
-                     <div class="absolute top-4 right-4 text-sm text-gray-500 bg-white bg-opacity-90 p-2 rounded border">
-                         <div class="font-semibold mb-1">Legend:</div>
-                         <div class="flex items-center space-x-2 mb-1">
-                             <div class="w-4 h-3 bg-brown-500 border border-gray-300"></div>
-                             <span>Desk (Clickable)</span>
-                         </div>
-                         <div class="flex items-center space-x-2 mb-1">
-                             <div class="w-4 h-4 bg-gray-400 border border-gray-300 rounded-full"></div>
-                             <span>Chair (Clickable)</span>
-                         </div>
-                         <div class="flex items-center space-x-2 mb-1">
-                             <div class="w-4 h-4 bg-brown-400 border border-gray-300"></div>
-                             <span>Table (Not Clickable)</span>
-                         </div>
-                         <div class="flex items-center space-x-2 mb-1">
-                             <div class="w-4 h-2 bg-black border border-gray-300"></div>
-                             <span>Wall (Not Clickable)</span>
-                         </div>
-                     </div>
                 </div>
             </div>
         </div>
@@ -153,6 +124,29 @@
             <button id="confirm-booking" class="px-6 py-3 bg-green-500 text-white rounded-lg font-semibold hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
                 Confirm Booking
             </button>
+        </div>
+    </div>
+
+    <!-- Booking Confirmation Modal -->
+    <div id="booking-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg shadow-xl w-96 mx-4">
+            <div class="p-6 text-center">
+                <div class="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
+                    <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-900 mb-4">Booking Confirmed!</h3>
+                <div class="text-left space-y-2 mb-6 text-base">
+                    <p><strong>Seat:</strong> <span id="modal-seat"></span></p>
+                    <p><strong>Date:</strong> <span id="modal-date"></span></p>
+                    <p><strong>Time:</strong> <span id="modal-time"></span></p>
+                    <p><strong>Booking ID:</strong> <span id="modal-booking-id"></span></p>
+                </div>
+                <button id="modal-ok-btn" class="w-full bg-blue-600 text-white px-4 py-3 rounded-md text-base font-medium hover:bg-blue-700 transition-colors">
+                    OK
+                </button>
+            </div>
         </div>
     </div>
 </div>
@@ -261,28 +255,43 @@ document.addEventListener('DOMContentLoaded', function() {
     loadFloorPlanFromDatabase();
 });
 
-// Load floor plan from database
-function loadFloorPlanFromDatabase() {
-    const canvasItems = document.getElementById('canvas-items');
-    
-    // Check if we have floor plan data from the controller
-    @if($floorPlan && $floorPlan->layout_data)
-        const floorPlanData = @json($floorPlan->layout_data);
-        console.log('Floor plan data from database:', floorPlanData);
-        console.log('Floor plan object:', @json($floorPlan));
+    // Load floor plan from database
+    function loadFloorPlanFromDatabase() {
+        const canvasItems = document.getElementById('canvas-items');
         
-        if (floorPlanData && floorPlanData.length > 0) {
-            console.log('Loading floor plan from database...');
-            createFloorPlanItems(floorPlanData);
-        } else {
-            console.log('No valid floor plan data, creating default...');
+        // Debug: Log what we received from the controller
+        console.log('=== FLOOR PLAN DEBUG ===');
+        console.log('Floor plan object from controller:', @json($floorPlan));
+        console.log('Floor plan exists:', {{ $floorPlan ? 'true' : 'false' }});
+        @if($floorPlan)
+            console.log('Floor plan ID:', {{ $floorPlan->id }});
+            console.log('Floor plan name:', '{{ $floorPlan->name }}');
+            console.log('Floor plan active:', {{ $floorPlan->is_active ? 'true' : 'false' }});
+            console.log('Floor plan items count:', {{ count($floorPlan->layout_data ?? []) }});
+            console.log('Floor plan data sample:', @json(array_slice($floorPlan->layout_data ?? [], 0, 3)));
+        @else
+            console.log('NO FLOOR PLAN FOUND - This means the database is empty or not connected properly');
+        @endif
+        console.log('=== END DEBUG ===');
+        
+        // Check if we have floor plan data from the controller
+        @if($floorPlan && $floorPlan->layout_data)
+            const floorPlanData = @json($floorPlan->layout_data);
+            console.log('Floor plan data from database:', floorPlanData);
+            console.log('Floor plan object:', @json($floorPlan));
+            
+            if (floorPlanData && floorPlanData.length > 0) {
+                console.log('Loading floor plan from database with', floorPlanData.length, 'items...');
+                createFloorPlanItems(floorPlanData);
+            } else {
+                console.log('No valid floor plan data, creating default...');
+                createDefaultFloorPlan();
+            }
+        @else
+            console.log('No floor plan from controller, creating default...');
             createDefaultFloorPlan();
-        }
-    @else
-        console.log('No floor plan from controller, creating default...');
-        createDefaultFloorPlan();
-    @endif
-}
+        @endif
+    }
 
 // Create floor plan items from database data
 function createFloorPlanItems(items) {
@@ -292,6 +301,10 @@ function createFloorPlanItems(items) {
     canvasItems.innerHTML = '';
     
     console.log('Creating', items.length, 'items from database...');
+    
+    // Get booking statuses from the controller
+    const bookingStatuses = @json($bookingStatuses ?? []);
+    console.log('Booking statuses:', bookingStatuses);
     
     items.forEach((item, index) => {
         // Show ALL items from the floor plan
@@ -305,8 +318,12 @@ function createFloorPlanItems(items) {
         const shapeConfig = getShapeConfig(item.shape);
         
         newItem.style.position = 'absolute';
+        // Use the exact original positions from the database
         newItem.style.left = item.x + 'px';
         newItem.style.top = item.y + 'px';
+        
+        // Debug positioning
+        console.log(`Item ${item.id} (${item.shape}): Position(${item.x}, ${item.y})`);
         
         // ALWAYS use the dimensions from the database to preserve exact orientation
         if (item.width && item.height) {
@@ -318,12 +335,22 @@ function createFloorPlanItems(items) {
             newItem.style.height = shapeConfig.height + 'px';
         }
         
-        // Use the exact background color from the database if available
-        if (item.backgroundColor) {
-            newItem.style.backgroundColor = item.backgroundColor;
+        // Apply color coding based on booking status for chairs only
+        if (item.shape === 'chair') {
+            // Initially set chairs as available (will be updated when date/time is selected)
+            newItem.style.backgroundColor = '#10B981'; // Green for available
+            newItem.classList.add('available');
+            console.log(`Chair ${item.id} initially set as available`);
         } else {
-            newItem.style.backgroundColor = shapeConfig.bg;
+            // For non-chair items (desks, tables, etc.), always use their original colors
+            if (item.backgroundColor) {
+                newItem.style.backgroundColor = item.backgroundColor;
+            } else {
+                newItem.style.backgroundColor = shapeConfig.bg;
+            }
+            console.log(`Non-chair item ${item.id} (${item.shape}) using color: ${newItem.style.backgroundColor}`);
         }
+        
         newItem.style.border = '2px solid #333';
         newItem.style.cursor = 'pointer';
         newItem.style.zIndex = '10';
@@ -343,14 +370,47 @@ function createFloorPlanItems(items) {
         // Add label text - use the proper label from database
         newItem.textContent = item.label || `Seat ${item.id}`;
         
-        // Add click handler for clickable items (desks and chairs only)
-        if (item.shape === 'desk' || item.shape === 'chair') {
-            newItem.addEventListener('click', function() {
-                selectSeat(newItem);
-            });
-            newItem.style.cursor = 'pointer';
-            // Add a subtle indicator that this is clickable
-            newItem.style.boxShadow = '0 2px 4px rgba(0,0,0,0.2)';
+        // Add data-id attribute for booking status lookup
+        newItem.setAttribute('data-id', item.id);
+        
+        // Add click handler for chairs only (chairs are the only bookable items)
+        if (item.shape === 'chair') {
+            const bookingStatus = bookingStatuses[item.id] || 'available';
+            
+            // Apply initial color based on booking status
+            switch (bookingStatus) {
+                case 'available':
+                    newItem.style.backgroundColor = '#10B981'; // Green
+                    newItem.classList.add('available');
+                    newItem.addEventListener('click', function() {
+                        selectSeat(newItem);
+                    });
+                    newItem.style.cursor = 'pointer';
+                    newItem.style.boxShadow = '0 2px 4px rgba(0,0,0,0.2)';
+                    break;
+                case 'confirmed':
+                    newItem.style.backgroundColor = '#EF4444'; // Red
+                    newItem.classList.add('booked', 'confirmed');
+                    newItem.style.cursor = 'not-allowed';
+                    newItem.style.opacity = '0.7';
+                    newItem.title = 'This chair is confirmed';
+                    break;
+                case 'pending':
+                    newItem.style.backgroundColor = '#F97316'; // Orange
+                    newItem.classList.add('booked', 'pending');
+                    newItem.style.cursor = 'not-allowed';
+                    newItem.style.opacity = '0.7';
+                    newItem.title = 'This chair is pending';
+                    break;
+                default:
+                    newItem.style.backgroundColor = '#10B981'; // Default to green
+                    newItem.classList.add('available');
+                    newItem.addEventListener('click', function() {
+                        selectSeat(newItem);
+                    });
+                    newItem.style.cursor = 'pointer';
+                    newItem.style.boxShadow = '0 2px 4px rgba(0,0,0,0.2)';
+            }
         } else {
             newItem.style.cursor = 'default';
             // Make non-clickable items slightly transparent to indicate they're not interactive
@@ -392,9 +452,6 @@ function createFloorPlanItems(items) {
     });
     
     console.log('Database floor plan loaded with', items.length, 'items');
-    
-    // Center all items within the canvas
-    centerItemsInCanvas();
     
     // Initialize seat selection functionality
     initializeSeatSelection();
@@ -563,9 +620,8 @@ function initializeSeatSelection() {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    alert(`Booking confirmed!\nSeat: ${selectedSeat.dataset.seatNumber}\nDate: ${bookingDate}\nTime: ${bookingTime}\n\nBooking ID: ${data.booking_id}`);
-                    // Redirect to booking history
-                    window.location.href = '{{ route("booking-history") }}';
+                    // Show modal instead of alert
+                    showBookingModal(selectedSeat.dataset.seatNumber, bookingDate, bookingTime, data.booking_id);
                 } else {
                     alert('Error creating booking: ' + data.message);
                 }
@@ -582,6 +638,119 @@ function initializeSeatSelection() {
     const dateInput = document.getElementById('booking-date');
     if (dateInput) {
         dateInput.value = today;
+    }
+
+    // Update chair colors on page load
+    setTimeout(() => {
+        updateChairColors();
+    }, 1000);
+
+    // Modal functions
+    function showBookingModal(seat, date, time, bookingId) {
+        document.getElementById('modal-seat').textContent = seat;
+        document.getElementById('modal-date').textContent = date;
+        document.getElementById('modal-time').textContent = time;
+        document.getElementById('modal-booking-id').textContent = bookingId;
+        document.getElementById('booking-modal').classList.remove('hidden');
+    }
+
+    function hideBookingModal() {
+        document.getElementById('booking-modal').classList.add('hidden');
+    }
+
+    // Modal event listeners
+    document.getElementById('modal-ok-btn').addEventListener('click', function() {
+        hideBookingModal();
+        window.location.href = '{{ route("booking-history") }}';
+    });
+
+    // Add event listeners for date and time changes
+    if (dateInput) {
+        dateInput.addEventListener('change', updateChairColors);
+    }
+    
+    const timeSelect = document.getElementById('booking-time');
+    if (timeSelect) {
+        timeSelect.addEventListener('change', updateChairColors);
+    }
+
+    // Function to update chair colors based on selected date and time
+    function updateChairColors() {
+        const selectedDate = dateInput?.value;
+        const selectedTime = timeSelect?.value;
+        
+        if (!selectedDate || !selectedTime) {
+            return; // Don't update if both date and time aren't selected
+        }
+        
+        console.log('Updating chair colors for:', selectedDate, selectedTime);
+        
+        // Fetch booking statuses for the selected date and time
+        fetch('{{ route("services.check-booking-status") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify({
+                date: selectedDate,
+                time: selectedTime
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                console.log('Received booking statuses:', data.bookingStatuses);
+                applyBookingStatuses(data.bookingStatuses);
+            }
+        })
+        .catch(error => {
+            console.error('Error checking booking status:', error);
+        });
+    }
+
+    // Function to apply booking statuses to chairs only
+    function applyBookingStatuses(bookingStatuses) {
+        // Only select chairs, not all canvas items
+        const chairs = document.querySelectorAll('.canvas-item[data-id]');
+        
+        chairs.forEach(item => {
+            const itemId = item.dataset.id;
+            const status = bookingStatuses[itemId];
+            
+            // Only update if this item has a booking status (i.e., it's a chair)
+            if (status !== undefined) {
+                console.log(`Updating chair ${itemId} to status: ${status}`);
+                
+                // Remove existing status classes
+                item.classList.remove('available', 'booked', 'confirmed', 'pending');
+                
+                // Apply new status
+                switch (status) {
+                    case 'available':
+                        item.style.backgroundColor = '#10B981'; // Green
+                        item.classList.add('available');
+                        item.style.cursor = 'pointer';
+                        item.style.opacity = '1';
+                        item.title = '';
+                        break;
+                    case 'confirmed':
+                        item.style.backgroundColor = '#EF4444'; // Red
+                        item.classList.add('booked', 'confirmed');
+                        item.style.cursor = 'not-allowed';
+                        item.style.opacity = '0.7';
+                        item.title = 'This chair is confirmed';
+                        break;
+                    case 'pending':
+                        item.style.backgroundColor = '#F97316'; // Orange
+                        item.classList.add('booked', 'pending');
+                        item.style.cursor = 'not-allowed';
+                        item.style.opacity = '0.7';
+                        item.title = 'This chair is pending';
+                        break;
+                }
+            }
+        });
     }
 }
 </script>

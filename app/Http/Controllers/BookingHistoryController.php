@@ -8,24 +8,23 @@ use Illuminate\Support\Facades\Auth;
 
 class BookingHistoryController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $user = Auth::user();
         
-        // Get upcoming and pending bookings
+        // Get upcoming and pending bookings with pagination
         $upcomingBookings = Booking::where('user_id', $user->id)
             ->whereIn('status', ['confirmed', 'pending'])
             ->where('booking_date', '>=', now()->toDateString())
             ->orderBy('booking_date')
             ->orderBy('booking_time')
-            ->get();
+            ->paginate(6, ['*'], 'upcoming_page');
             
-        // Get completed and cancelled bookings
+        // Get completed and cancelled bookings with pagination
         $pastBookings = Booking::where('user_id', $user->id)
             ->whereIn('status', ['completed', 'cancelled', 'rejected'])
             ->orderBy('booking_date', 'desc')
-            ->limit(6)
-            ->get();
+            ->paginate(6, ['*'], 'past_page');
             
         return view('booking-history', compact('upcomingBookings', 'pastBookings'));
     }

@@ -18,7 +18,7 @@
                     <a href="{{ route('dashboard') }}" class="nav-link">Home</a>
                     <a href="#" class="nav-link">Booking History</a>
                     <a href="{{ route('services.index') }}" class="nav-link active">Services</a>
-                    <a href="#" class="nav-link">About</a>
+                    <a href="{{ route('about') }}" class="nav-link">About</a>
                     <a href="#" class="nav-link">Location</a>
                     <a href="{{ route('profile.edit') }}" class="flex items-center">
                         <img 

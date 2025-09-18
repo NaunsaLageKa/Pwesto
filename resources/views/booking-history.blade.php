@@ -18,7 +18,7 @@
                     <a href="{{ route('dashboard') }}" class="nav-link">Home</a>
                     <a href="{{ route('booking-history') }}" class="nav-link active">Booking History</a>
                     <a href="{{ route('services.index') }}" class="nav-link">Services</a>
-                    <a href="#" class="nav-link">About</a>
+                    <a href="{{ route('about') }}" class="nav-link">About</a>
                     <a href="#" class="nav-link">Location</a>
                     <div class="flex items-center space-x-2">
                         <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -48,9 +48,15 @@
             </p>
         </div>
 
+
         <!-- Upcoming & Pending Bookings Section -->
         <div class="mb-12">
-            <h2 class="text-2xl font-semibold text-white mb-8">Upcoming & Pending Bookings</h2>
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-2xl font-semibold text-white">Upcoming & Pending Bookings</h2>
+                <span class="bg-teal-600 text-white px-3 py-1 rounded-full text-sm font-semibold">
+                    {{ $upcomingBookings->count() }} {{ $upcomingBookings->count() === 1 ? 'Booking' : 'Bookings' }}
+                </span>
+            </div>
             
             <div class="bg-gray-700 rounded-lg p-6">
                 @forelse($upcomingBookings as $booking)
@@ -79,14 +85,14 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="flex items-center space-x-8 text-white">
-                            <div class="text-center">
+                        <div class="flex items-center text-white" style="gap: 4rem;">
+                            <div class="text-center" style="min-width: 80px;">
                                 <p class="text-sm text-gray-300">Date</p>
                                 <p class="font-semibold">{{ \Carbon\Carbon::parse($booking->booking_date)->format('M d') }}</p>
                             </div>
-                            <div class="text-center">
+                            <div class="text-center" style="min-width: 80px;">
                                 <p class="text-sm text-gray-300">Time</p>
-                                <p class="font-semibold">{{ \Carbon\Carbon::parse($booking->booking_time)->format('g:iA') }}</p>
+                                <p class="font-semibold">{{ \Carbon\Carbon::parse($booking->booking_time)->format('g:i A') }}</p>
                             </div>
                             @if($booking->status === 'pending')
                                 <button class="px-4 py-2 bg-red-500 text-white rounded-lg font-semibold hover:bg-red-600 transition-colors"
@@ -94,9 +100,7 @@
                                     Cancel
                                 </button>
                             @else
-                                <button class="px-4 py-2 bg-gray-400 text-white rounded-lg font-semibold cursor-not-allowed" disabled>
-                                    Confirmed
-                                </button>
+                                <div class="px-4 py-2"></div>
                             @endif
                         </div>
                     </div>
@@ -107,11 +111,23 @@
                     </div>
                 @endforelse
             </div>
+            
+            <!-- Pagination for Upcoming Bookings -->
+            @if($upcomingBookings->hasPages())
+                <div class="mt-6 flex justify-center">
+                    {{ $upcomingBookings->appends(request()->query())->links() }}
+                </div>
+            @endif
         </div>
 
         <!-- Recent & Past Bookings Section -->
         <div class="mb-12">
-            <h2 class="text-2xl font-semibold text-white mb-8">Recent & Past Bookings</h2>
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-2xl font-semibold text-white">Recent & Past Bookings</h2>
+                <span class="bg-gray-600 text-white px-3 py-1 rounded-full text-sm font-semibold">
+                    {{ $pastBookings->count() }} {{ $pastBookings->count() === 1 ? 'Booking' : 'Bookings' }}
+                </span>
+            </div>
             
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 @forelse($pastBookings as $booking)
@@ -159,6 +175,54 @@
                     </div>
                 @endforelse
             </div>
+            
+            <!-- Pagination for Past Bookings -->
+            @if($pastBookings->hasPages())
+                <div class="mt-6 flex justify-center">
+                    {{ $pastBookings->appends(request()->query())->links() }}
+                </div>
+            @endif
+        </div>
+    </div>
+</div>
+
+<!-- Cancel Confirmation Modal -->
+<div id="cancel-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-lg shadow-xl w-96 mx-4">
+        <div class="p-6 text-center">
+            <div class="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
+                <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                </svg>
+            </div>
+            <h3 class="text-xl font-semibold text-gray-900 mb-4">Cancel Booking</h3>
+            <p class="text-base text-gray-600 mb-6">Are you sure you want to cancel this booking?</p>
+            <div class="flex space-x-3">
+                <button id="cancel-modal-no-btn" class="flex-1 bg-gray-500 text-white px-4 py-3 rounded-md text-base font-medium hover:bg-gray-600 transition-colors">
+                    No
+                </button>
+                <button id="cancel-modal-yes-btn" class="flex-1 bg-red-600 text-white px-4 py-3 rounded-md text-base font-medium hover:bg-red-700 transition-colors">
+                    Yes, Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Success Modal -->
+<div id="success-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-lg shadow-xl w-96 mx-4">
+        <div class="p-6 text-center">
+            <div class="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
+                <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+            </div>
+            <h3 class="text-xl font-semibold text-gray-900 mb-4">Booking Cancelled!</h3>
+            <p class="text-base text-gray-600 mb-6">Your booking has been successfully cancelled.</p>
+            <button id="success-modal-ok-btn" class="w-full bg-blue-600 text-white px-4 py-3 rounded-md text-base font-medium hover:bg-blue-700 transition-colors">
+                OK
+            </button>
         </div>
     </div>
 </div>
@@ -175,13 +239,54 @@
 .admin-button {
     @apply bg-teal-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-teal-700 transition-colors;
 }
+
+/* Custom pagination styling for dark theme */
+.pagination {
+    @apply flex justify-center space-x-2;
+}
+
+.pagination > li > a,
+.pagination > li > span {
+    @apply px-3 py-2 text-sm font-medium text-gray-300 bg-gray-700 border border-gray-600 rounded-md hover:bg-gray-600 hover:text-white transition-colors;
+}
+
+.pagination > li.active > span {
+    @apply bg-teal-600 text-white border-teal-600;
+}
+
+.pagination > li.disabled > span {
+    @apply bg-gray-800 text-gray-500 border-gray-700 cursor-not-allowed;
+}
 </style>
 
 <script>
 // Cancel booking functionality
+let currentBookingId = null;
+
 function cancelBooking(bookingId) {
-    if (confirm('Are you sure you want to cancel this booking?')) {
-        fetch(`/booking-history/${bookingId}/cancel`, {
+    currentBookingId = bookingId;
+    showCancelModal();
+}
+
+function showCancelModal() {
+    document.getElementById('cancel-modal').classList.remove('hidden');
+}
+
+function hideCancelModal() {
+    document.getElementById('cancel-modal').classList.add('hidden');
+}
+
+function showSuccessModal() {
+    document.getElementById('success-modal').classList.remove('hidden');
+}
+
+function hideSuccessModal() {
+    document.getElementById('success-modal').classList.add('hidden');
+}
+
+function confirmCancel() {
+    if (currentBookingId) {
+        fetch(`/booking-history/${currentBookingId}/cancel`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -190,15 +295,16 @@ function cancelBooking(bookingId) {
         })
         .then(response => response.json())
         .then(data => {
+            hideCancelModal();
             if (data.success) {
-                alert('Booking cancelled successfully!');
-                location.reload(); // Refresh the page to show updated status
+                showSuccessModal();
             } else {
                 alert('Error: ' + data.message);
             }
         })
         .catch(error => {
             console.error('Error:', error);
+            hideCancelModal();
             alert('Error cancelling booking. Please try again.');
         });
     }
@@ -232,5 +338,23 @@ function rebook(bookingId) {
         });
     }
 }
+
+// Modal event listeners
+document.addEventListener('DOMContentLoaded', function() {
+    // Cancel modal buttons
+    document.getElementById('cancel-modal-no-btn').addEventListener('click', function() {
+        hideCancelModal();
+    });
+    
+    document.getElementById('cancel-modal-yes-btn').addEventListener('click', function() {
+        confirmCancel();
+    });
+    
+    // Success modal button
+    document.getElementById('success-modal-ok-btn').addEventListener('click', function() {
+        hideSuccessModal();
+        location.reload(); // Refresh the page to show updated status
+    });
+});
 </script>
 @endsection

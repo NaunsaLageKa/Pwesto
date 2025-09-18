@@ -169,15 +169,6 @@
                 
                 <!-- Dragged items will be placed here -->
                 <div id="canvas-items" class="relative z-10"></div>
-                
-                <!-- Room labels -->
-                <div class="absolute top-4 left-4 text-sm text-gray-500">
-                    <div>Conference Room</div>
-                    <div>Open Area</div>
-                    <div>Kitchen</div>
-                    <div>Offices</div>
-                    <div>Restrooms</div>
-                </div>
             </div>
         </div>
     </div>
@@ -1328,7 +1319,7 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    alert('Floor plan saved successfully! Your work is now preserved.');
+                    showSaveModal();
                 } else {
                     alert('Saved to browser storage. Database save failed.');
                 }
@@ -2197,6 +2188,40 @@ document.addEventListener('DOMContentLoaded', function() {
             window.floorPlanLoaded = true;
         }, 100);
     }
+});
+</script>
+
+<!-- Save Success Modal -->
+<div id="save-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-lg shadow-xl w-96 mx-4">
+        <div class="p-6 text-center">
+            <div class="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
+                <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+            </div>
+            <h3 class="text-xl font-semibold text-gray-900 mb-4">Floor Plan Saved!</h3>
+            <p class="text-base text-gray-600 mb-6">Your work has been successfully preserved.</p>
+            <button id="save-modal-ok-btn" class="w-full bg-blue-600 text-white px-4 py-3 rounded-md text-base font-medium hover:bg-blue-700 transition-colors">
+                OK
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+// Modal functions for save confirmation
+function showSaveModal() {
+    document.getElementById('save-modal').classList.remove('hidden');
+}
+
+function hideSaveModal() {
+    document.getElementById('save-modal').classList.add('hidden');
+}
+
+// Modal event listener
+document.getElementById('save-modal-ok-btn').addEventListener('click', function() {
+    hideSaveModal();
 });
 </script>
 @endsection 

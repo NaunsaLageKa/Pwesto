@@ -19,7 +19,7 @@
             <a href="{{ route('dashboard') }}" style="font-weight:700; color:#111; text-decoration:none;">Home</a>
             <a href="#" style="color:#222; text-decoration:none;">Booking History</a>
             <a href="#" style="color:#222; text-decoration:none;">Services</a>
-            <a href="#" style="color:#222; text-decoration:none;">About</a>
+            <a href="{{ route('about') }}" style="color:#222; text-decoration:none;">About</a>
             <a href="#" style="color:#222; text-decoration:none;">Location</a>
             <a href="{{ route('profile.edit') }}">
                 <img src="{{ $hasImage ? asset('storage/' . Auth::user()->profile_image) : asset('images/avatar.svg') }}" alt="User" style="width:44px; height:44px; border-radius:50%; object-fit:cover; border:2px solid #eee; {{ !$hasImage ? 'background:#f3f4f6; padding:8px;' : '' }}">

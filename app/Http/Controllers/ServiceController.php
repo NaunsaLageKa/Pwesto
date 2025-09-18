@@ -24,17 +24,52 @@ class ServiceController extends Controller
         // Get the service type from the request (e.g., 'hot-desk', 'napping-room')
         $serviceType = $request->query('service', 'hot-desk');
         
-        // Load the floor plan for the current hub owner
-        // In a real application, you might want to get the floor plan based on the user's location or preference
-        // For now, we'll get the first active floor plan from any hub owner
-        $floorPlan = FloorPlan::where('is_active', true)->first();
+        // Load the floor plan for any hub owner
+        // Prioritize the floor plan with the most items (your detailed floor plan)
+        $floorPlan = FloorPlan::where('is_active', true)
+            ->get()
+            ->sortByDesc(function ($plan) {
+                return count($plan->layout_data ?? []);
+            })
+            ->first();
+
+        // If no active floor plan with items, get the most recent one regardless of item count
+        if (!$floorPlan) {
+            $floorPlan = FloorPlan::orderBy('created_at', 'desc')->first();
+        }
+        
+        // If still no floor plan, try to get any floor plan regardless of status
+        if (!$floorPlan) {
+            $floorPlan = FloorPlan::first();
+        }
+        
+        // Get booking statuses for all seats to determine colors
+        // Note: This will be updated dynamically via JavaScript based on selected date/time
+        $bookingStatuses = [];
+        // Don't set initial statuses - let JavaScript handle it based on selected date/time
         
         // Debug: Log what we found
         \Log::info('ServiceController selectSeat - Service Type: ' . $serviceType);
         \Log::info('ServiceController selectSeat - Floor Plan Found: ' . ($floorPlan ? 'Yes' : 'No'));
         if ($floorPlan) {
+            \Log::info('ServiceController selectSeat - Floor Plan ID: ' . $floorPlan->id);
+            \Log::info('ServiceController selectSeat - Floor Plan Name: ' . $floorPlan->name);
+            \Log::info('ServiceController selectSeat - Floor Plan Active: ' . ($floorPlan->is_active ? 'Yes' : 'No'));
+            \Log::info('ServiceController selectSeat - Floor Plan Items Count: ' . count($floorPlan->layout_data ?? []));
             \Log::info('ServiceController selectSeat - Floor Plan Data: ' . json_encode($floorPlan->layout_data));
+        } else {
+            \Log::info('ServiceController selectSeat - No floor plan found in database');
+            // Let's also check total count of floor plans
+            $totalPlans = FloorPlan::count();
+            \Log::info('ServiceController selectSeat - Total floor plans in database: ' . $totalPlans);
+            
+            // Let's also check what floor plans exist
+            $allPlans = FloorPlan::all();
+            foreach($allPlans as $plan) {
+                \Log::info('ServiceController selectSeat - Found plan: ' . $plan->name . ' (ID: ' . $plan->id . ') with ' . count($plan->layout_data ?? []) . ' items');
+            }
         }
+        \Log::info('ServiceController selectSeat - Booking Statuses: ' . json_encode($bookingStatuses));
         
         // If no floor plan exists, we'll create a default one
         if (!$floorPlan) {
@@ -43,7 +78,7 @@ class ServiceController extends Controller
             \Log::info('ServiceController selectSeat - No floor plan found, will use default');
         }
         
-        return view('services.select-seat', compact('serviceType', 'floorPlan'));
+        return view('services.select-seat', compact('serviceType', 'floorPlan', 'bookingStatuses'));
     }
 
     public function createBooking(Request $request)
@@ -57,6 +92,20 @@ class ServiceController extends Controller
         ]);
 
         try {
+            // Check if the same seat is already booked for the same date and time
+            $existingBooking = Booking::where('seat_id', $request->seat_id)
+                ->where('booking_date', $request->booking_date)
+                ->where('booking_time', $request->booking_time)
+                ->whereIn('status', ['pending', 'confirmed'])
+                ->first();
+
+            if ($existingBooking) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This seat is already booked for the selected date and time. Please choose a different seat or time.',
+                ], 400);
+            }
+
             // Get the floor plan to determine hub owner and hub name
             $floorPlan = FloorPlan::where('is_active', true)->first();
             
@@ -103,5 +152,44 @@ class ServiceController extends Controller
                 'message' => 'Error creating booking: ' . $e->getMessage(),
             ], 500);
         }
+    }
+
+    public function checkBookingStatus(Request $request)
+    {
+        $request->validate([
+            'date' => 'required|date',
+            'time' => 'required|string',
+        ]);
+
+        $bookingDate = $request->date;
+        $bookingTime = $request->time;
+
+        // Get all chairs from the floor plan
+        $floorPlan = FloorPlan::where('is_active', true)->first();
+        $bookingStatuses = [];
+
+        if ($floorPlan && $floorPlan->layout_data) {
+            foreach ($floorPlan->layout_data as $item) {
+                if ($item['shape'] === 'chair') {
+                    // Check if this chair has a booking for the specific date and time
+                    $activeBooking = Booking::where('seat_id', $item['id'])
+                        ->where('booking_date', $bookingDate)
+                        ->where('booking_time', $bookingTime)
+                        ->whereIn('status', ['pending', 'confirmed'])
+                        ->first();
+                    
+                    if ($activeBooking) {
+                        $bookingStatuses[$item['id']] = $activeBooking->status;
+                    } else {
+                        $bookingStatuses[$item['id']] = 'available';
+                    }
+                }
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'bookingStatuses' => $bookingStatuses
+        ]);
     }
 } 
