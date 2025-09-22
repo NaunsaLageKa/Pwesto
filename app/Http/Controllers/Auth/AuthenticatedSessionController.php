@@ -41,13 +41,13 @@ class AuthenticatedSessionController extends Controller
                 return redirect()->route('login')->withErrors(['email' => 'Your registration is pending admin approval.']);
             } elseif ($user->status === 'rejected') {
                 Auth::logout();
-                return redirect()->route('login')->withErrors(['email' => 'Your registration was rejected. Please contact support.']);
+                return redirect()->route('login')->withErrors(['email' => 'Your registration was rejected.']);
             }
         }
         // Prevent banned users from logging in
         if ($user && $user->status === 'banned') {
             Auth::logout();
-            return redirect()->route('login')->withErrors(['email' => 'Your account has been banned. Please contact support.']);
+            return redirect()->route('login')->withErrors(['email' => 'Your account has been banned.']);
         }
         // Redirect to the main dashboard after login
         return redirect()->route('dashboard');

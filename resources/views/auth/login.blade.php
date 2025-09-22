@@ -20,8 +20,8 @@ isset($errors) && $errors->any()): ?>
         <form method="POST" action="{{ route('login') }}" style="background:#fff;padding:2rem;border-radius:10px;box-shadow:0 2px 8px #0001;">
             @csrf
             <div style="margin-bottom:1rem;text-align:left;">
-                <label for="email" style="font-weight:500;">Username:</label>
-                <input id="email" type="email" name="email" value="{{ old('email') }}" required autofocus placeholder="Enter your full name"
+                <label for="email" style="font-weight:500;">Email:</label>
+                <input id="email" type="email" name="email" value="{{ old('email') }}" required autofocus placeholder="Enter your Email"
                     style="width:100%;padding:0.75rem;border:1px solid #e0e0e0;border-radius:6px;margin-top:0.25rem;background:#f3f6f9;">
             </div>
             <div style="margin-bottom:1.5rem;text-align:left;">

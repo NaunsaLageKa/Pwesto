@@ -16,10 +16,11 @@
                 <input type="text" placeholder="Search shapes..." class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
             </div>
             
-            <!-- Test Button -->
+            
+            <!-- Clear Storage Button -->
             <div class="mb-4">
-                <button id="test-btn" class="w-full px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
-                    Test: Add Desk
+                <button id="clear-storage-btn" class="w-full px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">
+                    Clear Browser Storage
                 </button>
             </div>
             
@@ -523,7 +524,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Toolbar buttons
     document.getElementById('save-btn').addEventListener('click', saveFloorPlan);
     document.getElementById('clear-btn').addEventListener('click', clearCanvas);
-    document.getElementById('test-btn').addEventListener('click', testAddShape);
     
     // Zoom controls
     document.getElementById('zoom-in').addEventListener('click', () => adjustZoom(1.1));
@@ -699,10 +699,6 @@ document.addEventListener('DOMContentLoaded', function() {
         document.removeEventListener('mouseup', stopResizing);
     }
     
-    function testAddShape() {
-        console.log('Test button clicked - adding a desk');
-        createShape('desk', 100, 100);
-    }
     
     function handleDragStart(e) {
         const shapeItem = e.target.closest('.shape-item');
@@ -2181,6 +2177,14 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
+    // Clear storage button
+    document.getElementById('clear-storage-btn').addEventListener('click', function() {
+        if (confirm('Are you sure you want to clear all browser storage? This will remove any saved floor plans.')) {
+            localStorage.removeItem('floorPlan');
+            location.reload();
+        }
+    });
+
     // Load saved floor plan on page load (only once)
     if (!window.floorPlanLoaded) {
         setTimeout(() => {

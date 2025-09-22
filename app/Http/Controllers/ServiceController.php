@@ -135,6 +135,8 @@ class ServiceController extends Controller
                 'seat_id' => $request->seat_id,
                 'seat_label' => $request->seat_label,
                 'booking_date' => $request->booking_date,
+                'start_time' => $request->booking_time, // Map booking_time to start_time
+                'end_time' => $request->booking_time, // Use same time for end_time for now
                 'booking_time' => $request->booking_time,
                 'status' => 'pending',
                 'amount' => 0.00, // Set default amount, can be updated later

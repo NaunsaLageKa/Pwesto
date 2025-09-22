@@ -1,5 +1,4 @@
 -- Pwesto Database Setup
--- Complete SQL file for Pwesto workspace booking platform
 
 -- Create database
 CREATE DATABASE IF NOT EXISTS pwesto_db;
@@ -14,7 +13,7 @@ DROP TABLE IF EXISTS sessions;
 DROP TABLE IF EXISTS password_reset_tokens;
 DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS cache;
-DROP TABLE IF EXISTS jobs;
+DROP TABLE IF EXISTS jobs; 
 
 -- Create users table
 CREATE TABLE users (
@@ -192,3 +191,9 @@ INSERT INTO migrations (migration, batch) VALUES
 ('2025_09_02_094003_add_missing_fields_to_bookings_table', 1),
 ('2025_09_02_094027_add_missing_fields_to_bookings_table', 1),
 ('2025_09_02_094225_add_rejected_status_to_bookings_table', 1);
+
+UPDATE users SET password = '$2y$10$mbMvKKc2IJpsxlx86mK.4ehZ0zjJghTstcj5RjHm1SmfaXuztWVM.' 
+WHERE email = 'admin@pwesto.com';
+
+UPDATE users SET password = '$2y$10$mbMvKKc2IJpsxlx86mK.4ehZ0zjJghTstcj5RjHm1SmfaXuztWVM.' 
+WHERE email = 'carl@gmail.com';
