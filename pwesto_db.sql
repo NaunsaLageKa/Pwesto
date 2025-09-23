@@ -17,7 +17,7 @@ DROP TABLE IF EXISTS jobs;
 
 -- Create users table
 CREATE TABLE users (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
     email_verified_at TIMESTAMP NULL,
@@ -26,6 +26,8 @@ CREATE TABLE users (
     profile_image VARCHAR(255) NULL,
     role VARCHAR(255) DEFAULT 'user',
     status VARCHAR(255) DEFAULT 'approved',
+    company VARCHAR(255) NULL,
+    company_id VARCHAR(255) NULL,
     company_name VARCHAR(255) NULL,
     company_address TEXT NULL,
     company_phone VARCHAR(255) NULL,
@@ -44,7 +46,7 @@ CREATE TABLE password_reset_tokens (
 -- Create sessions table
 CREATE TABLE sessions (
     id VARCHAR(255) PRIMARY KEY,
-    user_id BIGINT UNSIGNED NULL,
+    user_id INT UNSIGNED NULL,
     ip_address VARCHAR(45) NULL,
     user_agent TEXT NULL,
     payload LONGTEXT NOT NULL,
@@ -61,7 +63,7 @@ CREATE TABLE cache (
 );
 -- Create jobs table
 CREATE TABLE jobs (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     queue VARCHAR(255) NOT NULL,
     payload LONGTEXT NOT NULL,
     attempts TINYINT UNSIGNED NOT NULL,
@@ -73,9 +75,9 @@ CREATE TABLE jobs (
 
 -- Create bookings table
 CREATE TABLE bookings (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    user_id BIGINT UNSIGNED NOT NULL,
-    hub_owner_id BIGINT UNSIGNED NOT NULL,
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id INT UNSIGNED NOT NULL,
+    hub_owner_id INT UNSIGNED NOT NULL,
     hub_name VARCHAR(255) NOT NULL,
     booking_date DATE NOT NULL,
     start_time TIME NOT NULL,
@@ -95,8 +97,8 @@ CREATE TABLE bookings (
 
 -- Create floor_plans table
 CREATE TABLE floor_plans (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    hub_owner_id BIGINT UNSIGNED NOT NULL,
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    hub_owner_id INT UNSIGNED NOT NULL,
     name VARCHAR(255) DEFAULT 'My Floor Plan',
     layout_data JSON NOT NULL,
     description TEXT NULL,
@@ -108,16 +110,16 @@ CREATE TABLE floor_plans (
 
 -- Create reviews table
 CREATE TABLE reviews (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    user_id BIGINT UNSIGNED NOT NULL,
-    hub_owner_id BIGINT UNSIGNED NOT NULL,
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id INT UNSIGNED NOT NULL,
+    hub_owner_id INT UNSIGNED NOT NULL,
     rating INT DEFAULT 0,
     comment TEXT NOT NULL,
     status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
     approved_at TIMESTAMP NULL,
     rejected_at TIMESTAMP NULL,
-    approved_by BIGINT UNSIGNED NULL,
-    rejected_by BIGINT UNSIGNED NULL,
+    approved_by INT UNSIGNED NULL,
+    rejected_by INT UNSIGNED NULL,
     created_at TIMESTAMP NULL,
     updated_at TIMESTAMP NULL,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
@@ -128,16 +130,16 @@ CREATE TABLE reviews (
 
 -- Create disputes table
 CREATE TABLE disputes (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    user_id BIGINT UNSIGNED NOT NULL,
-    hub_owner_id BIGINT UNSIGNED NOT NULL,
-    booking_id BIGINT UNSIGNED NOT NULL,
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id INT UNSIGNED NOT NULL,
+    hub_owner_id INT UNSIGNED NOT NULL,
+    booking_id INT UNSIGNED NOT NULL,
     title VARCHAR(255) NOT NULL,
     description TEXT NOT NULL,
     status ENUM('open', 'in_progress', 'resolved', 'closed') DEFAULT 'open',
     resolution TEXT NULL,
     resolved_at TIMESTAMP NULL,
-    resolved_by BIGINT UNSIGNED NULL,
+    resolved_by INT UNSIGNED NULL,
     created_at TIMESTAMP NULL,
     updated_at TIMESTAMP NULL,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,

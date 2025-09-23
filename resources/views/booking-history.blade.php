@@ -84,13 +84,13 @@
                                     @endif
                                 </div>
                             </div>
-                        </div>
-                        <div class="flex items-center text-white" style="gap: 4rem;">
-                            <div class="text-center" style="min-width: 80px;">
+                        </div>  
+                        <div class="flex items-start text-white" style="gap: 5rem;">
+                            <div class="text-center" style="min-width: 80px; {{ $booking->status === 'confirmed' ? 'transform: translateX(-50px);' : '' }}">
                                 <p class="text-sm text-gray-300">Date</p>
                                 <p class="font-semibold">{{ \Carbon\Carbon::parse($booking->booking_date)->format('M d') }}</p>
                             </div>
-                            <div class="text-center" style="min-width: 80px;">
+                            <div class="text-center" style="min-width: 80px; {{ $booking->status === 'confirmed' ? 'transform: translateX(-50px);' : '' }}">
                                 <p class="text-sm text-gray-300">Time</p>
                                 <p class="font-semibold">{{ \Carbon\Carbon::parse($booking->booking_time)->format('g:i A') }}</p>
                             </div>

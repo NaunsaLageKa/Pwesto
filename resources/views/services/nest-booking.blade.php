@@ -18,12 +18,16 @@
                     <a href="{{ route('dashboard') }}" class="nav-link">Home</a>
                     <a href="{{ route('booking-history') }}" class="nav-link">Booking History</a>
                     <a href="{{ route('services.index') }}" class="nav-link">Services</a>
+                    @if(Auth::user()->role === 'hub_owner')
+                    <a href="{{ route('hub-owner.dashboard') }}" class="nav-link">Dashboard</a>
+                    <a href="{{ route('hub-owner.floor-plan') }}" class="nav-link">Floor Plan</a>
+                    @endif
                     <a href="{{ route('about') }}" class="nav-link">About</a>
                     <a href="#" class="nav-link">Location</a>
                     <div class="flex items-center space-x-2">
                         <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5 5v-5z"></path>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 002 2v14a2 2 0 002 2z"></path>
                         </svg>
                         <img 
                             src="{{ Auth::user()->profile_image ? asset('storage/' . Auth::user()->profile_image) : asset('images/avatar.svg') }}" 
@@ -41,15 +45,15 @@
         <!-- Left Content - Manually Positioned -->
         <div class="text-content">
             <h1 class="produktiv-title">
-                Produktiv
+                Nest Workplace
             </h1>
             <h2 class="book-title">
                 Book a space
             </h2>
             <p class="price-text">
-                ₱150/hour
+                ₱200/hour
             </p>
-            <a href="{{ route('services.select-seat', ['service' => 'hot-desk']) }}" class="book-button">
+            <a href="{{ route('services.select-seat', ['service' => 'private-office']) }}" class="book-button">
                 BOOK
             </a>
         </div>
@@ -59,16 +63,16 @@
             <div class="workspace-image">
                 <div class="carousel-container">
                     <div class="carousel-slide active">
-                        <img src="{{ asset('images/produktiv123.jpg') }}" alt="Perfect Spot For napping" class="w-full h-full object-cover">
-                        <div class="description-text">Perfect Spot For napping.</div>
+                        <img src="{{ asset('images/Nest.png') }}" alt="Nest Workplace" class="w-full h-full object-cover">
+                        <div class="description-text">Professional workspace for focused work.</div>
                     </div>
                     <div class="carousel-slide">
-                        <img src="{{ asset('images/produktiv1234.jpg') }}" alt="Find the perfect workspace for your needs" class="w-full h-full object-cover">
-                        <div class="description-text">Find the perfect workspace for your needs.</div>
+                        <img src="{{ asset('images/Coworking.jpeg') }}" alt="Modern coworking space" class="w-full h-full object-cover">
+                        <div class="description-text">Collaborative environment for teams.</div>
                     </div>
                     <div class="carousel-slide">
-                        <img src="{{ asset('images/produktivenapping.jpg') }}" alt="A perfect Spot for Friends and individuals" class="w-full h-full object-cover">
-                        <div class="description-text">A perfect Spot for Friends and individuals</div>
+                        <img src="{{ asset('images/collab.jpg') }}" alt="Team collaboration space" class="w-full h-full object-cover">
+                        <div class="description-text">Perfect for meetings and group work.</div>
                     </div>
                 </div>
                 <!-- Carousel Navigation Dots -->
@@ -88,11 +92,11 @@
 }
 
 .nav-link.active {
-    @apply text-teal-600 border-b-2 border-teal-600 pb-1;
+    @apply text-teal-600 font-semibold;
 }
 
 .admin-button {
-    @apply bg-teal-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-teal-700 transition-colors;
+    @apply bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors font-medium;
 }
 
 /* Manual Positioning Controls - Match the Image Layout */
@@ -119,7 +123,6 @@
     color: white;
     margin-bottom: 1rem;
     line-height: 1;
-    
 }
 
 .price-text {
@@ -161,21 +164,21 @@
     display: inline-block;
     background-color: #4a5d23;  /* Darker green like in image */
     color: white;
-    font-weight: bold;
-    padding: 1.2rem 3rem;       /* Smaller button */
-    border-radius: 0.5rem;
-    font-size: 1.5rem;          /* Smaller button text */
+    padding: 2rem 4rem;         /* Larger padding */
+    border-radius: 1rem;        /* More rounded */
     text-decoration: none;
+    font-weight: bold;
+    font-size: 2rem;            /* Larger text */
     transition: all 0.3s ease;
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
+    box-shadow: 0 8px 25px rgba(74, 93, 35, 0.3);
+    border: none;
+    cursor: pointer;
 }
 
 .book-button:hover {
     background-color: #5a6d33;
-    transform: translateY(-2px);
-    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+    transform: translateY(-3px);
+    box-shadow: 0 12px 35px rgba(74, 93, 35, 0.4);
 }
 
 /* Image Positioning - Match the Image Layout */
@@ -265,7 +268,7 @@
     }
     
     .produktiv-title {
-        font-size: 6rem;    
+        font-size: 6rem;
     }
     
     .book-title {
@@ -341,7 +344,7 @@ function autoAdvance() {
 // Initialize carousel
 document.addEventListener('DOMContentLoaded', function() {
     showSlides(slideIndex);
-    setInterval(autoAdvance, 3000); // Auto-advance every 5 seconds
+    setInterval(autoAdvance, 3000); // Auto-advance every 3 seconds
 });
 </script>
 @endsection

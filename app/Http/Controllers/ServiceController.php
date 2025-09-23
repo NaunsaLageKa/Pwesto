@@ -19,6 +19,11 @@ class ServiceController extends Controller
         return view('services.booking');
     }
 
+    public function nestBooking()
+    {
+        return view('services.nest-booking');
+    }
+
     public function selectSeat(Request $request)
     {
         // Get the service type from the request (e.g., 'hot-desk', 'napping-room')
@@ -139,7 +144,7 @@ class ServiceController extends Controller
                 'end_time' => $request->booking_time, // Use same time for end_time for now
                 'booking_time' => $request->booking_time,
                 'status' => 'pending',
-                'amount' => 0.00, // Set default amount, can be updated later
+                'amount' => 150, // Set default amount, can be updated later
                 'notes' => 'Booking created via floor plan selection',
             ]);
 
