@@ -20,17 +20,7 @@
                     <a href="{{ route('services.index') }}" class="nav-link">Services</a>
                     <a href="{{ route('about') }}" class="nav-link">About</a>
                     <a href="#" class="nav-link">Location</a>
-                    <div class="flex items-center space-x-2">
-                        <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5 5v-5z"></path>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
-                        </svg>
-                        <img 
-                            src="{{ Auth::user()->profile_image ? asset('storage/' . Auth::user()->profile_image) : asset('images/avatar.svg') }}" 
-                            alt="Profile" 
-                            class="w-10 h-10 rounded-full object-cover border-2 border-gray-200 {{ !Auth::user()->profile_image ? 'bg-gray-100 p-2' : '' }}"
-                        >
-                    </div>
+                    <x-profile-dropdown />
                 </div>
             </div>
         </div>
@@ -157,16 +147,9 @@
                                 @endif
                             </div>
                         </div>
-                        @if($booking->status === 'completed')
-                            <button class="w-full px-4 py-2 bg-blue-500 text-white rounded-lg font-semibold hover:bg-blue-600 transition-colors"
-                                    onclick="rebook({{ $booking->id }})">
-                                Rebook
-                            </button>
-                        @else
-                            <button class="w-full px-4 py-2 bg-gray-400 text-white rounded-lg font-semibold cursor-not-allowed" disabled>
-                                {{ ucfirst($booking->status) }}
-                            </button>
-                        @endif
+                        <button class="w-full px-4 py-2 bg-gray-400 text-white rounded-lg font-semibold cursor-not-allowed" disabled>
+                            {{ ucfirst($booking->status) }}
+                        </button>
                     </div>
                 @empty
                     <div class="col-span-full text-center text-gray-400 py-8">
@@ -310,34 +293,6 @@ function confirmCancel() {
     }
 }
 
-// Rebook functionality
-function rebook(bookingId) {
-    if (confirm('Would you like to rebook this service?')) {
-        fetch(`/booking-history/${bookingId}/rebook`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': '{{ csrf_token() }}'
-            }
-        })
-        .then(response => {
-            if (response.redirected) {
-                window.location.href = response.url;
-            } else {
-                return response.json();
-            }
-        })
-        .then(data => {
-            if (data && data.success) {
-                window.location.href = '{{ route("services.booking") }}';
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Error processing rebook. Please try again.');
-        });
-    }
-}
 
 // Modal event listeners
 document.addEventListener('DOMContentLoaded', function() {

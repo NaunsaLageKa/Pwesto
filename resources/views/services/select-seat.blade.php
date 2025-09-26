@@ -20,17 +20,7 @@
                     <a href="{{ route('services.index') }}" class="nav-link">Services</a>
                     <a href="{{ route('about') }}" class="nav-link">About</a>
                     <a href="#" class="nav-link">Location</a>
-                    <div class="flex items-center space-x-2">
-                        <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5 5v-5z"></path>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
-                        </svg>
-                        <img 
-                            src="{{ Auth::user()->profile_image ? asset('storage/' . Auth::user()->profile_image) : asset('images/avatar.svg') }}" 
-                            alt="Profile" 
-                            class="w-10 h-10 rounded-full object-cover border-2 border-gray-200 {{ !Auth::user()->profile_image ? 'bg-gray-100 p-2' : '' }}"
-                        >
-                    </div>
+                    <x-profile-dropdown />
                 </div>
             </div>
         </div>
@@ -42,7 +32,7 @@
         <div class="flex items-center justify-between mb-8">
             <div>
                 <h1 class="text-3xl font-bold text-yellow-500 mb-2">
-                    {{ ucfirst(str_replace('-', ' ', $serviceType)) }}
+                    {{ $floorPlan && $floorPlan->hubOwner ? strtoupper($floorPlan->hubOwner->company) : 'WORKSPACE' }}
                 </h1>
                 <p class="text-xl text-white">Select Seat</p>
             </div>
@@ -51,12 +41,13 @@
             <div class="flex items-center space-x-4">
                 <div class="flex items-center space-x-2">
                     <label class="text-white font-medium">Date:</label>
-                    <input type="date" id="booking-date" class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <input type="date" id="booking-date" min="{{ date('Y-m-d') }}" value="{{ date('Y-m-d') }}" class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
                 <div class="flex items-center space-x-2">
                     <label class="text-white font-medium">Time:</label>
                     <select id="booking-time" class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                         <option value="">Select Time</option>
+                        <option value="08:00">8:00 AM</option>
                         <option value="09:00">9:00 AM</option>
                         <option value="10:00">10:00 AM</option>
                         <option value="11:00">11:00 AM</option>
@@ -66,6 +57,13 @@
                         <option value="15:00">3:00 PM</option>
                         <option value="16:00">4:00 PM</option>
                         <option value="17:00">5:00 PM</option>
+                        <option value="18:00">6:00 PM</option>
+                        <option value="19:00">7:00 PM</option>
+                        <option value="20:00">8:00 PM</option>
+                        <option value="21:00">9:00 PM</option>
+                        <option value="22:00">10:00 PM</option>
+                        <option value="23:00">11:00 PM</option>
+                        <option value="00:00">12:00 AM</option>
                     </select>
                 </div>
             </div>
@@ -109,7 +107,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
                     </svg>
                     <div>
-                        <p class="text-gray-800 font-medium">{{ ucfirst(str_replace('-', ' ', $serviceType)) }}</p>
+                        <p class="text-gray-800 font-medium">₱50</p>
                         <p id="selected-seat" class="text-gray-600">No seat selected</p>
                     </div>
                 </div>
@@ -233,13 +231,11 @@
 <script>
 // Load floor plan from hub owner's database
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM loaded, loading floor plan from database...');
     
     // Get the canvas container
     const canvasItems = document.getElementById('canvas-items');
     const loadingIndicator = document.getElementById('loading-indicator');
     
-    console.log('Canvas items container:', canvasItems);
     
     if (!canvasItems) {
         console.error('Canvas items container not found!');
@@ -259,36 +255,17 @@ document.addEventListener('DOMContentLoaded', function() {
     function loadFloorPlanFromDatabase() {
         const canvasItems = document.getElementById('canvas-items');
         
-        // Debug: Log what we received from the controller
-        console.log('=== FLOOR PLAN DEBUG ===');
-        console.log('Floor plan object from controller:', @json($floorPlan));
-        console.log('Floor plan exists:', {{ $floorPlan ? 'true' : 'false' }});
-        @if($floorPlan)
-            console.log('Floor plan ID:', {{ $floorPlan->id }});
-            console.log('Floor plan name:', '{{ $floorPlan->name }}');
-            console.log('Floor plan active:', {{ $floorPlan->is_active ? 'true' : 'false' }});
-            console.log('Floor plan items count:', {{ count($floorPlan->layout_data ?? []) }});
-            console.log('Floor plan data sample:', @json(array_slice($floorPlan->layout_data ?? [], 0, 3)));
-        @else
-            console.log('NO FLOOR PLAN FOUND - This means the database is empty or not connected properly');
-        @endif
-        console.log('=== END DEBUG ===');
         
         // Check if we have floor plan data from the controller
         @if($floorPlan && $floorPlan->layout_data)
             const floorPlanData = @json($floorPlan->layout_data);
-            console.log('Floor plan data from database:', floorPlanData);
-            console.log('Floor plan object:', @json($floorPlan));
             
             if (floorPlanData && floorPlanData.length > 0) {
-                console.log('Loading floor plan from database with', floorPlanData.length, 'items...');
                 createFloorPlanItems(floorPlanData);
             } else {
-                console.log('No valid floor plan data, creating default...');
                 createDefaultFloorPlan();
             }
         @else
-            console.log('No floor plan from controller, creating default...');
             createDefaultFloorPlan();
         @endif
     }
@@ -300,19 +277,17 @@ function createFloorPlanItems(items) {
     // Clear existing items
     canvasItems.innerHTML = '';
     
-    console.log('Creating', items.length, 'items from database...');
     
     // Get booking statuses from the controller
     const bookingStatuses = @json($bookingStatuses ?? []);
-    console.log('Booking statuses:', bookingStatuses);
     
     items.forEach((item, index) => {
         // Show ALL items from the floor plan
-        console.log('Processing item:', item);
         const newItem = document.createElement('div');
         newItem.className = 'canvas-item available';
         newItem.dataset.id = item.id;
         newItem.dataset.seatNumber = item.label || `Seat ${item.id}`;
+        newItem.dataset.shape = item.shape;
         
         // Set styles based on shape type
         const shapeConfig = getShapeConfig(item.shape);
@@ -322,8 +297,6 @@ function createFloorPlanItems(items) {
         newItem.style.left = item.x + 'px';
         newItem.style.top = item.y + 'px';
         
-        // Debug positioning
-        console.log(`Item ${item.id} (${item.shape}): Position(${item.x}, ${item.y})`);
         
         // ALWAYS use the dimensions from the database to preserve exact orientation
         if (item.width && item.height) {
@@ -340,7 +313,6 @@ function createFloorPlanItems(items) {
             // Initially set chairs as available (will be updated when date/time is selected)
             newItem.style.backgroundColor = '#10B981'; // Green for available
             newItem.classList.add('available');
-            console.log(`Chair ${item.id} initially set as available`);
         } else {
             // For non-chair items (desks, tables, etc.), always use their original colors
             if (item.backgroundColor) {
@@ -348,7 +320,6 @@ function createFloorPlanItems(items) {
             } else {
                 newItem.style.backgroundColor = shapeConfig.bg;
             }
-            console.log(`Non-chair item ${item.id} (${item.shape}) using color: ${newItem.style.backgroundColor}`);
         }
         
         newItem.style.border = '2px solid #333';
@@ -387,71 +358,72 @@ function createFloorPlanItems(items) {
                     });
                     newItem.style.cursor = 'pointer';
                     newItem.style.boxShadow = '0 2px 4px rgba(0,0,0,0.2)';
+                    newItem.title = 'Click to book this chair';
                     break;
                 case 'confirmed':
-                    newItem.style.backgroundColor = '#EF4444'; // Red
+                    newItem.style.backgroundColor = '#DC2626'; // Dark red - very distinct from orange
                     newItem.classList.add('booked', 'confirmed');
                     newItem.style.cursor = 'not-allowed';
                     newItem.style.opacity = '0.7';
                     newItem.title = 'This chair is confirmed';
                     break;
                 case 'pending':
-                    newItem.style.backgroundColor = '#F97316'; // Orange
+                    newItem.style.backgroundColor = '#FFA500'; // Bright orange - very distinct from red
                     newItem.classList.add('booked', 'pending');
                     newItem.style.cursor = 'not-allowed';
                     newItem.style.opacity = '0.7';
                     newItem.title = 'This chair is pending';
                     break;
                 default:
-                    newItem.style.backgroundColor = '#10B981'; // Default to green
+                    newItem.style.backgroundColor = '#9CA3AF'; // Default chair color
                     newItem.classList.add('available');
                     newItem.addEventListener('click', function() {
                         selectSeat(newItem);
                     });
                     newItem.style.cursor = 'pointer';
                     newItem.style.boxShadow = '0 2px 4px rgba(0,0,0,0.2)';
+                    newItem.title = 'Click to book this chair';
+                    break;
+                }
+            } else {
+                // For non-chair items, use original colors and make them non-clickable
+                newItem.style.cursor = 'default';
+                newItem.style.opacity = '1';
+                newItem.title = '';
+                
+                // Use original colors based on shape
+                switch (item.shape) {
+                    case 'desk':
+                        newItem.style.backgroundColor = '#8B4513'; // Brown
+                        break;
+                    case 'table':
+                        newItem.style.backgroundColor = '#A0522D'; // Brown
+                        break;
+                    case 'sofa':
+                        newItem.style.backgroundColor = '#FBBF24'; // Yellow
+                        break;
+                    case 'wall':
+                        newItem.style.backgroundColor = '#000000'; // Black
+                        break;
+                    case 'window':
+                        newItem.style.backgroundColor = '#BFDBFE'; // Light blue
+                        break;
+                    case 'toilet':
+                        newItem.style.backgroundColor = '#FFFFFF'; // White
+                        break;
+                    default:
+                        newItem.style.backgroundColor = '#6B7280'; // Gray
+                        break;
+                }
             }
-        } else {
-            newItem.style.cursor = 'default';
-            // Make non-clickable items slightly transparent to indicate they're not interactive
-            newItem.style.opacity = '0.8';
-        }
         
         // Add to canvas
         canvasItems.appendChild(newItem);
-        console.log(`Added ${item.shape} at position ${item.x}, ${item.y}`);
         
-        // Special debugging for walls to see their dimensions
-        if (item.shape === 'wall') {
-            console.log(`WALL DEBUG - Original dimensions: ${item.width}x${item.height}, Applied dimensions: ${newItem.style.width}x${newItem.style.height}`);
-            console.log(`WALL DEBUG - Item data:`, item);
-        }
         
-        // Debug all items to see their exact data from database
-        console.log(`ITEM DEBUG - ID: ${item.id}, Shape: ${item.shape}, Dimensions: ${item.width}x${item.height}, Color: ${item.backgroundColor || 'default'}`);
-        console.log(`ITEM DEBUG - Full item data:`, item);
         
-        console.log('Item element:', newItem);
-        console.log('Item styles:', {
-            position: newItem.style.position,
-            left: newItem.style.left,
-            top: newItem.style.top,
-            width: newItem.style.width,
-            height: newItem.style.height,
-            backgroundColor: newItem.style.backgroundColor,
-            display: newItem.style.display,
-            zIndex: newItem.style.zIndex
-        });
-        
-        // Debug: Check if item is within canvas bounds
-        const canvasRect = document.getElementById('floor-plan-canvas').getBoundingClientRect();
-        const itemRect = newItem.getBoundingClientRect();
-        console.log(`Canvas bounds: ${canvasRect.width}x${canvasRect.height}`);
-        console.log(`Item bounds: ${itemRect.width}x${itemRect.height} at (${itemRect.left}, ${itemRect.top})`);
-        console.log(`Item is within canvas: ${itemRect.left >= canvasRect.left && itemRect.top >= canvasRect.top && itemRect.right <= canvasRect.right && itemRect.bottom <= canvasRect.bottom}`);
     });
     
-    console.log('Database floor plan loaded with', items.length, 'items');
     
     // Initialize seat selection functionality
     initializeSeatSelection();
@@ -476,7 +448,6 @@ function createDefaultFloorPlan() {
         { shape: 'chair', x: 370, y: 70, id: 8, width: 40, height: 40, label: 'Chair 4' }
     ];
     
-    console.log('Creating default floor plan with', defaultItems.length, 'items...');
     createFloorPlanItems(defaultItems);
 }
 
@@ -490,11 +461,7 @@ function getShapeConfig(shapeType) {
         wall: { width: 80, height: 20, bg: '#000000', label: 'Wall' },
         door: { width: 60, height: 40, bg: '#D2691E', label: 'Door' },
         window: { width: 60, height: 30, bg: '#BFDBFE', label: 'Window' },
-        sink: { width: 60, height: 40, bg: '#9CA3AF', label: 'Sink' },
-        refrigerator: { width: 60, height: 80, bg: '#FFFFFF', label: 'Fridge' },
-        toilet: { width: 40, height: 50, bg: '#FFFFFF', label: 'Toilet' },
-        plant: { width: 40, height: 40, bg: '#10B981', label: 'Plant' },
-        lamp: { width: 30, height: 50, bg: '#FCD34D', label: 'Lamp' }
+        toilet: { width: 40, height: 50, bg: '#FFFFFF', label: 'Toilet' }
     };
     
     return shapes[shapeType] || { width: 60, height: 40, bg: '#6B7280', label: 'Item' };
@@ -546,7 +513,6 @@ function centerItemsInCanvas() {
         item.style.top = (currentTop + offsetY) + 'px';
     });
     
-    console.log('Items centered in canvas');
 }
 
 // Seat selection functionality
@@ -557,7 +523,6 @@ function initializeSeatSelection() {
     
     // Select a seat
     function selectSeat(item) {
-        console.log('Selecting seat:', item.dataset.seatNumber);
         
         // Remove previous selection
         document.querySelectorAll('.canvas-item').forEach(i => i.classList.remove('selected'));
@@ -606,7 +571,6 @@ function initializeSeatSelection() {
                 _token: '{{ csrf_token() }}'
             };
             
-            console.log('Sending booking data:', bookingData);
             
             // Send booking request to backend
             fetch('{{ route("services.create-booking") }}', {
@@ -633,11 +597,13 @@ function initializeSeatSelection() {
         });
     }
     
-    // Set default date to today
-    const today = new Date().toISOString().split('T')[0];
+    // Set default date to today (using server date to avoid timezone issues)
+    const today = '{{ date("Y-m-d") }}';
     const dateInput = document.getElementById('booking-date');
     if (dateInput) {
         dateInput.value = today;
+        console.log('Date set to:', today);
+        console.log('Current date input value:', dateInput.value);
     }
 
     // Update chair colors on page load
@@ -683,7 +649,6 @@ function initializeSeatSelection() {
             return; // Don't update if both date and time aren't selected
         }
         
-        console.log('Updating chair colors for:', selectedDate, selectedTime);
         
         // Fetch booking statuses for the selected date and time
         fetch('{{ route("services.check-booking-status") }}', {
@@ -694,13 +659,13 @@ function initializeSeatSelection() {
             },
             body: JSON.stringify({
                 date: selectedDate,
-                time: selectedTime
+                time: selectedTime,
+                service_type: '{{ $serviceType }}'
             })
         })
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                console.log('Received booking statuses:', data.bookingStatuses);
                 applyBookingStatuses(data.bookingStatuses);
             }
         })
@@ -711,16 +676,16 @@ function initializeSeatSelection() {
 
     // Function to apply booking statuses to chairs only
     function applyBookingStatuses(bookingStatuses) {
-        // Only select chairs, not all canvas items
-        const chairs = document.querySelectorAll('.canvas-item[data-id]');
+        // Only apply booking statuses to chairs, not other items
+        const allItems = document.querySelectorAll('.canvas-item[data-id]');
         
-        chairs.forEach(item => {
+        allItems.forEach(item => {
             const itemId = item.dataset.id;
-            const status = bookingStatuses[itemId];
+            const itemShape = item.dataset.shape;
             
-            // Only update if this item has a booking status (i.e., it's a chair)
-            if (status !== undefined) {
-                console.log(`Updating chair ${itemId} to status: ${status}`);
+            // Only apply booking statuses to chairs
+            if (itemShape === 'chair') {
+                const status = bookingStatuses[itemId];
                 
                 // Remove existing status classes
                 item.classList.remove('available', 'booked', 'confirmed', 'pending');
@@ -732,21 +697,59 @@ function initializeSeatSelection() {
                         item.classList.add('available');
                         item.style.cursor = 'pointer';
                         item.style.opacity = '1';
-                        item.title = '';
+                        item.title = 'Click to book this chair';
                         break;
                     case 'confirmed':
-                        item.style.backgroundColor = '#EF4444'; // Red
+                        item.style.backgroundColor = '#DC2626'; // Dark red - very distinct from orange
                         item.classList.add('booked', 'confirmed');
                         item.style.cursor = 'not-allowed';
                         item.style.opacity = '0.7';
                         item.title = 'This chair is confirmed';
                         break;
                     case 'pending':
-                        item.style.backgroundColor = '#F97316'; // Orange
+                        item.style.backgroundColor = '#FFA500'; // Bright orange - very distinct from red
                         item.classList.add('booked', 'pending');
                         item.style.cursor = 'not-allowed';
                         item.style.opacity = '0.7';
                         item.title = 'This chair is pending';
+                        break;
+                    default:
+                        // Default chair color if no booking status
+                        item.style.backgroundColor = '#9CA3AF'; // Default chair color
+                        item.classList.add('available');
+                        item.style.cursor = 'pointer';
+                        item.style.opacity = '1';
+                        item.title = 'Click to book this chair';
+                        break;
+                }
+            } else {
+                // For non-chair items, restore original colors and make them non-clickable
+                item.style.cursor = 'default';
+                item.style.opacity = '1';
+                item.title = '';
+                
+                // Restore original colors based on shape
+                switch (itemShape) {
+                    case 'desk':
+                        item.style.backgroundColor = '#8B4513'; // Brown
+                        break;
+                    case 'table':
+                        item.style.backgroundColor = '#A0522D'; // Brown
+                        break;
+                    case 'sofa':
+                        item.style.backgroundColor = '#FBBF24'; // Yellow
+                        break;
+                    case 'wall':
+                        item.style.backgroundColor = '#000000'; // Black
+                        break;
+                    case 'window':
+                        item.style.backgroundColor = '#BFDBFE'; // Light blue
+                        break;
+                    case 'toilet':
+                        item.style.backgroundColor = '#FFFFFF'; // White
+                        break;
+                    default:
+                        item.style.backgroundColor = '#6B7280'; // Gray
                         break;
                 }
             }

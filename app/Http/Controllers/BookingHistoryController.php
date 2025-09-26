@@ -3,12 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Booking;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class BookingHistoryController extends Controller
 {
-    public function index(Request $request)
+    public function index()
     {
         $user = Auth::user();
         
@@ -29,7 +28,7 @@ class BookingHistoryController extends Controller
         return view('booking-history', compact('upcomingBookings', 'pastBookings'));
     }
 
-    public function cancel(Request $request, $id)
+    public function cancel($id)
     {
         $booking = Booking::where('id', $id)
             ->where('user_id', Auth::id())
@@ -43,17 +42,4 @@ class BookingHistoryController extends Controller
         return response()->json(['success' => false, 'message' => 'Cannot cancel this booking']);
     }
 
-    public function rebook(Request $request, $id)
-    {
-        $booking = Booking::where('id', $id)
-            ->where('user_id', Auth::id())
-            ->firstOrFail();
-            
-        // Redirect to services with pre-filled data
-        return redirect()->route('services.booking')
-            ->with('rebook_data', [
-                'service_type' => $booking->service_type,
-                'seat_label' => $booking->seat_label
-            ]);
-    }
 }

@@ -20,13 +20,7 @@
                     <a href="{{ route('services.index') }}" class="nav-link active">Services</a>
                     <a href="{{ route('about') }}" class="nav-link">About</a>
                     <a href="#" class="nav-link">Location</a>
-                    <a href="{{ route('profile.edit') }}" class="flex items-center">
-                        <img 
-                            src="{{ Auth::user()->profile_image ? asset('storage/' . Auth::user()->profile_image) : asset('images/avatar.svg') }}" 
-                            alt="Profile" 
-                            class="w-10 h-10 rounded-full object-cover border-2 border-gray-200 {{ !Auth::user()->profile_image ? 'bg-gray-100 p-2' : '' }}"
-                        >
-                    </a>
+                    <x-profile-dropdown />
                 </div>
             </div>
         </div>
@@ -57,21 +51,17 @@
                     <div class="service-overlay"></div>
                     <div class="absolute bottom-8 left-8">
                         <h3 class="service-title">
-                            <span class="text-yellow-400">P</span>REMIUM CATERING
+                            <span class="text-yellow-400">S</span>ERVES FOOD
                         </h3>
                         <p class="service-subtitle">Gourmet meals & refreshments</p>
                     </div>
                 </div>
                 <div class="service-content">
-                    <h4>Executive Catering Services</h4>
+                    <h4>Food Services</h4>
                     <p>
-                        Indulge in our premium catering services featuring gourmet meals, artisanal coffee, and healthy refreshments. Our professional culinary team ensures every meal is crafted with excellence to keep you energized and focused throughout your workday.
-                    </p>
+                    We serve delicious meals, fresh coffee, and healthy snacks to keep you full and energized all day.                    </p>
                     <div class="service-footer">
-                        <span class="service-status">Premium Available</span>
-                        <button class="service-button">
-                            Explore Services
-                        </button>
+
                     </div>
                 </div>
             </div>
@@ -87,20 +77,16 @@
                     <div class="service-overlay"></div>
                     <div class="absolute bottom-8 left-8">
                         <h3 class="service-title">
-                            <span class="text-yellow-400">E</span>QUIPMENT RENTAL
+                            <span class="text-yellow-400">F</span>AST & RELIABLE WIFI
                         </h3>
-                        <p class="service-subtitle">Professional tools & technology</p>
+                        <p class="service-subtitle">High-Speed Internet Access</p>
                     </div>
                 </div>
                 <div class="service-content">
-                    <h4>Professional Equipment Solutions</h4>
+                    <h4>Stay Connected Anytime, Anywhere</h4>
                     <p>
-                        Access cutting-edge technology and professional equipment when you need it most. From high-performance laptops and presentation systems to specialized business tools, we provide everything you need to succeed in today's competitive environment.
-                    </p>
+                    Experience lightning-fast internet with 24/7 WiFi access. Whether you’re working, streaming, or video conferencing, our high-speed connection keeps you connected without interruptions, so you can stay productive anytime, anywhere.                    </p>
                     <div class="service-footer">
-                        <span class="service-status">Premium Available</span>
-                        <button class="service-button">
-                            Explore Services
                         </button>
                     </div>
                 </div>
@@ -117,21 +103,16 @@
                     <div class="service-overlay"></div>
                     <div class="absolute bottom-8 left-8">
                         <h3 class="service-title">
-                            <span class="text-yellow-400">E</span>XECUTIVE WORKSPACES
+                            <span class="text-yellow-400">E</span>PRIVATE WORKSPACES
                         </h3>
-                        <p class="service-subtitle">Premium office environments</p>
+                        <p class="service-subtitle">office environments</p>
                     </div>
                 </div>
                 <div class="service-content">
                     <h4>Premium Workspace Solutions</h4>
                     <p>
-                        Experience the ultimate in workspace luxury with our executive offices, private suites, and collaborative environments. Each space is meticulously designed with premium amenities, high-speed connectivity, and professional services to support your success.
-                    </p>
+                    Enjoy the comfort of your own dedicated space designed for focus and productivity. Our private work areas offer premium amenities, high-speed WiFi, and a professional environment tailored to help you succeed without distractions                    </p>
                     <div class="service-footer">
-                        <span class="service-status">Premium Available</span>
-                        <button class="service-button">
-                            Explore Services
-                        </button>
                     </div>
                 </div>
             </div>
@@ -158,10 +139,6 @@
                         Host impactful meetings in our state-of-the-art conference facilities equipped with advanced presentation technology, video conferencing capabilities, and professional support services. Make every meeting count with our premium meeting solutions.
                     </p>
                     <div class="service-footer">
-                        <span class="service-status">Premium Available</span>
-                        <button class="service-button">
-                            Explore Services
-                        </button>
                     </div>
                 </div>
             </div>
@@ -188,10 +165,6 @@
                         Deliver professional results with our comprehensive printing and copying services. From high-resolution color printing to large-format displays, our advanced equipment and expert staff ensure your materials make the right impression every time.
                     </p>
                     <div class="service-footer">
-                        <span class="service-status">Premium Available</span>
-                        <button class="service-button">
-                            Explore Services
-                        </button>
                     </div>
                 </div>
             </div>
@@ -218,28 +191,8 @@
                         Experience unparalleled support with our dedicated concierge service available 24/7. Our professional team is committed to ensuring your workspace experience is seamless, efficient, and exceeds your expectations at every interaction.
                     </p>
                     <div class="service-footer">
-                        <span class="service-status">Premium Available</span>
-                        <button class="service-button">
-                            Explore Services
-                        </button>
                     </div>
                 </div>
             </div>
         </div>
-
-        <!-- Call to Action -->
-        <div class="text-center mt-20">
-            <div class="cta-section">
-                <h2 class="cta-title">Ready to Experience Excellence?</h2>
-                <p class="cta-subtitle">
-                    Join the elite professionals who choose PWESTO for their workspace needs. 
-                    Discover how our premium services can transform your productivity and elevate your success.
-                </p>
-                <a href="{{ route('dashboard') }}" class="cta-button">
-                    Reserve Your Premium Workspace
-                </a>
-            </div>
-        </div>
-    </div>
-</div>
 @endsection 

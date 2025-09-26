@@ -95,6 +95,8 @@ CREATE TABLE bookings (
     FOREIGN KEY (hub_owner_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
+
+
 -- Create floor_plans table
 CREATE TABLE floor_plans (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -137,7 +139,7 @@ CREATE TABLE disputes (
     title VARCHAR(255) NOT NULL,
     description TEXT NOT NULL,
     status ENUM('open', 'in_progress', 'resolved', 'closed') DEFAULT 'open',
-    resolution TEXT NULL,
+    resolution TEXT NULL,floor_plans
     resolved_at TIMESTAMP NULL,
     resolved_by INT UNSIGNED NULL,
     created_at TIMESTAMP NULL,
@@ -199,3 +201,4 @@ WHERE email = 'admin@pwesto.com';
 
 UPDATE users SET password = '$2y$10$mbMvKKc2IJpsxlx86mK.4ehZ0zjJghTstcj5RjHm1SmfaXuztWVM.' 
 WHERE email = 'carl@gmail.com';
+

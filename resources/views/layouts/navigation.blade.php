@@ -7,6 +7,7 @@
             </div>
 
             <!-- Settings Dropdown -->
+            @if(Auth::check() && Auth::user()->role !== 'user')
             <div class="hidden sm:flex sm:items-center sm:ms-6">
                 <x-dropdown align="right" width="48">
                     <x-slot name="trigger">
@@ -43,6 +44,7 @@
                     </x-slot>
                 </x-dropdown>
             </div>
+            @endif
 
             <!-- Hamburger -->
             <div class="-me-2 flex items-center sm:hidden">
@@ -63,6 +65,7 @@
         </div>
 
         <!-- Responsive Settings Options -->
+        @if(Auth::check() && Auth::user()->role !== 'user')
         <div class="pt-4 pb-1 border-t border-gray-200">
             <div class="px-4">
                 <div class="font-medium text-base text-gray-800">
@@ -94,5 +97,6 @@
                 </form>
             </div>
         </div>
+        @endif
     </div>
 </nav>

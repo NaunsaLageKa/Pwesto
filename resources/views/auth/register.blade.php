@@ -71,8 +71,13 @@
                             </div>
                             <div style="margin-bottom:1.25rem;text-align:left;">
                                 <label for="company_hub" style="font-weight:500;">Company</label>
-                                <input id="company_hub" type="text" name="company" placeholder="Company" value="{{ old('company') }}"
+                                <select id="company_hub" name="company" required
                                     style="width:100%;padding:1rem 1.2rem;border:1px solid #e0e0e0;border-radius:10px;margin-top:0.25rem;background:#f3f6f9;font-size:1.1rem;">
+                                    <option value="">Select Company</option>
+                                    <option value="Produktiv" {{ old('company') == 'Produktiv' ? 'selected' : '' }}>Produktiv</option>
+                                    <option value="Nest Workspaces" {{ old('company') == 'Nest Workspaces' ? 'selected' : '' }}>Nest Workspaces</option>
+                                    <option value="Mesh Media" {{ old('company') == 'Mesh Media' ? 'selected' : '' }}>Mesh Media</option>
+                                </select>
                             </div>
                             <div style="margin-bottom:2rem;text-align:left;display:flex;align-items:center;gap:1rem;">
                                 <label for="company_id_hub" style="display:flex;align-items:center;justify-content:center;width:60px;height:60px;background:#f3f6f9;border-radius:10px;cursor:pointer;border:1px solid #e0e0e0;">

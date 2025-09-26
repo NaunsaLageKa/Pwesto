@@ -4,7 +4,7 @@
 <div class="flex min-h-screen bg-gray-50">
     <!-- Sidebar -->
     <aside class="w-60 bg-white border-r flex flex-col py-8 px-4 min-h-screen">
-        <div class="text-2xl font-bold mb-10 tracking-tight">CoWork Hub</div>
+        <div class="text-2xl font-bold mb-10 tracking-tight">{{ strtoupper(auth()->user()->company ?? 'HUB') }} HUB</div>
         <nav class="flex-1">
             <ul class="space-y-2">
                 <li><a href="{{ route('hub-owner.dashboard') }}" class="flex items-center px-3 py-2 rounded-lg hover:bg-gray-100"><svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M13 5v6h6m-6 0H7m6 0v6m0 0H7m6 0h6"/></svg>Dashboard</a></li>
@@ -81,7 +81,7 @@
                             </div>
                             <div>
                                 <span class="text-sm font-medium text-gray-500">Time:</span>
-                                <span class="ml-2 text-sm text-gray-900">{{ \Carbon\Carbon::parse($booking->start_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($booking->end_time)->format('H:i') }}</span>
+                                <span class="ml-2 text-sm text-gray-900">{{ \Carbon\Carbon::parse($booking->booking_time)->format('H:i') }}</span>
                             </div>
                             <div>
                                 <span class="text-sm font-medium text-gray-500">Amount:</span>

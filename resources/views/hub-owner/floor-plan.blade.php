@@ -91,20 +91,6 @@
                 <div>
                     <h3 class="font-semibold text-gray-700 mb-2">Appliances</h3>
                     <div class="grid grid-cols-2 gap-2">
-                        <div class="shape-item" data-shape="sink" draggable="true">
-                            <div class="w-6 h-4 bg-gray-300 border border-gray-300 rounded cursor-grab relative">
-                                <div class="absolute inset-1 bg-gray-200 border border-gray-400 rounded-full"></div>
-                                <div class="absolute inset-0 flex items-center justify-center text-xs text-gray-700 font-bold">S</div>
-                            </div>
-                            <span class="text-xs text-gray-600">Sink</span>
-                        </div>
-                        <div class="shape-item" data-shape="refrigerator" draggable="true">
-                            <div class="w-6 h-8 bg-white border border-gray-300 cursor-grab relative">
-                                <div class="absolute right-1 top-1/2 transform -translate-y-1/2 w-1 h-3 bg-gray-400"></div>
-                                <div class="absolute inset-0 flex items-center justify-center text-xs text-gray-700 font-bold">F</div>
-                            </div>
-                            <span class="text-xs text-gray-600">Fridge</span>
-                        </div>
                         <div class="shape-item" data-shape="toilet" draggable="true">
                             <div class="w-4 h-5 bg-white border border-gray-300 rounded cursor-grab relative">
                                 <div class="absolute inset-1 bg-white border border-gray-400 rounded-t-full"></div>
@@ -115,27 +101,7 @@
                     </div>
                 </div>
                 
-                <!-- Decorations -->
-                <div>
-                    <h3 class="font-semibold text-gray-700 mb-2">Decorations</h3>
-                    <div class="grid grid-cols-2 gap-2">
-                        <div class="shape-item" data-shape="plant" draggable="true">
-                            <div class="w-4 h-4 bg-green-500 border border-gray-300 rounded-full cursor-grab relative">
-                                <div class="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-2 h-1 bg-brown-600 rounded-b"></div>
-                                <div class="absolute inset-0 flex items-center justify-center text-xs text-white font-bold">P</div>
                             </div>
-                            <span class="text-xs text-gray-600">Plant</span>
-                        </div>
-                        <div class="shape-item" data-shape="lamp" draggable="true">
-                            <div class="w-3 h-5 bg-yellow-300 border border-gray-300 cursor-grab relative">
-                                <div class="absolute -top-1 left-1/2 transform -translate-x-1/2 w-3 h-1 bg-yellow-200 border border-yellow-400 rounded-t"></div>
-                                <div class="absolute inset-0 flex items-center justify-center text-xs text-yellow-800 font-bold">L</div>
-                            </div>
-                            <span class="text-xs text-gray-600">Lamp</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
     
@@ -459,7 +425,6 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentDragShape = null;
     let clipboard = null; // Store copied item data
     let isProcessingDrop = false; // Flag to prevent duplicate drops
-    let resizeThrottle = null; // For smooth resizing
     
     // Shape definitions
     const shapes = {
@@ -470,30 +435,16 @@ document.addEventListener('DOMContentLoaded', function() {
         wall: { width: 80, height: 20, bg: '#000000', type: 'drawing-wall', label: 'Wall' },
         door: { width: 60, height: 40, bg: '#D2691E', type: 'door', label: 'Door' },
         window: { width: 60, height: 30, bg: '#BFDBFE', type: 'window', label: 'Window' },
-        sink: { width: 60, height: 40, bg: '#9CA3AF', type: 'sink', label: 'Sink' },
-        refrigerator: { width: 60, height: 80, bg: '#FFFFFF', type: 'refrigerator', label: 'Fridge' },
-        toilet: { width: 40, height: 50, bg: '#FFFFFF', type: 'toilet', label: 'Toilet' },
-        plant: { width: 40, height: 40, bg: '#10B981', type: 'plant', label: 'Plant' },
-        lamp: { width: 30, height: 50, bg: '#FCD34D', type: 'lamp', label: 'Lamp' }
+        toilet: { width: 40, height: 50, bg: '#FFFFFF', type: 'toilet', label: 'Toilet' }
     };
     
     // Make shape items draggable
     document.querySelectorAll('.shape-item').forEach(item => {
-        // Remove existing listeners to prevent duplicates
-        item.removeEventListener('dragstart', handleDragStart);
-        item.removeEventListener('dragend', handleDragEnd);
-        
         item.addEventListener('dragstart', handleDragStart);
         item.addEventListener('dragend', handleDragEnd);
     });
     
     // Canvas drop zone
-    canvas.removeEventListener('dragover', handleDragOver);
-    canvas.removeEventListener('drop', handleDrop);
-    canvas.removeEventListener('dragenter', handleDragEnter);
-    canvas.removeEventListener('dragleave', handleDragLeave);
-    canvas.removeEventListener('click', handleCanvasClick);
-    
     canvas.addEventListener('dragover', handleDragOver);
     canvas.addEventListener('drop', handleDrop);
     canvas.addEventListener('dragenter', handleDragEnter);
@@ -502,11 +453,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Also add drop listeners to the canvas container
     const canvasContainer = canvas.parentElement;
-    canvasContainer.removeEventListener('dragover', handleDragOver);
-    canvasContainer.removeEventListener('drop', handleDrop);
-    canvasContainer.removeEventListener('dragenter', handleDragEnter);
-    canvasContainer.removeEventListener('dragleave', handleDragLeave);
-    
     canvasContainer.addEventListener('dragover', handleDragOver);
     canvasContainer.addEventListener('drop', handleDrop);
     canvasContainer.addEventListener('dragenter', handleDragEnter);
@@ -599,12 +545,8 @@ document.addEventListener('DOMContentLoaded', function() {
     function handleResize(e) {
         if (!isResizing || !selectedItem) return;
         
-        // Throttle resize updates for smoother performance
-        if (resizeThrottle) {
-            clearTimeout(resizeThrottle);
-        }
-        
-        resizeThrottle = setTimeout(() => {
+        // Smooth resize updates
+        requestAnimationFrame(() => {
             const canvasRect = canvas.getBoundingClientRect();
             const mouseX = e.clientX - canvasRect.left;
             const mouseY = e.clientY - canvasRect.top;
@@ -673,7 +615,7 @@ document.addEventListener('DOMContentLoaded', function() {
         requestAnimationFrame(() => {
             selectedItem.style.transition = '';
         });
-        }, 16); // ~60fps for smooth resizing
+        });
     }
     
     function stopResizing() {
@@ -686,11 +628,6 @@ document.addEventListener('DOMContentLoaded', function() {
         // Reset cursor
         document.body.style.cursor = '';
         
-        // Clear throttle
-        if (resizeThrottle) {
-            clearTimeout(resizeThrottle);
-            resizeThrottle = null;
-        }
         
         isResizing = false;
         resizeHandle = null;
@@ -828,8 +765,6 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        console.log('Creating shape:', shapeType, 'with properties:', shape, 'at time:', new Date().getTime());
-        console.log('Position coordinates:', x, y);
         
         const item = document.createElement('div');
         item.className = 'canvas-item';
@@ -847,232 +782,9 @@ document.addEventListener('DOMContentLoaded', function() {
         item.style.border = '2px solid #333';
         item.style.zIndex = '20';
         
-        console.log('Item position set to:', item.style.left, item.style.top);
         
         // Render shape based on type
-        switch(shape.type) {
-            case 'circle':
-                item.style.borderRadius = '50%';
-                break;
-            case 'chair':
-                item.style.borderRadius = '50%';
-                // Add chair back
-                const chairBack = document.createElement('div');
-                chairBack.style.position = 'absolute';
-                chairBack.style.top = '-10px';
-                chairBack.style.left = '50%';
-                chairBack.style.transform = 'translateX(-50%)';
-                chairBack.style.width = '20px';
-                chairBack.style.height = '20px';
-                chairBack.style.backgroundColor = shape.bg;
-                chairBack.style.border = '2px solid #333';
-                chairBack.style.borderRadius = '50%';
-                item.appendChild(chairBack);
-                break;
-            case 'table':
-                // Add table legs
-                for (let i = 0; i < 4; i++) {
-                    const leg = document.createElement('div');
-                    leg.style.position = 'absolute';
-                    leg.style.width = '6px';
-                    leg.style.height = '15px';
-                    leg.style.backgroundColor = '#654321';
-                    leg.style.border = '1px solid #333';
-                    leg.style.bottom = '-15px';
-                    
-                    if (i === 0) leg.style.left = '5px';
-                    else if (i === 1) leg.style.right = '5px';
-                    else if (i === 2) leg.style.left = '5px';
-                    else leg.style.right = '5px';
-                    
-                    if (i < 2) leg.style.top = '0px';
-                    else leg.style.bottom = '-15px';
-                    
-                    item.appendChild(leg);
-                }
-                break;
-            case 'sofa':
-                // Add sofa back and arms
-                const sofaBack = document.createElement('div');
-                sofaBack.style.position = 'absolute';
-                sofaBack.style.top = '-15px';
-                sofaBack.style.left = '0';
-                sofaBack.style.right = '0';
-                sofaBack.style.height = '15px';
-                sofaBack.style.backgroundColor = shape.bg;
-                sofaBack.style.border = '2px solid #333';
-                sofaBack.style.borderRadius = '8px 8px 0 0';
-                item.appendChild(sofaBack);
-                
-                // Add arms
-                const leftArm = document.createElement('div');
-                leftArm.style.position = 'absolute';
-                leftArm.style.left = '-8px';
-                leftArm.style.top = '0';
-                leftArm.style.width = '8px';
-                leftArm.style.height = '100%';
-                leftArm.style.backgroundColor = shape.bg;
-                leftArm.style.border = '2px solid #333';
-                leftArm.style.borderRadius = '8px 0 0 8px';
-                item.appendChild(leftArm);
-                
-                const rightArm = document.createElement('div');
-                rightArm.style.position = 'absolute';
-                rightArm.style.right = '-8px';
-                rightArm.style.top = '0';
-                rightArm.style.width = '8px';
-                rightArm.style.height = '100%';
-                rightArm.style.backgroundColor = shape.bg;
-                rightArm.style.border = '2px solid #333';
-                rightArm.style.borderRadius = '0 8px 8px 0';
-                item.appendChild(rightArm);
-                break;
-            case 'door':
-                // Add door handle
-                const handle = document.createElement('div');
-                handle.style.position = 'absolute';
-                handle.style.right = '5px';
-                handle.style.top = '50%';
-                handle.style.transform = 'translateY(-50%)';
-                handle.style.width = '8px';
-                handle.style.height = '8px';
-                handle.style.backgroundColor = '#FFD700';
-                handle.style.border = '1px solid #333';
-                handle.style.borderRadius = '50%';
-                item.appendChild(handle);
-                break;
-            case 'window':
-                // Add window frame
-                item.style.border = '3px solid #1F2937';
-                const windowPane = document.createElement('div');
-                windowPane.style.position = 'absolute';
-                windowPane.style.top = '3px';
-                windowPane.style.left = '3px';
-                windowPane.style.right = '3px';
-                windowPane.style.bottom = '3px';
-                windowPane.style.backgroundColor = '#E0F2FE';
-                windowPane.style.border = '1px solid #1F2937';
-                item.appendChild(windowPane);
-                break;
-            case 'sink':
-                // Add sink basin
-                const basin = document.createElement('div');
-                basin.style.position = 'absolute';
-                basin.style.top = '5px';
-                basin.style.left = '5px';
-                basin.style.right = '5px';
-                basin.style.bottom = '5px';
-                basin.style.backgroundColor = '#E5E7EB';
-                basin.style.border = '2px solid #6B7280';
-                basin.style.borderRadius = '50%';
-                item.appendChild(basin);
-                break;
-            case 'refrigerator':
-                // Add refrigerator door
-                const fridgeDoor = document.createElement('div');
-                fridgeDoor.style.position = 'absolute';
-                fridgeDoor.style.top = '0';
-                fridgeDoor.style.left = '0';
-                fridgeDoor.style.right = '0';
-                fridgeDoor.style.bottom = '0';
-                fridgeDoor.style.backgroundColor = '#F3F4F6';
-                fridgeDoor.style.border = '2px solid #374151';
-                item.appendChild(fridgeDoor);
-                
-                // Add handle
-                const fridgeHandle = document.createElement('div');
-                fridgeHandle.style.position = 'absolute';
-                fridgeHandle.style.right = '3px';
-                fridgeHandle.style.top = '50%';
-                fridgeHandle.style.transform = 'translateY(-50%)';
-                fridgeHandle.style.width = '4px';
-                fridgeHandle.style.height = '20px';
-                fridgeHandle.style.backgroundColor = '#6B7280';
-                fridgeHandle.style.border = '1px solid #374151';
-                item.appendChild(fridgeHandle);
-                break;
-            case 'toilet':
-                // Add toilet seat
-                const seat = document.createElement('div');
-                seat.style.position = 'absolute';
-                seat.style.top = '5px';
-                seat.style.left = '5px';
-                seat.style.right = '5px';
-                seat.style.bottom = '15px';
-                seat.style.backgroundColor = '#FFFFFF';
-                seat.style.border = '2px solid #6B7280';
-                seat.style.borderRadius = '50% 50% 0 0';
-                item.appendChild(seat);
-                break;
-            case 'plant':
-                // Add plant pot
-                const pot = document.createElement('div');
-                pot.style.position = 'absolute';
-                pot.style.bottom = '0';
-                pot.style.left = '50%';
-                pot.style.transform = 'translateX(-50%)';
-                pot.style.width = '20px';
-                pot.style.height = '10px';
-                pot.style.backgroundColor = '#8B4513';
-                pot.style.border = '1px solid #654321';
-                pot.style.borderRadius = '0 0 10px 10px';
-                item.appendChild(pot);
-                break;
-            case 'lamp':
-                // Add lamp shade
-                const shade = document.createElement('div');
-                shade.style.position = 'absolute';
-                shade.style.top = '-10px';
-                shade.style.left = '50%';
-                shade.style.transform = 'translateX(-50%)';
-                shade.style.width = '25px';
-                shade.style.height = '15px';
-                shade.style.backgroundColor = '#FEF3C7';
-                shade.style.border = '2px solid #F59E0B';
-                shade.style.borderRadius = '50% 50% 0 0';
-                item.appendChild(shade);
-                break;
-            case 'drawing-wall':
-                // Make wall stretchable like a drawing line
-                item.style.cursor = 'crosshair';
-                item.dataset.isDrawingWall = 'true';
-                item.dataset.startX = x;
-                item.dataset.startY = y;
-                
-                // Add drawing wall visual indicator
-                const wallIndicator = document.createElement('div');
-                wallIndicator.style.position = 'absolute';
-                wallIndicator.style.top = '0';
-                wallIndicator.style.left = '0';
-                wallIndicator.style.right = '0';
-                wallIndicator.style.bottom = '0';
-                wallIndicator.style.backgroundColor = 'transparent';
-                wallIndicator.style.border = '2px dashed #666';
-                wallIndicator.style.pointerEvents = 'none';
-                item.appendChild(wallIndicator);
-                
-                // Add stretch handles for drawing wall
-                const stretchHandle = document.createElement('div');
-                stretchHandle.className = 'stretch-handle';
-                stretchHandle.style.position = 'absolute';
-                stretchHandle.style.right = '-15px';
-                stretchHandle.style.top = '50%';
-                stretchHandle.style.transform = 'translateY(-50%)';
-                stretchHandle.style.width = '22px';
-                stretchHandle.style.height = '22px';
-                stretchHandle.style.backgroundColor = '#FF4444';
-                stretchHandle.style.border = '2px solid #333';
-                stretchHandle.style.borderRadius = '50%';
-                stretchHandle.style.cursor = 'crosshair';
-                stretchHandle.style.zIndex = '30';
-                stretchHandle.innerHTML = '↔';
-                stretchHandle.addEventListener('mousedown', (e) => {
-                    e.stopPropagation();
-                    startDrawingWall(e, item);
-                });
-                item.appendChild(stretchHandle);
-                break;
-        }
+        renderShape(item, shapeType, x, y);
         
         // Add label
         const label = document.createElement('div');
@@ -1141,25 +853,10 @@ document.addEventListener('DOMContentLoaded', function() {
         // Add drag functionality for moving items
         item.addEventListener('mousedown', startDragging);
         
-        // Add label
-        const itemLabel = document.createElement('div');
-        itemLabel.className = 'canvas-item-label';
-        itemLabel.style.position = 'absolute';
-        itemLabel.style.bottom = '-20px';
-        itemLabel.style.left = '50%';
-        itemLabel.style.transform = 'translateX(-50%)';
-        itemLabel.style.fontSize = '10px';
-        itemLabel.style.color = 'white';
-        itemLabel.style.textShadow = '1px 1px 1px rgba(0,0,0,0.8)';
-        itemLabel.style.whiteSpace = 'nowrap';
-        itemLabel.textContent = shape.label;
-        item.appendChild(itemLabel);
         
         // Add to canvas
         canvasItems.appendChild(item);
         
-        console.log('Shape added to canvas:', item);
-        console.log('Final position:', item.style.left, item.style.top);
         
         // Force a visual update
         item.style.display = 'block';
@@ -1190,12 +887,6 @@ document.addEventListener('DOMContentLoaded', function() {
         dragOffset.x = e.clientX - canvasRect.left - itemLeft;
         dragOffset.y = e.clientY - canvasRect.top - itemTop;
         
-        console.log('=== DRAG START ===');
-        console.log('Mouse position:', e.clientX, e.clientY);
-        console.log('Canvas rect:', canvasRect.left, canvasRect.top);
-        console.log('Item actual position:', itemLeft, itemTop);
-        console.log('Item size:', itemWidth, itemHeight);
-        console.log('Drag offset:', dragOffset.x, dragOffset.y);
         
         // Ensure the dragged item stays on top during drag
         selectedItem.style.zIndex = '1000';
@@ -1219,24 +910,15 @@ document.addEventListener('DOMContentLoaded', function() {
         const newX = e.clientX - canvasRect.left - dragOffset.x;
         const newY = e.clientY - canvasRect.top - dragOffset.y;
         
-        console.log('=== DRAG MOVE ===');
-        console.log('Mouse position:', e.clientX, e.clientY);
-        console.log('Canvas rect:', canvasRect.left, canvasRect.top);
-        console.log('Offset:', dragOffset.x, dragOffset.y);
-        console.log('New position:', newX, newY);
         
         // Update position directly
         selectedItem.style.left = newX + 'px';
         selectedItem.style.top = newY + 'px';
         
-        console.log('Updated item position to:', selectedItem.style.left, selectedItem.style.top);
     }
     
     function stopDragging() {
         if (selectedItem) {
-            console.log('=== DRAG STOP ===');
-            console.log('Final position:', selectedItem.style.left, selectedItem.style.top);
-            
             // Reset z-index and remove dragging class
             selectedItem.style.zIndex = '20';
             selectedItem.classList.remove('dragging');
@@ -1312,16 +994,21 @@ document.addEventListener('DOMContentLoaded', function() {
                     description: 'Floor plan created on ' + new Date().toLocaleDateString()
                 })
             })
-            .then(response => response.json())
+            .then(response => {
+                console.log('Response status:', response.status);
+                return response.json();
+            })
             .then(data => {
+                console.log('Response data:', data);
                 if (data.success) {
                     showSaveModal();
                 } else {
-                    alert('Saved to browser storage. Database save failed.');
+                    alert('Saved to browser storage. Database save failed: ' + (data.message || 'Unknown error'));
                 }
             })
             .catch(error => {
-                alert('Saved to browser storage. Database save failed.');
+                console.error('Save error:', error);
+                alert('Saved to browser storage. Database save failed: ' + error.message);
             });
         } catch (error) {
             alert('Saved to browser storage. Database save failed.');
@@ -1541,6 +1228,170 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
+    function renderShape(item, shapeType, x, y) {
+        const shape = shapes[shapeType];
+        if (!shape) return;
+        
+        switch(shape.type) {
+            case 'circle':
+                item.style.borderRadius = '50%';
+                break;
+            case 'chair':
+                item.style.borderRadius = '50%';
+                // Add chair back
+                const chairBack = document.createElement('div');
+                chairBack.style.position = 'absolute';
+                chairBack.style.top = '-10px';
+                chairBack.style.left = '50%';
+                chairBack.style.transform = 'translateX(-50%)';
+                chairBack.style.width = '20px';
+                chairBack.style.height = '20px';
+                chairBack.style.backgroundColor = shape.bg;
+                chairBack.style.border = '2px solid #333';
+                chairBack.style.borderRadius = '50%';
+                item.appendChild(chairBack);
+                break;
+            case 'table':
+                // Add table legs
+                for (let i = 0; i < 4; i++) {
+                    const leg = document.createElement('div');
+                    leg.style.position = 'absolute';
+                    leg.style.width = '6px';
+                    leg.style.height = '15px';
+                    leg.style.backgroundColor = '#654321';
+                    leg.style.border = '1px solid #333';
+                    leg.style.bottom = '-15px';
+                    
+                    if (i === 0) leg.style.left = '5px';
+                    else if (i === 1) leg.style.right = '5px';
+                    else if (i === 2) leg.style.left = '5px';
+                    else leg.style.right = '5px';
+                    
+                    if (i < 2) leg.style.top = '0px';
+                    else leg.style.bottom = '-15px';
+                    
+                    item.appendChild(leg);
+                }
+                break;
+            case 'sofa':
+                // Add sofa back and arms
+                const sofaBack = document.createElement('div');
+                sofaBack.style.position = 'absolute';
+                sofaBack.style.top = '-15px';
+                sofaBack.style.left = '0';
+                sofaBack.style.right = '0';
+                sofaBack.style.height = '15px';
+                sofaBack.style.backgroundColor = shape.bg;
+                sofaBack.style.border = '2px solid #333';
+                sofaBack.style.borderRadius = '8px 8px 0 0';
+                item.appendChild(sofaBack);
+                
+                // Add arms
+                const leftArm = document.createElement('div');
+                leftArm.style.position = 'absolute';
+                leftArm.style.left = '-8px';
+                leftArm.style.top = '0';
+                leftArm.style.width = '8px';
+                leftArm.style.height = '100%';
+                leftArm.style.backgroundColor = shape.bg;
+                leftArm.style.border = '2px solid #333';
+                leftArm.style.borderRadius = '8px 0 0 8px';
+                item.appendChild(leftArm);
+                
+                const rightArm = document.createElement('div');
+                rightArm.style.position = 'absolute';
+                rightArm.style.right = '-8px';
+                rightArm.style.top = '0';
+                rightArm.style.width = '8px';
+                rightArm.style.height = '100%';
+                rightArm.style.backgroundColor = shape.bg;
+                rightArm.style.border = '2px solid #333';
+                rightArm.style.borderRadius = '0 8px 8px 0';
+                item.appendChild(rightArm);
+                break;
+            case 'door':
+                // Add door handle
+                const handle = document.createElement('div');
+                handle.style.position = 'absolute';
+                handle.style.right = '5px';
+                handle.style.top = '50%';
+                handle.style.transform = 'translateY(-50%)';
+                handle.style.width = '8px';
+                handle.style.height = '8px';
+                handle.style.backgroundColor = '#FFD700';
+                handle.style.border = '1px solid #333';
+                handle.style.borderRadius = '50%';
+                item.appendChild(handle);
+                break;
+            case 'window':
+                // Add window frame
+                item.style.border = '3px solid #1F2937';
+                const windowPane = document.createElement('div');
+                windowPane.style.position = 'absolute';
+                windowPane.style.top = '3px';
+                windowPane.style.left = '3px';
+                windowPane.style.right = '3px';
+                windowPane.style.bottom = '3px';
+                windowPane.style.backgroundColor = '#E0F2FE';
+                windowPane.style.border = '1px solid #1F2937';
+                item.appendChild(windowPane);
+                break;
+            case 'toilet':
+                // Add toilet seat
+                const seat = document.createElement('div');
+                seat.style.position = 'absolute';
+                seat.style.top = '5px';
+                seat.style.left = '5px';
+                seat.style.right = '5px';
+                seat.style.bottom = '15px';
+                seat.style.backgroundColor = '#FFFFFF';
+                seat.style.border = '2px solid #6B7280';
+                seat.style.borderRadius = '50% 50% 0 0';
+                item.appendChild(seat);
+                break;
+            case 'drawing-wall':
+                // Make wall stretchable like a drawing line
+                item.style.cursor = 'crosshair';
+                item.dataset.isDrawingWall = 'true';
+                item.dataset.startX = x;
+                item.dataset.startY = y;
+                
+                // Add drawing wall visual indicator
+                const wallIndicator = document.createElement('div');
+                wallIndicator.style.position = 'absolute';
+                wallIndicator.style.top = '0';
+                wallIndicator.style.left = '0';
+                wallIndicator.style.right = '0';
+                wallIndicator.style.bottom = '0';
+                wallIndicator.style.backgroundColor = 'transparent';
+                wallIndicator.style.border = '2px dashed #666';
+                wallIndicator.style.pointerEvents = 'none';
+                item.appendChild(wallIndicator);
+                
+                // Add stretch handles for drawing wall
+                const stretchHandle = document.createElement('div');
+                stretchHandle.className = 'stretch-handle';
+                stretchHandle.style.position = 'absolute';
+                stretchHandle.style.right = '-15px';
+                stretchHandle.style.top = '50%';
+                stretchHandle.style.transform = 'translateY(-50%)';
+                stretchHandle.style.width = '22px';
+                stretchHandle.style.height = '22px';
+                stretchHandle.style.backgroundColor = '#FF4444';
+                stretchHandle.style.border = '2px solid #333';
+                stretchHandle.style.borderRadius = '50%';
+                stretchHandle.style.cursor = 'crosshair';
+                stretchHandle.style.zIndex = '30';
+                stretchHandle.innerHTML = '↔';
+                stretchHandle.addEventListener('mousedown', (e) => {
+                    e.stopPropagation();
+                    startDrawingWall(e, item);
+                });
+                item.appendChild(stretchHandle);
+                break;
+        }
+    }
+    
     function recreateShape(item, shapeType) {
         switch(shapeType) {
             case 'chair':
@@ -1639,44 +1490,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 windowPane.style.border = '1px solid #1F2937';
                 item.appendChild(windowPane);
                 break;
-            case 'sink':
-                // Add sink basin
-                const basin = document.createElement('div');
-                basin.style.position = 'absolute';
-                basin.style.top = '5px';
-                basin.style.left = '5px';
-                basin.style.right = '5px';
-                basin.style.bottom = '5px';
-                basin.style.backgroundColor = '#E5E7EB';
-                basin.style.border = '2px solid #6B7280';
-                basin.style.borderRadius = '50%';
-                item.appendChild(basin);
-                break;
-            case 'refrigerator':
-                // Add refrigerator door
-                const fridgeDoor = document.createElement('div');
-                fridgeDoor.style.position = 'absolute';
-                fridgeDoor.style.top = '0';
-                fridgeDoor.style.left = '0';
-                fridgeDoor.style.right = '0';
-                fridgeDoor.style.bottom = '0';
-                fridgeDoor.style.backgroundColor = '#F3F4F6';
-                fridgeDoor.style.border = '2px solid #374151';
-                item.appendChild(fridgeDoor);
-                
-                // Add handle
-                const fridgeHandle = document.createElement('div');
-                fridgeHandle.style.position = 'absolute';
-                fridgeHandle.style.right = '3px';
-                fridgeHandle.style.top = '50%';
-                fridgeHandle.style.transform = 'translateY(-50%)';
-                fridgeHandle.style.width = '6px';
-                fridgeHandle.style.height = '20px';
-                fridgeHandle.style.backgroundColor = '#6B7280';
-                fridgeHandle.style.border = '1px solid #374151';
-                fridgeHandle.style.borderRadius = '3px';
-                item.appendChild(fridgeHandle);
-                break;
             case 'toilet':
                 // Add toilet seat
                 const seat = document.createElement('div');
@@ -1689,34 +1502,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 seat.style.border = '2px solid #6B7280';
                 seat.style.borderRadius = '50%';
                 item.appendChild(seat);
-                break;
-            case 'plant':
-                // Add plant pot
-                const pot = document.createElement('div');
-                pot.style.position = 'absolute';
-                pot.style.bottom = '0';
-                pot.style.left = '50%';
-                pot.style.transform = 'translateX(-50%)';
-                pot.style.width = '20px';
-                pot.style.height = '8px';
-                pot.style.backgroundColor = '#8B4513';
-                pot.style.border = '1px solid #654321';
-                pot.style.borderRadius = '50%';
-                item.appendChild(pot);
-                break;
-            case 'lamp':
-                // Add lamp shade
-                const shade = document.createElement('div');
-                shade.style.position = 'absolute';
-                shade.style.top = '0';
-                shade.style.left = '50%';
-                shade.style.transform = 'translateX(-50%)';
-                shade.style.width = '20px';
-                shade.style.height = '15px';
-                shade.style.backgroundColor = '#FEF3C7';
-                shade.style.border = '1px solid #F59E0B';
-                shade.style.borderRadius = '50%';
-                item.appendChild(shade);
                 break;
             case 'drawing-wall':
                 // Make wall stretchable like a drawing line
@@ -1818,189 +1603,7 @@ document.addEventListener('DOMContentLoaded', function() {
         newItem.style.zIndex = '20';
 
         // Render shape based on type
-        switch(clipboard.shape) {
-            case 'circle':
-                newItem.style.borderRadius = '50%';
-                break;
-            case 'chair':
-                newItem.style.borderRadius = '50%';
-                // Add chair back
-                const chairBack = document.createElement('div');
-                chairBack.style.position = 'absolute';
-                chairBack.style.top = '-10px';
-                chairBack.style.left = '50%';
-                chairBack.style.transform = 'translateX(-50%)';
-                chairBack.style.width = '20px';
-                chairBack.style.height = '20px';
-                chairBack.style.backgroundColor = shapes[clipboard.shape].bg;
-                chairBack.style.border = '2px solid #333';
-                chairBack.style.borderRadius = '50%';
-                newItem.appendChild(chairBack);
-                break;
-            case 'table':
-                // Add table legs
-                for (let i = 0; i < 4; i++) {
-                    const leg = document.createElement('div');
-                    leg.style.position = 'absolute';
-                    leg.style.width = '6px';
-                    leg.style.height = '15px';
-                    leg.style.backgroundColor = '#654321';
-                    leg.style.border = '1px solid #333';
-                    leg.style.bottom = '-15px';
-                    
-                    if (i === 0) leg.style.left = '5px';
-                    else if (i === 1) leg.style.right = '5px';
-                    else if (i === 2) leg.style.left = '5px';
-                    else leg.style.right = '5px';
-                    
-                    if (i < 2) leg.style.top = '0px';
-                    else leg.style.bottom = '-15px';
-                    
-                    newItem.appendChild(leg);
-                }
-                break;
-            case 'sofa':
-                // Add sofa back and arms
-                const sofaBack = document.createElement('div');
-                sofaBack.style.position = 'absolute';
-                sofaBack.style.top = '-15px';
-                sofaBack.style.left = '0';
-                sofaBack.style.right = '0';
-                sofaBack.style.height = '15px';
-                sofaBack.style.backgroundColor = shapes[clipboard.shape].bg;
-                sofaBack.style.border = '2px solid #333';
-                sofaBack.style.borderRadius = '8px 8px 0 0';
-                newItem.appendChild(sofaBack);
-                
-                // Add arms
-                const leftArm = document.createElement('div');
-                leftArm.style.position = 'absolute';
-                leftArm.style.left = '-8px';
-                leftArm.style.top = '0';
-                leftArm.style.width = '8px';
-                leftArm.style.height = '100%';
-                leftArm.style.backgroundColor = shapes[clipboard.shape].bg;
-                leftArm.style.border = '2px solid #333';
-                leftArm.style.borderRadius = '8px 0 0 8px';
-                newItem.appendChild(leftArm);
-                
-                const rightArm = document.createElement('div');
-                rightArm.style.position = 'absolute';
-                rightArm.style.right = '-8px';
-                rightArm.style.top = '0';
-                rightArm.style.width = '8px';
-                rightArm.style.height = '100%';
-                rightArm.style.backgroundColor = shapes[clipboard.shape].bg;
-                rightArm.style.border = '2px solid #333';
-                rightArm.style.borderRadius = '0 8px 8px 0';
-                newItem.appendChild(rightArm);
-                break;
-            case 'door':
-                // Add door handle
-                const handle = document.createElement('div');
-                handle.style.position = 'absolute';
-                handle.style.right = '5px';
-                handle.style.top = '50%';
-                handle.style.transform = 'translateY(-50%)';
-                handle.style.width = '8px';
-                handle.style.height = '8px';
-                handle.style.backgroundColor = '#FFD700';
-                handle.style.border = '1px solid #333';
-                handle.style.borderRadius = '50%';
-                newItem.appendChild(handle);
-                break;
-            case 'window':
-                // Add window frame
-                newItem.style.border = '3px solid #1F2937';
-                const windowPane = document.createElement('div');
-                windowPane.style.position = 'absolute';
-                windowPane.style.top = '3px';
-                windowPane.style.left = '3px';
-                windowPane.style.right = '3px';
-                windowPane.style.bottom = '3px';
-                windowPane.style.backgroundColor = '#E0F2FE';
-                windowPane.style.border = '1px solid #1F2937';
-                newItem.appendChild(windowPane);
-                break;
-            case 'sink':
-                // Add sink basin
-                const basin = document.createElement('div');
-                basin.style.position = 'absolute';
-                basin.style.top = '5px';
-                basin.style.left = '5px';
-                basin.style.right = '5px';
-                basin.style.bottom = '5px';
-                basin.style.backgroundColor = '#E5E7EB';
-                basin.style.border = '2px solid #6B7280';
-                basin.style.borderRadius = '50%';
-                newItem.appendChild(basin);
-                break;
-            case 'refrigerator':
-                // Add refrigerator door
-                const fridgeDoor = document.createElement('div');
-                fridgeDoor.style.position = 'absolute';
-                fridgeDoor.style.top = '0';
-                fridgeDoor.style.left = '0';
-                fridgeDoor.style.right = '0';
-                fridgeDoor.style.bottom = '0';
-                fridgeDoor.style.backgroundColor = '#F3F4F6';
-                fridgeDoor.style.border = '2px solid #374151';
-                newItem.appendChild(fridgeDoor);
-                
-                // Add handle
-                const fridgeHandle = document.createElement('div');
-                fridgeHandle.style.position = 'absolute';
-                fridgeHandle.style.right = '3px';
-                fridgeHandle.style.top = '50%';
-                fridgeHandle.style.transform = 'translateY(-50%)';
-                fridgeHandle.style.width = '4px';
-                fridgeHandle.style.height = '20px';
-                fridgeHandle.style.backgroundColor = '#6B7280';
-                fridgeHandle.style.border = '1px solid #374151';
-                newItem.appendChild(fridgeHandle);
-                break;
-            case 'toilet':
-                // Add toilet seat
-                const seat = document.createElement('div');
-                seat.style.position = 'absolute';
-                seat.style.top = '5px';
-                seat.style.left = '5px';
-                seat.style.right = '5px';
-                seat.style.bottom = '15px';
-                seat.style.backgroundColor = '#FFFFFF';
-                seat.style.border = '2px solid #6B7280';
-                seat.style.borderRadius = '50% 50% 0 0';
-                newItem.appendChild(seat);
-                break;
-            case 'plant':
-                // Add plant pot
-                const pot = document.createElement('div');
-                pot.style.position = 'absolute';
-                pot.style.bottom = '0';
-                pot.style.left = '50%';
-                pot.style.transform = 'translateX(-50%)';
-                pot.style.width = '20px';
-                pot.style.height = '10px';
-                pot.style.backgroundColor = '#8B4513';
-                pot.style.border = '1px solid #654321';
-                pot.style.borderRadius = '0 0 10px 10px';
-                newItem.appendChild(pot);
-                break;
-            case 'lamp':
-                // Add lamp shade
-                const shade = document.createElement('div');
-                shade.style.position = 'absolute';
-                shade.style.top = '-10px';
-                shade.style.left = '50%';
-                shade.style.transform = 'translateX(-50%)';
-                shade.style.width = '25px';
-                shade.style.height = '15px';
-                shade.style.backgroundColor = '#FEF3C7';
-                shade.style.border = '2px solid #F59E0B';
-                shade.style.borderRadius = '50% 50% 0 0';
-                newItem.appendChild(shade);
-                break;
-        }
+        renderShape(newItem, clipboard.shape, clipboard.x, clipboard.y);
         
         // Add label
         const pasteItemLabel = document.createElement('div');
@@ -2072,8 +1675,6 @@ document.addEventListener('DOMContentLoaded', function() {
         // Add to canvas
         canvasItems.appendChild(newItem);
         
-        console.log('Item pasted to canvas:', newItem);
-        console.log('Final position:', newItem.style.left, newItem.style.top);
         
         // Force a visual update
         newItem.style.display = 'block';
@@ -2145,7 +1746,6 @@ document.addEventListener('DOMContentLoaded', function() {
             stretchHandle.style.right = 'auto';
         }
         
-        console.log('Drawing wall - Length:', wallLength, 'Angle:', angle, 'Position:', originalX, originalY);
     }
     
     function stopDrawingWall() {
@@ -2170,10 +1770,8 @@ document.addEventListener('DOMContentLoaded', function() {
             // Clear selection if this was the selected item
             if (selectedItem === item) {
                 selectedItem = null;
-                hideSelectionControls();
             }
             
-            console.log('Item deleted:', item);
         }
     }
     

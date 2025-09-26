@@ -23,6 +23,7 @@ class Booking extends Model
         'status',
         'amount',
         'notes',
+        'floor_plan_id',
     ];
 
     protected $casts = [
@@ -40,5 +41,10 @@ class Booking extends Model
     public function hubOwner()
     {
         return $this->belongsTo(User::class, 'hub_owner_id');
+    }
+
+    public function floorPlan()
+    {
+        return $this->belongsTo(FloorPlan::class);
     }
 }

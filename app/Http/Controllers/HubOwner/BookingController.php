@@ -11,16 +11,8 @@ class BookingController extends Controller
 {
     public function index(Request $request)
     {
-        // Get the active floor plan to determine which workspace this hub owner belongs to
-        $activeFloorPlan = \App\Models\FloorPlan::where('is_active', true)->first();
-        
-        if (!$activeFloorPlan) {
-            // If no active floor plan, show only current user's bookings
-            $query = Booking::where('hub_owner_id', Auth::id())->with('user');
-        } else {
-            // Show all bookings for this workspace (all hub owners can see the same bookings)
-            $query = Booking::with('user');
-        }
+        // Show only bookings for this specific hub owner
+        $query = Booking::where('hub_owner_id', Auth::id())->with('user');
 
         // Search functionality
         if ($request->filled('search')) {
@@ -62,14 +54,21 @@ class BookingController extends Controller
 
     public function show(Booking $booking)
     {
-        // All hub owners can view any booking in the workspace
-        // No need to restrict access since all hub owners manage the same workspace
+        // Ensure this booking belongs to the current hub owner
+        if ($booking->hub_owner_id !== Auth::id()) {
+            abort(403, 'Unauthorized access to this booking.');
+        }
+        
         return view('hub-owner.bookings.show', compact('booking'));
     }
 
     public function updateStatus(Request $request, Booking $booking)
     {
-        // All hub owners can update any booking status in the workspace
+        // Ensure this booking belongs to the current hub owner
+        if ($booking->hub_owner_id !== Auth::id()) {
+            abort(403, 'Unauthorized access to this booking.');
+        }
+        
         $request->validate([
             'status' => 'required|in:pending,confirmed,cancelled,completed',
         ]);
@@ -81,7 +80,11 @@ class BookingController extends Controller
 
     public function destroy(Booking $booking)
     {
-        // All hub owners can cancel any booking in the workspace
+        // Ensure this booking belongs to the current hub owner
+        if ($booking->hub_owner_id !== Auth::id()) {
+            abort(403, 'Unauthorized access to this booking.');
+        }
+        
         $booking->delete();
 
         return redirect()->back()->with('success', 'Booking cancelled successfully.');

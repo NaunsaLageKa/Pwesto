@@ -30,9 +30,6 @@ class ProfileController extends Controller
         $user = $request->user();
         $user->fill($request->validated());
 
-        if ($user->isDirty('email')) {
-            $user->email_verified_at = null;
-        }
 
         // Handle profile image upload
         if ($request->hasFile('profile_image')) {
@@ -50,7 +47,6 @@ class ProfileController extends Controller
 
         $user->save();
 
-        // Redirect to profile page in read-only mode after update (fixed)
         return Redirect::route('profile.edit')->with('status', 'profile-updated');
     }
 

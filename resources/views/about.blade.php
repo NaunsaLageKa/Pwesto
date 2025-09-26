@@ -20,17 +20,7 @@
                     <a href="{{ route('services.index') }}" class="nav-link">Services</a>
                     <a href="{{ route('about') }}" class="nav-link active">About</a>
                     <a href="#" class="nav-link">Location</a>
-                    <div class="flex items-center space-x-2">
-                        <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5 5v-5z"></path>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
-                        </svg>
-                        <img 
-                            src="{{ Auth::user()->profile_image ? asset('storage/' . Auth::user()->profile_image) : asset('images/avatar.svg') }}" 
-                            alt="Profile" 
-                            class="w-10 h-10 rounded-full object-cover border-2 border-gray-200 {{ !Auth::user()->profile_image ? 'bg-gray-100 p-2' : '' }}"
-                        >
-                    </div>
+                    <x-profile-dropdown />
                 </div>
             </div>
         </div>
@@ -112,41 +102,6 @@
                 </p>
             </div>
         </div>
-
-        <!-- Services Section -->
-        <div class="bg-gray-700 rounded-xl p-8 mb-12 shadow-lg">
-            <h2 class="text-3xl font-bold text-white text-center mb-8">Our Services</h2>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div class="flex items-start space-x-6">
-                    <div class="w-20 h-20 bg-yellow-500 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <img src="{{ asset('images/produktiv.png') }}" alt="Hot Desk" class="w-16 h-16 object-contain">
-                    </div>
-                    <div>
-                        <h3 class="text-xl font-semibold text-white mb-2">Hot Desk</h3>
-                        <p class="text-gray-300">
-                            Flexible workspace for individuals who need a productive environment 
-                            for focused work. Perfect for freelancers, remote workers, and professionals.
-                        </p>
-                    </div>
-                </div>
-
-                <div class="flex items-start space-x-6">
-                    <div class="w-20 h-20 bg-orange-500 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <img src="{{ asset('images/nest.png') }}" alt="Private Office" class="w-16 h-16 object-contain">
-                    </div>
-                    <div>
-                        <h3 class="text-xl font-semibold text-white mb-2">Private Office</h3>
-                        <p class="text-gray-300">
-                            Dedicated private spaces for teams and individuals who need 
-                            privacy and quiet for important meetings and confidential work.
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Mission Section -->
         <div class="bg-gradient-to-r from-teal-600 to-blue-600 rounded-xl p-8 text-center shadow-lg">
             <h2 class="text-3xl font-bold text-white mb-4">Our Mission</h2>
             <p class="text-xl text-white leading-relaxed max-w-4xl mx-auto">
