@@ -20,7 +20,7 @@
             <a href="#" style="color:#222; text-decoration:none;">Booking History</a>
             <a href="#" style="color:#222; text-decoration:none;">Services</a>
             <a href="{{ route('about') }}" style="color:#222; text-decoration:none;">About</a>
-            <a href="#" style="color:#222; text-decoration:none;">Location</a>
+            <a href="{{ route('location') }}" style="color:#222; text-decoration:none;">Location</a>
             <a href="{{ route('profile.edit') }}">
                 <img src="{{ $hasImage ? asset('storage/' . Auth::user()->profile_image) : asset('images/avatar.svg') }}" alt="User" style="width:44px; height:44px; border-radius:50%; object-fit:cover; border:2px solid #eee; {{ !$hasImage ? 'background:#f3f4f6; padding:8px;' : '' }}">
             </a>
@@ -63,7 +63,6 @@
         <!-- Tabs -->
         <div style="display:flex; gap:2rem; border-bottom:2px solid #e0e0e0; margin-bottom:2.5rem;">
             <div style="font-weight:700; color:#222; border-bottom:3px solid #19c2b8; padding-bottom:0.5rem;">Personal Details</div>
-            <div style="font-weight:500; color:#888; padding-bottom:0.5rem;">Booking History</div>
             <div style="font-weight:500; color:#888; padding-bottom:0.5rem;">Feedback</div>
         </div>
         <div style="font-size:1.3rem; font-weight:700; margin-bottom:1.5rem;">Personal Details</div>

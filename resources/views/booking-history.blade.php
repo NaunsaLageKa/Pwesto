@@ -19,7 +19,7 @@
                     <a href="{{ route('booking-history') }}" class="nav-link active">Booking History</a>
                     <a href="{{ route('services.index') }}" class="nav-link">Services</a>
                     <a href="{{ route('about') }}" class="nav-link">About</a>
-                    <a href="#" class="nav-link">Location</a>
+                    <a href="{{ route('location') }}" class="nav-link">Location</a>
                     <x-profile-dropdown />
                 </div>
             </div>

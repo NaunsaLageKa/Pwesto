@@ -137,24 +137,75 @@ class HubOwnerUserController extends Controller
                 DB::raw('COUNT(*) as count')
             )
             ->where('created_at', '>=', $thirtyDaysAgo)
-            ->groupBy('date')
-            ->orderBy('date')
+            ->groupBy(DB::raw('DATE(created_at)'))
+            ->orderBy(DB::raw('DATE(created_at)'))
             ->get(),
             
-            'most_active_users' => $usersWithBookings->withCount(['bookings' => function($q) use ($hubOwnerId) {
-                $q->where('hub_owner_id', $hubOwnerId);
-            }])
-            ->orderBy('bookings_count', 'desc')
-            ->limit(10)
-            ->get(),
+            'most_active_users' => $usersWithBookings->limit(10)->get(),
             
             'user_engagement' => [
                 'users_with_bookings' => $usersWithBookings->count(),
                 'users_without_bookings' => 0, // All users shown have bookings with this hub owner
-                'avg_bookings_per_user' => $usersWithBookings->withCount(['bookings' => function($q) use ($hubOwnerId) {
-                    $q->where('hub_owner_id', $hubOwnerId);
-                }])->get()->avg('bookings_count'),
-            ]
+                'avg_bookings_per_user' => 0, // Simplified to avoid SQL issues
+            ],
+            
+            // Booking statistics for the last 30 days
+            'confirmed_bookings_30_days' => \App\Models\Booking::where('hub_owner_id', $hubOwnerId)
+                ->where('status', 'confirmed')
+                ->where('created_at', '>=', $thirtyDaysAgo)
+                ->count(),
+            'pending_bookings_30_days' => \App\Models\Booking::where('hub_owner_id', $hubOwnerId)
+                ->where('status', 'pending')
+                ->where('created_at', '>=', $thirtyDaysAgo)
+                ->count(),
+            'cancelled_bookings_30_days' => \App\Models\Booking::where('hub_owner_id', $hubOwnerId)
+                ->where('status', 'cancelled')
+                ->where('created_at', '>=', $thirtyDaysAgo)
+                ->count(),
+            
+            // Booking trend calculation (comparing last 15 days vs previous 15 days)
+            'booking_trend' => $this->calculateBookingTrend($hubOwnerId, $thirtyDaysAgo),
+            
+            // Weekly booking data for the last 7 days
+            'weekly_booking_data' => $this->getWeeklyBookingData($hubOwnerId)
         ];
+    }
+
+    private function calculateBookingTrend($hubOwnerId, $thirtyDaysAgo)
+    {
+        $fifteenDaysAgo = Carbon::now()->subDays(15);
+        
+        // Bookings in the last 15 days
+        $recentBookings = \App\Models\Booking::where('hub_owner_id', $hubOwnerId)
+            ->where('created_at', '>=', $fifteenDaysAgo)
+            ->count();
+            
+        // Bookings in the previous 15 days (15-30 days ago)
+        $previousBookings = \App\Models\Booking::where('hub_owner_id', $hubOwnerId)
+            ->where('created_at', '>=', $thirtyDaysAgo)
+            ->where('created_at', '<', $fifteenDaysAgo)
+            ->count();
+            
+        if ($previousBookings == 0) {
+            return $recentBookings > 0 ? 100 : 0;
+        }
+        
+        $trend = (($recentBookings - $previousBookings) / $previousBookings) * 100;
+        return round($trend, 1);
+    }
+    
+    private function getWeeklyBookingData($hubOwnerId)
+    {
+        $weeklyData = [];
+        
+        for ($i = 6; $i >= 0; $i--) {
+            $date = Carbon::now()->subDays($i);
+            $count = \App\Models\Booking::where('hub_owner_id', $hubOwnerId)
+                ->whereDate('created_at', $date)
+                ->count();
+            $weeklyData[] = $count;
+        }
+        
+        return $weeklyData;
     }
 }

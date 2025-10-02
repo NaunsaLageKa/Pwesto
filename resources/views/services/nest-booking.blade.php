@@ -23,7 +23,7 @@
                     <a href="{{ route('hub-owner.floor-plan') }}" class="nav-link">Floor Plan</a>
                     @endif
                     <a href="{{ route('about') }}" class="nav-link">About</a>
-                    <a href="#" class="nav-link">Location</a>
+                    <a href="{{ route('location') }}" class="nav-link">Location</a>
                     <div class="flex items-center space-x-2">
                         <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5 5v-5z"></path>
@@ -59,15 +59,15 @@
             <div class="workspace-image">
                 <div class="carousel-container">
                     <div class="carousel-slide active">
-                        <img src="{{ asset('images/Nest.png') }}" alt="Nest Workplace" class="w-full h-full object-cover">
+                        <img src="{{ asset('images/nest 1.webp') }}" alt="Nest Workplace 1" class="w-full h-full object-cover">
                         <div class="description-text">Professional workspace for focused work.</div>
                     </div>
                     <div class="carousel-slide">
-                        <img src="{{ asset('images/Coworking.jpeg') }}" alt="Modern coworking space" class="w-full h-full object-cover">
+                        <img src="{{ asset('images/nest 2.jpg') }}" alt="Nest Workplace 2" class="w-full h-full object-cover">
                         <div class="description-text">Collaborative environment for teams.</div>
                     </div>
                     <div class="carousel-slide">
-                        <img src="{{ asset('images/collab.jpg') }}" alt="Team collaboration space" class="w-full h-full object-cover">
+                        <img src="{{ asset('images/nest 3.jpg') }}" alt="Nest Workplace 3" class="w-full h-full object-cover">
                         <div class="description-text">Perfect for meetings and group work.</div>
                     </div>
                 </div>

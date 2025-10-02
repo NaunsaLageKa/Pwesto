@@ -18,7 +18,7 @@
             <a href="{{ route('booking-history') }}" style="color:#222; text-decoration:none;">Booking History</a>
             <a href="{{ route('services.index') }}" style="color:#222; text-decoration:none;">Services</a>
             <a href="{{ route('about') }}" style="color:#222; text-decoration:none;">About</a>
-            <a href="#" style="color:#222; text-decoration:none;">Location</a>
+            <a href="{{ route('location') }}" style="color:#222; text-decoration:none;">Location</a>
             <!-- Profile Dropdown for Regular Users Only -->
             @if(Auth::user()->role === 'user')
             <div style="position:relative;" x-data="{ open: false }" @click.outside="open = false">

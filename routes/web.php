@@ -9,7 +9,7 @@ use App\Http\Controllers\Admin\UserController;
 
 Route::get('/', function () {
     return view('welcome');
-});
+})->name('welcome');
 
 Route::get('/dashboard', function () {
     return view('dashboard');
@@ -18,6 +18,10 @@ Route::get('/dashboard', function () {
 Route::get('/about', function () {
     return view('about');
 })->name('about');
+
+Route::get('/location', function () {
+    return view('location');
+})->name('location');
 
 
 Route::get('/services', [App\Http\Controllers\ServiceController::class, 'index'])->name('services.index');
