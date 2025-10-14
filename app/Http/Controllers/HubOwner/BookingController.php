@@ -11,8 +11,15 @@ class BookingController extends Controller
 {
     public function index(Request $request)
     {
-        // Show only bookings for this specific hub owner
-        $query = Booking::where('hub_owner_id', Auth::id())->with('user');
+        // Show bookings for this hub owner by ID OR by matching company name
+        $currentUser = Auth::user();
+        $query = Booking::where(function($q) use ($currentUser) {
+            $q->where('hub_owner_id', $currentUser->id);
+            // Also include bookings where hub_name matches this hub owner's company (case-insensitive)
+            if ($currentUser->company) {
+                $q->orWhereRaw('LOWER(hub_name) LIKE ?', ['%' . strtolower($currentUser->company) . '%']);
+            }
+        })->with('user');
 
         // Search functionality
         if ($request->filled('search')) {
@@ -54,8 +61,16 @@ class BookingController extends Controller
 
     public function show(Booking $booking)
     {
-        // Ensure this booking belongs to the current hub owner
-        if ($booking->hub_owner_id !== Auth::id()) {
+        // Ensure this booking belongs to the current hub owner (by ID or company name)
+        $currentUser = Auth::user();
+        $hasAccess = $booking->hub_owner_id === $currentUser->id;
+        
+        // Also check if hub_name matches the current hub owner's company
+        if (!$hasAccess && $currentUser->company) {
+            $hasAccess = stripos($booking->hub_name, $currentUser->company) !== false;
+        }
+        
+        if (!$hasAccess) {
             abort(403, 'Unauthorized access to this booking.');
         }
         
@@ -64,8 +79,16 @@ class BookingController extends Controller
 
     public function updateStatus(Request $request, Booking $booking)
     {
-        // Ensure this booking belongs to the current hub owner
-        if ($booking->hub_owner_id !== Auth::id()) {
+        // Ensure this booking belongs to the current hub owner (by ID or company name)
+        $currentUser = Auth::user();
+        $hasAccess = $booking->hub_owner_id === $currentUser->id;
+        
+        // Also check if hub_name matches the current hub owner's company
+        if (!$hasAccess && $currentUser->company) {
+            $hasAccess = stripos($booking->hub_name, $currentUser->company) !== false;
+        }
+        
+        if (!$hasAccess) {
             abort(403, 'Unauthorized access to this booking.');
         }
         
@@ -80,8 +103,16 @@ class BookingController extends Controller
 
     public function destroy(Booking $booking)
     {
-        // Ensure this booking belongs to the current hub owner
-        if ($booking->hub_owner_id !== Auth::id()) {
+        // Ensure this booking belongs to the current hub owner (by ID or company name)
+        $currentUser = Auth::user();
+        $hasAccess = $booking->hub_owner_id === $currentUser->id;
+        
+        // Also check if hub_name matches the current hub owner's company
+        if (!$hasAccess && $currentUser->company) {
+            $hasAccess = stripos($booking->hub_name, $currentUser->company) !== false;
+        }
+        
+        if (!$hasAccess) {
             abort(403, 'Unauthorized access to this booking.');
         }
         

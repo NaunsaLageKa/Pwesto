@@ -513,7 +513,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const newRotation = (currentRotation + 90) % 360;
         item.dataset.rotation = newRotation;
         item.style.transform = `rotate(${newRotation}deg)`;
-        console.log('Rotated item to:', newRotation + '°');
     }
     
     function startResizing(e, item, handle) {
@@ -653,7 +652,6 @@ document.addEventListener('DOMContentLoaded', function() {
         // Add visual feedback
         shapeItem.style.opacity = '0.5';
         
-        console.log('Drag started for:', shapeType);
     }
     
     function createDragGhost(shapeItem, shapeType) {
@@ -687,7 +685,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         currentDragShape = null;
-        console.log('Drag ended');
     }
     
     function handleDragOver(e) {
@@ -703,21 +700,17 @@ document.addEventListener('DOMContentLoaded', function() {
     
     function handleDragEnter(e) {
         e.preventDefault();
-        console.log('Drag entered canvas area');
     }
     
     function handleDragLeave(e) {
         e.preventDefault();
-        console.log('Drag left canvas area');
     }
     
     function handleDrop(e) {
         e.preventDefault();
-        console.log('Drop event triggered!', new Date().getTime());
         
         // Prevent duplicate drops
         if (isProcessingDrop) {
-            console.log('Drop already processing, skipping');
             return;
         }
         
@@ -730,7 +723,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         if (!shapeType) {
-            console.log('No shape type found for drop');
             isProcessingDrop = false;
             return;
         }
@@ -739,7 +731,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
         
-        console.log('Dropping shape:', shapeType, 'at position:', x, y);
         
         // Create the shape
         createShape(shapeType, x, y);
@@ -755,13 +746,11 @@ document.addEventListener('DOMContentLoaded', function() {
             isProcessingDrop = false;
         }, 100);
         
-        console.log('Shape created successfully');
     }
     
     function createShape(shapeType, x, y) {
         const shape = shapes[shapeType];
         if (!shape) {
-            console.log('Shape not found:', shapeType);
             return;
         }
         
@@ -995,11 +984,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 })
             })
             .then(response => {
-                console.log('Response status:', response.status);
                 return response.json();
             })
             .then(data => {
-                console.log('Response data:', data);
                 if (data.success) {
                     showSaveModal();
                 } else {
@@ -1029,14 +1016,12 @@ document.addEventListener('DOMContentLoaded', function() {
             if (data.success && data.layout_data && data.layout_data.length > 0) {
                 // Load from database
                 loadItemsFromData(data.layout_data);
-                console.log('Floor plan loaded from database');
             } else {
                 // Try to load from localStorage as backup
                 const savedData = localStorage.getItem('floorPlan');
                 if (savedData) {
                     const items = JSON.parse(savedData);
                     loadItemsFromData(items);
-                    console.log('Floor plan loaded from browser storage');
                 }
             }
         })
@@ -1046,7 +1031,6 @@ document.addEventListener('DOMContentLoaded', function() {
             if (savedData) {
                 const items = JSON.parse(savedData);
                 loadItemsFromData(items);
-                console.log('Floor plan loaded from browser storage');
             }
         });
     }
@@ -1577,7 +1561,6 @@ document.addEventListener('DOMContentLoaded', function() {
             height: parseInt(item.style.height),
             label: labelText
         };
-        console.log('Item copied:', clipboard);
     }
 
     function pasteItem() {

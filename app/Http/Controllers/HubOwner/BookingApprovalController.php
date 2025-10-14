@@ -13,15 +13,27 @@ class BookingApprovalController extends Controller
     {
         $user = Auth::user();
         
-        // Get all pending and confirmed bookings for this hub owner
-        $pendingBookings = Booking::where('hub_owner_id', $user->id)
+        // Get all pending and confirmed bookings for this hub owner by ID OR company name
+        $pendingBookings = Booking::where(function($q) use ($user) {
+            $q->where('hub_owner_id', $user->id);
+            // Also include bookings where hub_name matches this hub owner's company (case-insensitive)
+            if ($user->company) {
+                $q->orWhereRaw('LOWER(hub_name) LIKE ?', ['%' . strtolower($user->company) . '%']);
+            }
+        })
             ->where('status', 'pending')
             ->with('user')
             ->orderBy('booking_date')
             ->orderBy('booking_time')
             ->get();
             
-        $confirmedBookings = Booking::where('hub_owner_id', $user->id)
+        $confirmedBookings = Booking::where(function($q) use ($user) {
+            $q->where('hub_owner_id', $user->id);
+            // Also include bookings where hub_name matches this hub owner's company (case-insensitive)
+            if ($user->company) {
+                $q->orWhereRaw('LOWER(hub_name) LIKE ?', ['%' . strtolower($user->company) . '%']);
+            }
+        })
             ->where('status', 'confirmed')
             ->with('user')
             ->orderBy('booking_date')
@@ -33,8 +45,16 @@ class BookingApprovalController extends Controller
 
     public function approve(Request $request, $id)
     {
+        $user = Auth::user();
+        
+        // Find booking by ID and verify access by hub_owner_id OR company name
         $booking = Booking::where('id', $id)
-            ->where('hub_owner_id', Auth::id())
+            ->where(function($q) use ($user) {
+                $q->where('hub_owner_id', $user->id);
+                if ($user->company) {
+                    $q->orWhereRaw('LOWER(hub_name) LIKE ?', ['%' . strtolower($user->company) . '%']);
+                }
+            })
             ->firstOrFail();
             
         if ($booking->status === 'pending') {
@@ -51,8 +71,16 @@ class BookingApprovalController extends Controller
             'rejection_reason' => 'required|string|max:500'
         ]);
         
+        $user = Auth::user();
+        
+        // Find booking by ID and verify access by hub_owner_id OR company name
         $booking = Booking::where('id', $id)
-            ->where('hub_owner_id', Auth::id())
+            ->where(function($q) use ($user) {
+                $q->where('hub_owner_id', $user->id);
+                if ($user->company) {
+                    $q->orWhereRaw('LOWER(hub_name) LIKE ?', ['%' . strtolower($user->company) . '%']);
+                }
+            })
             ->firstOrFail();
             
         if ($booking->status === 'pending') {
@@ -68,8 +96,16 @@ class BookingApprovalController extends Controller
 
     public function complete(Request $request, $id)
     {
+        $user = Auth::user();
+        
+        // Find booking by ID and verify access by hub_owner_id OR company name
         $booking = Booking::where('id', $id)
-            ->where('hub_owner_id', Auth::id())
+            ->where(function($q) use ($user) {
+                $q->where('hub_owner_id', $user->id);
+                if ($user->company) {
+                    $q->orWhereRaw('LOWER(hub_name) LIKE ?', ['%' . strtolower($user->company) . '%']);
+                }
+            })
             ->firstOrFail();
             
         if ($booking->status === 'confirmed') {

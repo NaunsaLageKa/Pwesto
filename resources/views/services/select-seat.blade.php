@@ -602,8 +602,6 @@ function initializeSeatSelection() {
     const dateInput = document.getElementById('booking-date');
     if (dateInput) {
         dateInput.value = today;
-        console.log('Date set to:', today);
-        console.log('Current date input value:', dateInput.value);
     }
 
     // Update chair colors on page load

@@ -39,6 +39,7 @@ Route::post('/booking-history/{id}/cancel', [App\Http\Controllers\BookingHistory
     ->name('booking-history.cancel');
 
 
+
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

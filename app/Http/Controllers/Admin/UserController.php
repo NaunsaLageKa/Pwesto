@@ -13,16 +13,14 @@ class UserController extends Controller
     public function dashboard()
     {
         $totalUsers = User::where('role', 'user')->count();
-        $totalHubOwners = User::where('role', 'hub_owner')->count();
-        $pendingHubOwners = User::where('role', 'hub_owner')->where('status', 'pending')->count();
+        $hubOwnerStats = $this->getHubOwnerStats();
         $totalBookings = Booking::count();
         $totalFloorPlans = FloorPlan::count();
         $recentUsers = User::latest()->take(5)->get();
         
         return view('admin.dashboard', compact(
             'totalUsers', 
-            'totalHubOwners', 
-            'pendingHubOwners',
+            'hubOwnerStats',
             'totalBookings',
             'totalFloorPlans',
             'recentUsers'
@@ -54,7 +52,7 @@ class UserController extends Controller
         $user = User::findOrFail($id);
         $user->role = $request->role;
         $user->save();
-        return redirect()->back()->with('success', 'User role updated.');
+        return $this->successRedirect('User role updated.');
     }
 
     public function toggleBan($id)
@@ -66,7 +64,7 @@ class UserController extends Controller
             $user->status = 'banned';
         }
         $user->save();
-        return redirect()->back()->with('success', 'User status updated.');
+        return $this->successRedirect('User status updated.');
     }
 
     public function approve($id)
@@ -74,7 +72,7 @@ class UserController extends Controller
         $user = User::where('role', 'hub_owner')->findOrFail($id);
         $user->status = 'approved';
         $user->save();
-        return redirect()->back()->with('success', 'Hub owner approved.');
+        return $this->successRedirect('Hub owner approved.');
     }
 
     public function reject($id)
@@ -82,6 +80,6 @@ class UserController extends Controller
         $user = User::where('role', 'hub_owner')->findOrFail($id);
         $user->status = 'rejected';
         $user->save();
-        return redirect()->back()->with('success', 'Hub owner rejected.');
+        return $this->successRedirect('Hub owner rejected.');
     }
 } 

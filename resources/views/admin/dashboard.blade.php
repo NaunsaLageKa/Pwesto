@@ -29,7 +29,7 @@
                 </div>
                 <div class="ml-4">
                     <p class="text-sm font-medium text-gray-600">Hub Owners</p>
-                    <p class="text-2xl font-semibold text-gray-900">{{ $totalHubOwners ?? 0 }}</p>
+                    <p class="text-2xl font-semibold text-gray-900">{{ $hubOwnerStats['total'] ?? 0 }}</p>
                 </div>
             </div>
         </div>
@@ -43,7 +43,7 @@
                 </div>
                 <div class="ml-4">
                     <p class="text-sm font-medium text-gray-600">Pending Approvals</p>
-                    <p class="text-2xl font-semibold text-gray-900">{{ $pendingHubOwners ?? 0 }}</p>
+                    <p class="text-2xl font-semibold text-gray-900">{{ $hubOwnerStats['pending'] ?? 0 }}</p>
                 </div>
             </div>
         </div>

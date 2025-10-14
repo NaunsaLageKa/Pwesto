@@ -9,6 +9,29 @@ use App\Models\Booking;
 
 class ServiceController extends Controller
 {
+    /**
+     * Get the service to hub owner mapping
+     */
+    private function getServiceMapping()
+    {
+        return [
+            'hot-desk' => 'Produktiv',
+            'private-office' => 'Nest Workspaces', 
+            'meeting-room' => 'Mesh Media',
+        ];
+    }
+
+    /**
+     * Get the active floor plan for a service type
+     */
+    private function getFloorPlanForService($serviceType)
+    {
+        $serviceMapping = $this->getServiceMapping();
+        $targetCompany = $serviceMapping[$serviceType] ?? 'Produktiv';
+        
+        return $this->getActiveFloorPlanForCompany($targetCompany);
+    }
+
     public function index()
     {
         return view('services.index');
@@ -28,22 +51,8 @@ class ServiceController extends Controller
     {
         $serviceType = $request->query('service', 'hot-desk');
         
-        // Map service types to specific hub owners
-        $serviceToHubOwner = [
-            'hot-desk' => 'Produktiv', // Hot desk service maps to Produktiv hub owner
-            'private-office' => 'Nest Workspaces', // Private office service maps to Nest Workspaces hub owner
-            'meeting-room' => 'Mesh Media', // Meeting room service maps to Mesh Media hub owner
-        ];
-        
-        $targetCompany = $serviceToHubOwner[$serviceType] ?? 'Produktiv';
-        
-        // Get the active floor plan for the specific hub owner based on service type
-        $floorPlan = FloorPlan::whereHas('hubOwner', function($query) use ($targetCompany) {
-            $query->where('company', $targetCompany);
-        })
-        ->where('is_active', true)
-        ->whereNotNull('layout_data')
-        ->first();
+        // Get the active floor plan for the service type
+        $floorPlan = $this->getFloorPlanForService($serviceType);
         
         // Load booking statuses for the floor plan items
         $bookingStatuses = [];
@@ -72,14 +81,6 @@ class ServiceController extends Controller
             }
         }
         
-        // Debug: Log the floor plan loading
-        \Log::info('Floor plan loading for service', [
-            'service_type' => $serviceType,
-            'target_company' => $targetCompany,
-            'floor_plan_id' => $floorPlan ? $floorPlan->id : 'null',
-            'items_count' => $floorPlan ? count($floorPlan->layout_data) : 0,
-            'booking_statuses_count' => count($bookingStatuses)
-        ]);
         
         return view('services.select-seat', compact('serviceType', 'floorPlan', 'bookingStatuses'));
     }
@@ -126,22 +127,8 @@ class ServiceController extends Controller
             ], 400);
         }
 
-        // Map service types to specific hub owners
-        $serviceToHubOwner = [
-            'hot-desk' => 'Produktiv', // Hot desk service maps to Produktiv hub owner
-            'private-office' => 'Nest Workspaces', // Private office service maps to Nest Workspaces hub owner
-            'meeting-room' => 'Mesh Media', // Meeting room service maps to Mesh Media hub owner
-        ];
-        
-        $targetCompany = $serviceToHubOwner[$request->service_type] ?? 'Produktiv';
-        
-        // Get the active floor plan for the specific hub owner based on service type
-        $floorPlan = FloorPlan::whereHas('hubOwner', function($query) use ($targetCompany) {
-            $query->where('company', $targetCompany);
-        })
-        ->where('is_active', true)
-        ->whereNotNull('layout_data')
-        ->first();
+        // Get the active floor plan for the service type
+        $floorPlan = $this->getFloorPlanForService($request->service_type);
         
         if (!$floorPlan) {
             return response()->json([
@@ -189,22 +176,8 @@ class ServiceController extends Controller
             'service_type' => 'required|string',
         ]);
 
-        // Map service types to specific hub owners
-        $serviceToHubOwner = [
-            'hot-desk' => 'Produktiv',
-            'private-office' => 'Nest Workspaces',
-            'meeting-room' => 'Mesh Media',
-        ];
-        
-        $targetCompany = $serviceToHubOwner[$request->service_type] ?? 'Produktiv';
-        
-        // Get the active floor plan for the specific hub owner
-        $floorPlan = FloorPlan::whereHas('hubOwner', function($query) use ($targetCompany) {
-            $query->where('company', $targetCompany);
-        })
-        ->where('is_active', true)
-        ->whereNotNull('layout_data')
-        ->first();
+        // Get the active floor plan for the service type
+        $floorPlan = $this->getFloorPlanForService($request->service_type);
         
         $bookingStatuses = [];
 

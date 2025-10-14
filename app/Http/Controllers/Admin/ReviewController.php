@@ -36,7 +36,7 @@ class ReviewController extends Controller
         $review->status = 'approved';
         $review->save();
         
-        return redirect()->back()->with('success', 'Review approved successfully.');
+        return $this->successRedirect('Review approved successfully.');
     }
 
     public function reject($id)
@@ -45,7 +45,7 @@ class ReviewController extends Controller
         $review->status = 'rejected';
         $review->save();
         
-        return redirect()->back()->with('success', 'Review rejected successfully.');
+        return $this->successRedirect('Review rejected successfully.');
     }
 
     public function delete($id)
@@ -53,6 +53,6 @@ class ReviewController extends Controller
         $review = Review::findOrFail($id);
         $review->delete();
         
-        return redirect()->back()->with('success', 'Review deleted successfully.');
+        return $this->successRedirect('Review deleted successfully.');
     }
 }

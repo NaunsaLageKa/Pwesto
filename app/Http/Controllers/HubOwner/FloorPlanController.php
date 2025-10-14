@@ -21,10 +21,10 @@ class FloorPlanController extends Controller
      */
     public function index()
     {
-        // Get the active floor plan for the current authenticated hub owner
-        $floorPlan = FloorPlan::where('hub_owner_id', auth()->id())
-            ->where('is_active', true)
-            ->first();
+        $currentUser = auth()->user();
+        
+        // Get the active floor plan for this company (shared by all hub owners of the company)
+        $floorPlan = $this->getActiveFloorPlanForCompany($currentUser->company);
             
         // Return the floor plan editor view with the floor plan data
         return view('hub-owner.floor-plan', compact('floorPlan'));
@@ -47,23 +47,17 @@ class FloorPlanController extends Controller
                 'description' => 'nullable|string',  // Optional description
             ]);
 
-            // Debug: Log the current user and company
-            \Log::info('Floor plan save attempt', [
-                'user_id' => auth()->id(),
-                'user_company' => auth()->user()->company ?? 'No company',
-                'layout_data_count' => count($request->input('layout_data', []))
-            ]);
 
-            // First, deactivate all existing floor plans for this hub owner
-            FloorPlan::where('hub_owner_id', auth()->id())->update(['is_active' => false]);
+            $currentUser = auth()->user();
             
-            // Debug: Log the data being saved
-            \Log::info('Floor plan data to save', [
-                'layout_data' => $request->input('layout_data'),
-                'count' => count($request->input('layout_data', []))
-            ]);
+            // Get all hub owners for the same company
+            $companyHubOwners = $this->getHubOwnersForCompany($currentUser->company);
             
-            // Create new floor plan for this hub owner
+            // First, deactivate all existing floor plans for ALL hub owners of this company
+            FloorPlan::whereIn('hub_owner_id', $companyHubOwners)->update(['is_active' => false]);
+            
+            
+            // Create new floor plan for this hub owner (will be shared by all hub owners of the company)
             $floorPlan = FloorPlan::create([
                 'hub_owner_id' => auth()->id(),
                 'name' => $request->input('name', 'My Floor Plan'),
@@ -72,11 +66,6 @@ class FloorPlanController extends Controller
                 'is_active' => true,
             ]);
 
-            // Debug: Log successful save
-            \Log::info('Floor plan saved successfully', [
-                'floor_plan_id' => $floorPlan->id,
-                'hub_owner_id' => $floorPlan->hub_owner_id
-            ]);
 
             // Return success response with floor plan ID
             return response()->json([
@@ -85,14 +74,6 @@ class FloorPlanController extends Controller
                 'floor_plan_id' => $floorPlan->id,
             ]);
         } catch (\Exception $e) {
-            // Debug: Log the error
-            \Log::error('Floor plan save failed', [
-                'error' => $e->getMessage(),
-                'user_id' => auth()->id(),
-                'user_company' => auth()->user()->company ?? 'No company'
-            ]);
-
-            // Return error response if something goes wrong
             return response()->json([
                 'success' => false,
                 'message' => 'Error saving floor plan: ' . $e->getMessage(),
