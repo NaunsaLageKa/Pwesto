@@ -15,6 +15,31 @@
             <div class="mb-4">
                 <input type="text" placeholder="Search shapes..." class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
             </div>
+            <script>
+                        document.addEventListener("DOMContentLoaded", function() {
+                            const searchInput = document.querySelector('input[placeholder="Search shapes..."]');
+                                const shapeItems = document.querySelectorAll('.shape-item');
+
+                                searchInput.addEventListener('input', function() {
+                             const query = this.value.toLowerCase().trim();
+
+                                    shapeItems.forEach(item => {
+                                const label = item.querySelector('span').textContent.toLowerCase();
+
+                            if (label.includes(query) || query === '') {
+                            item.style.display = 'block';
+                                    } else {
+                                    item.style.display = 'none';
+                                }
+                          });
+                     });
+                    });
+                </script>
+
+
+                
+                </script>
+
             
             
             <!-- Clear Storage Button -->
@@ -58,6 +83,17 @@
                                 <div class="absolute inset-0 flex items-center justify-center text-xs text-white font-bold">S</div>
                             </div>
                             <span class="text-xs text-gray-600">Sofa</span>
+                        </div>
+                        <div class="shape-item" data-shape="star" draggable="true">
+                            <div class="w-8 h-8 cursor-grab relative" style="background: transparent; border: none;">
+                                <svg width="32" height="32" viewBox="0 0 32 32" style="position: absolute; top: 0; left: 0;">
+                                    <polygon points="16,2 20,12 30,12 22,20 26,30 16,24 6,30 10,20 2,12 12,12" 
+                                             fill="#8B5CF6" 
+                                             stroke="#333" 
+                                             stroke-width="2"/>
+                                </svg>
+                            </div>
+                            <span class="text-xs text-gray-600">Star</span>
                         </div>
                     </div>
                 </div>
@@ -407,6 +443,20 @@
     height: 24px;
     font-size: 13px;
 }
+
+
+.star-shape {
+    clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+    border-radius: 0 !important;
+    border: 2px solid #333 !important;
+}
+
+
+.shape-item .star-shape {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
 </style>
 
 <script>
@@ -432,6 +482,7 @@ document.addEventListener('DOMContentLoaded', function() {
         chair: { width: 40, height: 40, bg: '#9CA3AF', type: 'chair', label: 'Chair' },
         table: { width: 80, height: 80, bg: '#A0522D', type: 'table', label: 'Table' },
         sofa: { width: 120, height: 60, bg: '#FBBF24', type: 'sofa', label: 'Sofa' },
+        star: { width: 60, height: 60, bg: '#8B5CF6', type: 'star', label: 'Star' },
         wall: { width: 80, height: 20, bg: '#000000', type: 'drawing-wall', label: 'Wall' },
         door: { width: 60, height: 40, bg: '#D2691E', type: 'door', label: 'Door' },
         window: { width: 60, height: 30, bg: '#BFDBFE', type: 'window', label: 'Window' },
@@ -614,7 +665,40 @@ document.addEventListener('DOMContentLoaded', function() {
         requestAnimationFrame(() => {
             selectedItem.style.transition = '';
         });
+        
+        
+        if (selectedItem && selectedItem.dataset.shape === 'star') {
+            // Use setTimeout to ensure the element is fully rendered
+            setTimeout(() => {
+                maintainStarShape(selectedItem);
+            }, 10);
+        }
         });
+    }
+    
+    function maintainStarShape(item) {
+        if (!item) return;
+        
+        const starElement = item.querySelector('.star-shape-element');
+        if (starElement && starElement.style) {
+    
+            starElement.style.top = '0';
+            starElement.style.left = '0';
+            starElement.style.right = '0';
+            starElement.style.bottom = '0';
+            starElement.style.clipPath = 'polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%)';
+            starElement.style.border = '2px solid #333';
+            
+
+            starElement.style.transform = 'scale(1)';
+            starElement.style.transformOrigin = 'center center';
+        }
+        
+
+        if (item.style) {
+            item.style.backgroundColor = 'transparent';
+            item.style.border = 'none';
+        }
     }
     
     function stopResizing() {
@@ -622,6 +706,14 @@ document.addEventListener('DOMContentLoaded', function() {
             // Reset z-index and remove resizing class
             selectedItem.style.zIndex = '20';
             selectedItem.classList.remove('resizing');
+            
+
+            if (selectedItem && selectedItem.dataset.shape === 'star') {
+    
+                setTimeout(() => {
+                    maintainStarShape(selectedItem);
+                }, 10);
+            }
         }
         
         // Reset cursor
@@ -808,7 +900,7 @@ document.addEventListener('DOMContentLoaded', function() {
             e.stopPropagation();
             rotateItem(item);
         });
-        item.appendChild(rotateBtn);
+        item.appendChild(rotateBtn);    
         
         // Add copy button
         const copyBtn = document.createElement('div');
@@ -1333,6 +1425,28 @@ document.addEventListener('DOMContentLoaded', function() {
                 seat.style.borderRadius = '50% 50% 0 0';
                 item.appendChild(seat);
                 break;
+            case 'star':
+                // Remove background and border from main item for star
+                item.style.backgroundColor = 'transparent';
+                item.style.border = 'none';
+                
+
+                const starShape = document.createElement('div');
+                starShape.className = 'star-shape-element';
+                starShape.style.position = 'absolute';
+                starShape.style.top = '0';
+                starShape.style.left = '0';
+                starShape.style.right = '0';
+                starShape.style.bottom = '0';
+                starShape.style.backgroundColor = shape.bg;
+                starShape.style.clipPath = 'polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%)';
+                starShape.style.borderRadius = '0';
+                starShape.style.pointerEvents = 'none';
+                starShape.style.border = '2px solid #333';
+                starShape.style.transform = 'scale(1)';
+                starShape.style.transformOrigin = 'center center';
+                item.appendChild(starShape);
+                break;
             case 'drawing-wall':
                 // Make wall stretchable like a drawing line
                 item.style.cursor = 'crosshair';
@@ -1486,6 +1600,28 @@ document.addEventListener('DOMContentLoaded', function() {
                 seat.style.border = '2px solid #6B7280';
                 seat.style.borderRadius = '50%';
                 item.appendChild(seat);
+                break;
+            case 'star':
+               
+                item.style.backgroundColor = 'transparent';
+                item.style.border = 'none';
+                
+               
+                const starShapeRecreate = document.createElement('div');
+                starShapeRecreate.className = 'star-shape-element';
+                starShapeRecreate.style.position = 'absolute';
+                starShapeRecreate.style.top = '0';
+                starShapeRecreate.style.left = '0';
+                starShapeRecreate.style.right = '0';
+                starShapeRecreate.style.bottom = '0';
+                starShapeRecreate.style.backgroundColor = shapes[shapeType].bg;
+                starShapeRecreate.style.clipPath = 'polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%)';
+                starShapeRecreate.style.borderRadius = '0';
+                starShapeRecreate.style.pointerEvents = 'none';
+                starShapeRecreate.style.border = '2px solid #333';
+                starShapeRecreate.style.transform = 'scale(1)';
+                starShapeRecreate.style.transformOrigin = 'center center';
+                item.appendChild(starShapeRecreate);
                 break;
             case 'drawing-wall':
                 // Make wall stretchable like a drawing line

@@ -68,6 +68,29 @@
                 </div>
             </div>
         </div>
+        <div class="flex items-center space-x-2">
+                    <label class="text-white font-medium">End Time:</label>
+                    <select id="booking-time" class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">Select EndTime</option>
+                        <option value="08:00">8:00 AM</option>
+                        <option value="09:00">9:00 AM</option>
+                        <option value="10:00">10:00 AM</option>
+                        <option value="11:00">11:00 AM</option>
+                        <option value="12:00">12:00 PM</option>
+                        <option value="13:00">1:00 PM</option>
+                        <option value="14:00">2:00 PM</option>
+                        <option value="15:00">3:00 PM</option>
+                        <option value="16:00">4:00 PM</option>
+                        <option value="17:00">5:00 PM</option>
+                        <option value="18:00">6:00 PM</option>
+                        <option value="19:00">7:00 PM</option>
+                        <option value="20:00">8:00 PM</option>
+                        <option value="21:00">9:00 PM</option>
+                        <option value="22:00">10:00 PM</option>
+                        <option value="23:00">11:00 PM</option>
+                        <option value="00:00">12:00 AM</option>
+                    </select>
+                </div>
 
         <!-- Floor Plan Container -->
         <div class="bg-white rounded-lg shadow-xl p-6 mb-8">
@@ -139,6 +162,7 @@
                     <p><strong>Seat:</strong> <span id="modal-seat"></span></p>
                     <p><strong>Date:</strong> <span id="modal-date"></span></p>
                     <p><strong>Time:</strong> <span id="modal-time"></span></p>
+                    <p><strong>endTime:</strong> <span id="modal-endTime"></span></p>
                     <p><strong>Booking ID:</strong> <span id="modal-booking-id"></span></p>
                 </div>
                 <button id="modal-ok-btn" class="w-full bg-blue-600 text-white px-4 py-3 rounded-md text-base font-medium hover:bg-blue-700 transition-colors">
@@ -555,6 +579,7 @@ function initializeSeatSelection() {
             
             const bookingDate = document.getElementById('booking-date')?.value;
             const bookingTime = document.getElementById('booking-time')?.value;
+            
             
             if (!bookingDate || !bookingTime) {
                 alert('Please select both date and time.');

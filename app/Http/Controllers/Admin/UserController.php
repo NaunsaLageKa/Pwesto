@@ -30,39 +30,58 @@ class UserController extends Controller
     public function index(Request $request)
     {
         $query = User::query();
+
         if ($request->filled('search')) {
             $search = $request->input('search');
             $query->where(function($q) use ($search) {
                 $q->where('name', 'like', "%$search%")
-                  ->orWhere('email', 'like', "%$search%");
+                  ->orWhere('email', 'like', "%$search%")
+                  ->orWhere('phone', 'like', "%$search%");
             });
         }
+
+
         if ($request->filled('role')) {
             $query->where('role', $request->input('role'));
         }
-        $users = $query->orderBy('created_at', 'desc')->paginate(15)->withQueryString();
+
+
+        if ($request->filled('company')) {
+            $company = $request->input('company');
+            $query->where('company', 'like', "%$company%");
+        }
+
+    
+        $users = $query->orderBy('created_at', 'desc')
+                       ->paginate(15)
+                       ->withQueryString();
+
         return view('admin.users', compact('users'));
     }
 
     public function updateRole(Request $request, $id)
     {
         $request->validate([
-            'role' => 'required|in:user,hub_owner,admin',
+            'role' => 'required|in:user,hub_owner,admin,company',
         ]);
+
         $user = User::findOrFail($id);
         $user->role = $request->role;
         $user->save();
+
         return $this->successRedirect('User role updated.');
     }
 
     public function toggleBan($id)
     {
         $user = User::findOrFail($id);
+
         if ($user->status === 'banned') {
             $user->status = 'approved';
         } else {
             $user->status = 'banned';
         }
+
         $user->save();
         return $this->successRedirect('User status updated.');
     }
@@ -82,4 +101,4 @@ class UserController extends Controller
         $user->save();
         return $this->successRedirect('Hub owner rejected.');
     }
-} 
+}

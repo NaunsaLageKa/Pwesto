@@ -43,8 +43,8 @@ class FloorPlanController extends Controller
             // Validate the incoming request data
             $request->validate([
                 'layout_data' => 'required|array',  // Array of floor plan items
-                'name' => 'nullable|string|max:255',  // Optional floor plan name
-                'description' => 'nullable|string',  // Optional description
+                'name' => 'nullable|string|max:255',  // floor plan name
+                'description' => 'nullable|string',  //  description
             ]);
 
 
@@ -57,7 +57,7 @@ class FloorPlanController extends Controller
             FloorPlan::whereIn('hub_owner_id', $companyHubOwners)->update(['is_active' => false]);
             
             
-            // Create new floor plan for this hub owner (will be shared by all hub owners of the company)
+            // Create new floor plan for only in the same company
             $floorPlan = FloorPlan::create([
                 'hub_owner_id' => auth()->id(),
                 'name' => $request->input('name', 'My Floor Plan'),
@@ -71,7 +71,6 @@ class FloorPlanController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Floor plan saved successfully!',
-                'floor_plan_id' => $floorPlan->id,
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -115,7 +114,7 @@ class FloorPlanController extends Controller
             // Return error response if loading fails
             return response()->json([
                 'success' => false,
-                'message' => 'Error loading floor plan: ' . $e->getMessage(),
+                'message' => 'No Floor plan found: ' . $e->getMessage(),
                 'layout_data' => [],
             ], 500);
         }

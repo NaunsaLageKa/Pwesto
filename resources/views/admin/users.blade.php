@@ -4,17 +4,37 @@
 <div class="container mx-auto py-8">
     <a href="{{ route('admin.dashboard') }}" class="inline-block mb-4 text-blue-600 hover:underline">&larr; Back to Dashboard</a>
     <h1 class="text-3xl font-bold mb-6">User Management</h1>
-    <form method="GET" action="" class="flex flex-wrap gap-4 mb-6 items-center bg-white p-4 rounded-lg shadow">
-        <input type="text" name="search" value="{{ request('search') }}" placeholder="Search by name or email" class="border rounded px-3 py-2 flex-1 min-w-[200px]" />
+
+    <form method="GET" action="{{ route('admin.users') }}" class="flex flex-wrap gap-4 mb-6 items-center bg-white p-4 rounded-lg shadow">
+        <input 
+            type="text" 
+            name="search" 
+            value="{{ request('search') }}" 
+            placeholder="Search by name,email or phone" 
+            class="border rounded px-3 py-2 flex-1 min-w-[200px]" 
+        />
+
         <select name="role" class="border rounded px-3 py-2">
             <option value="">All Roles</option>
             <option value="user" @if(request('role')=='user') selected @endif>User</option>
             <option value="hub_owner" @if(request('role')=='hub_owner') selected @endif>Hub Owner</option>
+            <option value="company" @if(request('role')=='company') selected @endif>Company</option>
             <option value="admin" @if(request('role')=='admin') selected @endif>Admin</option>
         </select>
+
+       
+        <input 
+            type="text" 
+            name="company" 
+            value="{{ request('company') }}" 
+            placeholder="Filter by company name"
+            class="border rounded px-3 py-2 flex-1 min-w-[200px]" 
+        />
+
         <button class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition" type="submit">Filter</button>
         <a href="{{ route('admin.users') }}" class="bg-gray-200 text-gray-700 px-4 py-2 rounded hover:bg-gray-300 transition">Clear</a>
     </form>
+
     <div class="bg-white p-6 rounded-lg shadow overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
@@ -35,14 +55,27 @@
                     <td class="py-2 px-4">{{ $user->name }}</td>
                     <td class="py-2 px-4">{{ $user->email }}</td>
                     <td class="py-2 px-4">{{ $user->phone }}</td>
-                    <td class="py-2 px-4">@if($user->role == 'hub_owner'){{ $user->company }}@else<span class="text-gray-400">N/A</span>@endif</td>
-                    <td class="py-2 px-4">@if($user->role == 'hub_owner' && $user->company_id)<a href="{{ asset('storage/' . $user->company_id) }}" target="_blank" class="text-blue-600 underline hover:text-blue-800">View</a>@elseif($user->role == 'hub_owner')<span class="text-gray-400">N/A</span>@else<span class="text-gray-400">N/A</span>@endif</td>
+                    <td class="py-2 px-4">
+                        @if($user->company)
+                            {{ $user->company }}
+                        @else
+                            <span class="text-gray-400">N/A</span>
+                        @endif
+                    </td>
+                    <td class="py-2 px-4">
+                        @if($user->company_id)
+                            <a href="{{ asset('storage/' . $user->company_id) }}" target="_blank" class="text-blue-600 underline hover:text-blue-800">View</a>
+                        @else
+                            <span class="text-gray-400">N/A</span>
+                        @endif
+                    </td>
                     <td class="py-2 px-4 capitalize">
                         <form action="{{ route('admin.users.updateRole', $user->id) }}" method="POST" class="inline">
                             @csrf
                             <select name="role" onchange="this.form.submit()" class="border rounded px-2 py-1 text-xs">
                                 <option value="user" @if($user->role=='user') selected @endif>User</option>
                                 <option value="hub_owner" @if($user->role=='hub_owner') selected @endif>Hub Owner</option>
+                                <option value="company" @if($user->role=='company') selected @endif>Company</option>
                                 <option value="admin" @if($user->role=='admin') selected @endif>Admin</option>
                             </select>
                         </form>
@@ -82,6 +115,7 @@
                 @endforelse
             </tbody>
         </table>
+
         <div class="mt-6">
             {{ $users->links() }}
         </div>

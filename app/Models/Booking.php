@@ -23,7 +23,6 @@ class Booking extends Model
         'status',
         'amount',
         'notes',
-        'floor_plan_id',
     ];
 
     protected $casts = [
