@@ -22,13 +22,47 @@ abstract class Controller
      */
     protected function getActiveFloorPlanForCompany($company)
     {
-        return FloorPlan::whereHas('hubOwner', function($query) use ($company) {
-            $query->whereRaw('LOWER(company) LIKE ?', ['%' . strtolower($company) . '%']);
+        // First, try to find by company name
+        $floorPlan = FloorPlan::whereHas('hubOwner', function($query) use ($company) {
+            $query->where('role', 'hub_owner')
+                ->where('status', 'approved')
+                ->whereRaw('LOWER(company) LIKE ?', ['%' . strtolower($company) . '%']);
         })
         ->where('is_active', true)
         ->whereNotNull('layout_data')
         ->orderBy('updated_at', 'desc')
         ->first();
+
+        // If not found by company, try to find by name
+        if (!$floorPlan) {
+            $floorPlan = FloorPlan::whereHas('hubOwner', function($query) use ($company) {
+                $query->where('role', 'hub_owner')
+                    ->where('status', 'approved')
+                    ->where(function($q) use ($company) {
+                        // Try matching name if company is null
+                        $q->whereRaw('LOWER(name) LIKE ?', ['%' . strtolower($company) . '%'])
+                          ->orWhereRaw('LOWER(company) LIKE ?', ['%' . strtolower($company) . '%']);
+                    });
+            })
+            ->where('is_active', true)
+            ->whereNotNull('layout_data')
+            ->orderBy('updated_at', 'desc')
+            ->first();
+        }
+
+        // If still not found, return the first active floor plan as fallback
+        if (!$floorPlan) {
+            $floorPlan = FloorPlan::whereHas('hubOwner', function($query) {
+                $query->where('role', 'hub_owner')
+                    ->where('status', 'approved');
+            })
+            ->where('is_active', true)
+            ->whereNotNull('layout_data')
+            ->orderBy('updated_at', 'desc')
+            ->first();
+        }
+
+        return $floorPlan;
     }
 
     /**

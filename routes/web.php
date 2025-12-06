@@ -44,6 +44,17 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    
+    // Feedback Routes
+    Route::get('/feedback', [App\Http\Controllers\FeedbackController::class, 'index'])->name('feedback.index');
+    Route::get('/feedback/create', [App\Http\Controllers\FeedbackController::class, 'create'])->name('feedback.create');
+    Route::post('/feedback', [App\Http\Controllers\FeedbackController::class, 'store'])->name('feedback.store');
+    Route::get('/feedback/get-hub-owner', [App\Http\Controllers\FeedbackController::class, 'getHubOwner'])->name('feedback.get-hub-owner');
+    
+    // Profile Feedback Tab Route
+    Route::get('/profile/feedback', function() {
+        return redirect()->route('profile.edit', ['tab' => 'feedback']);
+    })->name('profile.feedback');
 });
 
 // Hub Owner Routes
@@ -57,6 +68,9 @@ Route::middleware(['auth', 'hub.owner'])->prefix('hub-owner')->name('hub-owner.'
     Route::get('/floor-plan', [App\Http\Controllers\HubOwner\FloorPlanController::class, 'index'])->name('floor-plan');
     Route::post('/floor-plan/save', [App\Http\Controllers\HubOwner\FloorPlanController::class, 'save'])->name('floor-plan.save');
     Route::get('/floor-plan/load', [App\Http\Controllers\HubOwner\FloorPlanController::class, 'load'])->name('floor-plan.load');
+    
+    // Hub Owner Feedback Routes
+    Route::get('/feedback', [App\Http\Controllers\HubOwner\FeedbackController::class, 'index'])->name('feedback.index');
 });
 
 Route::middleware(['auth'])->group(function () {
@@ -74,6 +88,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/admin/reviews/{id}/approve', [App\Http\Controllers\Admin\ReviewController::class, 'approve'])->name('admin.reviews.approve');
         Route::post('/admin/reviews/{id}/reject', [App\Http\Controllers\Admin\ReviewController::class, 'reject'])->name('admin.reviews.reject');
         Route::delete('/admin/reviews/{id}', [App\Http\Controllers\Admin\ReviewController::class, 'delete'])->name('admin.reviews.delete');
+        Route::post('/admin/reviews/bulk-action', [App\Http\Controllers\Admin\ReviewController::class, 'bulkAction'])->name('admin.reviews.bulk-action');
         
         // Reports and Analytics
         Route::get('/admin/reports', [App\Http\Controllers\Admin\ReportController::class, 'index'])->name('admin.reports.index');

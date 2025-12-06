@@ -62,9 +62,10 @@
         </div>
         <!-- Tabs -->
         <div style="display:flex; gap:2rem; border-bottom:2px solid #e0e0e0; margin-bottom:2.5rem;">
-            <div style="font-weight:700; color:#222; border-bottom:3px solid #19c2b8; padding-bottom:0.5rem;">Personal Details</div>
-            <div style="font-weight:500; color:#888; padding-bottom:0.5rem;">Feedback</div>
+            <a href="{{ route('profile.edit', ['tab' => 'details']) }}" style="font-weight:{{ $activeTab === 'details' ? '700' : '500' }}; color:{{ $activeTab === 'details' ? '#222' : '#888' }}; border-bottom:{{ $activeTab === 'details' ? '3px solid #19c2b8' : '3px solid transparent' }}; padding-bottom:0.5rem; text-decoration:none;">Personal Details</a>
+            <a href="{{ route('profile.edit', ['tab' => 'feedback']) }}" style="font-weight:{{ $activeTab === 'feedback' ? '700' : '500' }}; color:{{ $activeTab === 'feedback' ? '#222' : '#888' }}; border-bottom:{{ $activeTab === 'feedback' ? '3px solid #19c2b8' : '3px solid transparent' }}; padding-bottom:0.5rem; text-decoration:none;">Feedback</a>
         </div>
+        @if($activeTab === 'details')
         <div style="font-size:1.3rem; font-weight:700; margin-bottom:1.5rem;">Personal Details</div>
         <form method="post" action="{{ route('profile.update') }}">
             @csrf
@@ -92,6 +93,65 @@
             </div>
             @endif
         </form>
+        @elseif($activeTab === 'feedback')
+        <div style="font-size:1.3rem; font-weight:700; margin-bottom:1.5rem;">My Feedback</div>
+        
+        <div style="margin-bottom:1.5rem;">
+            <a href="{{ route('feedback.create') }}" style="background:#19c2b8; color:#fff; padding:0.75rem 1.5rem; border-radius:8px; text-decoration:none; font-weight:600; display:inline-block;">
+                + Submit New Feedback
+            </a>
+        </div>
+
+        @if(session('success'))
+            <div style="background:#d4edda; color:#155724; padding:1rem; border-radius:8px; margin-bottom:1.5rem;">
+                {{ session('success') }}
+            </div>
+        @endif
+
+        @if($reviews && $reviews->count() > 0)
+            @foreach($reviews as $review)
+                <div style="border:1px solid #e0e0e0; border-radius:12px; padding:1.5rem; margin-bottom:1rem;">
+                    <div style="display:flex; justify-content:space-between; align-items:start; margin-bottom:1rem;">
+                        <div>
+                            <h3 style="font-size:1.1rem; font-weight:600; margin-bottom:0.25rem;">
+                                {{ $review->hubOwner ? ($review->hubOwner->company ?? $review->hubOwner->name) : 'Pwesto Platform' }}
+                            </h3>
+                            <p style="color:#666; font-size:0.85rem;">
+                                {{ $review->created_at->format('M d, Y') }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <div style="display:flex; gap:0.25rem; margin-bottom:0.75rem;">
+                        @for($i = 1; $i <= 5; $i++)
+                            <svg style="width:16px; height:16px;" fill="{{ $i <= $review->rating ? '#ffc107' : 'none' }}" stroke="{{ $i <= $review->rating ? '#ffc107' : '#ddd' }}" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path>
+                            </svg>
+                        @endfor
+                    </div>
+
+                    <p style="color:#333; line-height:1.6; font-size:0.95rem;">{{ Str::limit($review->comment, 200) }}</p>
+                    
+                    @if(strlen($review->comment) > 200)
+                        <a href="{{ route('feedback.index') }}" style="color:#19c2b8; text-decoration:none; font-size:0.9rem; margin-top:0.5rem; display:inline-block;">Read more →</a>
+                    @endif
+                </div>
+            @endforeach
+
+            @if($reviews->hasPages())
+                <div style="margin-top:2rem; display:flex; justify-content:center; align-items:center;">
+                    {{ $reviews->appends(['tab' => 'feedback'])->links() }}
+                </div>
+            @endif
+        @else
+            <div style="text-align:center; padding:2rem; color:#666;">
+                <p style="font-size:1.1rem; margin-bottom:1rem;">No feedback submitted yet</p>
+                <a href="{{ route('feedback.create') }}" style="background:#19c2b8; color:#fff; padding:0.75rem 1.5rem; border-radius:8px; text-decoration:none; font-weight:600; display:inline-block;">
+                    Submit Your First Feedback
+                </a>
+            </div>
+        @endif
+        @endif
     </div>
 </div>
 @endsection

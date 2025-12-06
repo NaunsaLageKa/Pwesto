@@ -17,8 +17,21 @@ class ProfileController extends Controller
      */
     public function edit(Request $request): View
     {
+        $user = $request->user();
+        $activeTab = $request->query('tab', 'details'); // 'details' or 'feedback'
+        
+        $reviews = null;
+        if ($activeTab === 'feedback') {
+            $reviews = \App\Models\Review::where('user_id', $user->id)
+                ->with('hubOwner', 'booking')
+                ->orderBy('created_at', 'desc')
+                ->paginate(2);
+        }
+        
         return view('profile.edit', [
-            'user' => $request->user(),
+            'user' => $user,
+            'activeTab' => $activeTab ?? 'details',
+            'reviews' => $reviews,
         ]);
     }
 

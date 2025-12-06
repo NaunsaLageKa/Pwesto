@@ -18,6 +18,9 @@
                     <a href="{{ route('hub-owner.users.index') }}" class="block px-4 py-3 text-sm font-medium text-white bg-blue-600 rounded-lg">
                         Users
                     </a>
+                    <a href="{{ route('hub-owner.feedback.index') }}" class="block px-4 py-3 text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg transition-colors">
+                        Reviews
+                    </a>
                     <a href="{{ route('hub-owner.floor-plan') }}" class="block px-4 py-3 text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg transition-colors">
                         Floor Plan
                     </a>

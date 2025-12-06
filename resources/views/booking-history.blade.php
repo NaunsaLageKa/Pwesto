@@ -147,9 +147,35 @@
                                 @endif
                             </div>
                         </div>
-                        <button class="w-full px-4 py-2 bg-gray-400 text-white rounded-lg font-semibold cursor-not-allowed" disabled>
-                            {{ ucfirst($booking->status) }}
-                        </button>
+                        @if($booking->status === 'completed')
+                            @php
+                                $hasFeedback = \App\Models\Review::where('booking_id', $booking->id)
+                                    ->where('user_id', Auth::id())
+                                    ->exists();
+                            @endphp
+                            @if(!$hasFeedback)
+                                <!-- Feedback Prompt -->
+                                <div class="mt-4 p-3 bg-teal-900 bg-opacity-50 rounded-lg border border-teal-500">
+                                    <p class="text-white text-sm mb-2">💡 Would you like to share your experience?</p>
+                                    <a href="{{ route('feedback.create', ['booking_id' => $booking->id]) }}" 
+                                       class="block w-full px-4 py-2 bg-teal-600 text-white rounded-lg font-semibold hover:bg-teal-700 transition-colors text-center mb-2">
+                                        Feedback on Workspace
+                                    </a>
+                                    <button onclick="showPlatformFeedbackModal()" 
+                                       class="block w-full px-4 py-2 bg-teal-800 text-white rounded-lg font-semibold hover:bg-teal-900 transition-colors">
+                                        Feedback on Pwesto Website
+                                    </button>
+                                </div>
+                            @else
+                                <button class="w-full px-4 py-2 bg-gray-400 text-white rounded-lg font-semibold cursor-not-allowed" disabled>
+                                    Feedback Submitted ✓
+                                </button>
+                            @endif
+                        @else
+                            <button class="w-full px-4 py-2 bg-gray-400 text-white rounded-lg font-semibold cursor-not-allowed" disabled>
+                                {{ ucfirst($booking->status) }}
+                            </button>
+                        @endif
                     </div>
                 @empty
                     <div class="col-span-full text-center text-gray-400 py-8">
@@ -191,6 +217,43 @@
         </div>
     </div>
 </div>
+
+<!-- Platform Feedback Recommendation Modal -->
+<div id="platform-feedback-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
+        <div class="p-6">
+            <div class="text-center mb-4">
+                <div class="mx-auto w-16 h-16 bg-teal-100 rounded-full flex items-center justify-center mb-4">
+                    <svg class="w-8 h-8 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"></path>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-900 mb-2">Share Your Experience!</h3>
+                <p class="text-base text-gray-600 mb-4">
+                    Would you like to provide feedback about the Pwesto website? Your input helps us improve!
+                </p>
+            </div>
+            <div class="flex space-x-3">
+                <button onclick="hidePlatformFeedbackModal()" class="flex-1 bg-gray-500 text-white px-4 py-3 rounded-md text-base font-medium hover:bg-gray-600 transition-colors">
+                    Maybe Later
+                </button>
+                <a href="{{ route('feedback.create', ['workspace' => 'pwesto']) }}" class="flex-1 bg-teal-600 text-white px-4 py-3 rounded-md text-base font-medium hover:bg-teal-700 transition-colors text-center">
+                    Yes, I'll Feedback
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function showPlatformFeedbackModal() {
+    document.getElementById('platform-feedback-modal').classList.remove('hidden');
+}
+
+function hidePlatformFeedbackModal() {
+    document.getElementById('platform-feedback-modal').classList.add('hidden');
+}
+</script>
 
 <!-- Success Modal -->
 <div id="success-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">

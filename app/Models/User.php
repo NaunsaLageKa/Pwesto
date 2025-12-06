@@ -67,4 +67,20 @@ class User extends Authenticatable
     {
         return $this->hasMany(Booking::class, 'hub_owner_id');
     }
+
+    /**
+     * Get reviews submitted by this user.
+     */
+    public function reviews()
+    {
+        return $this->hasMany(Review::class);
+    }
+
+    /**
+     * Get reviews for this user's workspace (if hub owner).
+     */
+    public function hubReviews()
+    {
+        return $this->hasMany(Review::class, 'hub_owner_id');
+    }
 }

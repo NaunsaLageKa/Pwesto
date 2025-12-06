@@ -44,7 +44,7 @@
                     <input type="date" id="booking-date" min="{{ date('Y-m-d') }}" value="{{ date('Y-m-d') }}" class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
                 <div class="flex items-center space-x-2">
-                    <label class="text-white font-medium">Time:</label>
+                    <label class="text-white font-medium">Time Start:</label>
                     <select id="booking-time" class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                         <option value="">Select Time</option>
                         <option value="08:00">8:00 AM</option>
@@ -66,12 +66,10 @@
                         <option value="00:00">12:00 AM</option>
                     </select>
                 </div>
-            </div>
-        </div>
-        <div class="flex items-center space-x-2">
+                <div class="flex items-center space-x-2">
                     <label class="text-white font-medium">End Time:</label>
-                    <select id="booking-time" class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="">Select EndTime</option>
+                    <select id="booking-end-time" class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">Select End Time</option>
                         <option value="08:00">8:00 AM</option>
                         <option value="09:00">9:00 AM</option>
                         <option value="10:00">10:00 AM</option>
@@ -91,6 +89,8 @@
                         <option value="00:00">12:00 AM</option>
                     </select>
                 </div>
+            </div>
+        </div>
 
         <!-- Floor Plan Container -->
         <div class="bg-white rounded-lg shadow-xl p-6 mb-8">
@@ -161,8 +161,8 @@
                 <div class="text-left space-y-2 mb-6 text-base">
                     <p><strong>Seat:</strong> <span id="modal-seat"></span></p>
                     <p><strong>Date:</strong> <span id="modal-date"></span></p>
-                    <p><strong>Time:</strong> <span id="modal-time"></span></p>
-                    <p><strong>endTime:</strong> <span id="modal-endTime"></span></p>
+                    <p><strong>Time Start:</strong> <span id="modal-time"></span></p>
+                    <p><strong>End Time:</strong> <span id="modal-endTime"></span></p>
                     <p><strong>Booking ID:</strong> <span id="modal-booking-id"></span></p>
                 </div>
                 <button id="modal-ok-btn" class="w-full bg-blue-600 text-white px-4 py-3 rounded-md text-base font-medium hover:bg-blue-700 transition-colors">
@@ -579,10 +579,11 @@ function initializeSeatSelection() {
             
             const bookingDate = document.getElementById('booking-date')?.value;
             const bookingTime = document.getElementById('booking-time')?.value;
+            const bookingEndTime = document.getElementById('booking-end-time')?.value;
             
             
             if (!bookingDate || !bookingTime) {
-                alert('Please select both date and time.');
+                alert('Please select both date and time start.');
                 return;
             }
             
@@ -593,6 +594,7 @@ function initializeSeatSelection() {
                 seat_label: selectedSeat.dataset.seatNumber,
                 booking_date: bookingDate,
                 booking_time: bookingTime,
+                end_time: bookingEndTime || null,
                 _token: '{{ csrf_token() }}'
             };
             
@@ -610,7 +612,7 @@ function initializeSeatSelection() {
             .then(data => {
                 if (data.success) {
                     // Show modal instead of alert
-                    showBookingModal(selectedSeat.dataset.seatNumber, bookingDate, bookingTime, data.booking_id);
+                    showBookingModal(selectedSeat.dataset.seatNumber, bookingDate, bookingTime, bookingEndTime, data.booking_id);
                 } else {
                     alert('Error creating booking: ' + data.message);
                 }
@@ -635,10 +637,11 @@ function initializeSeatSelection() {
     }, 1000);
 
     // Modal functions
-    function showBookingModal(seat, date, time, bookingId) {
+    function showBookingModal(seat, date, time, endTime, bookingId) {
         document.getElementById('modal-seat').textContent = seat;
         document.getElementById('modal-date').textContent = date;
         document.getElementById('modal-time').textContent = time;
+        document.getElementById('modal-endTime').textContent = endTime || 'Not specified';
         document.getElementById('modal-booking-id').textContent = bookingId;
         document.getElementById('booking-modal').classList.remove('hidden');
     }
@@ -661,6 +664,11 @@ function initializeSeatSelection() {
     const timeSelect = document.getElementById('booking-time');
     if (timeSelect) {
         timeSelect.addEventListener('change', updateChairColors);
+    }
+    
+    const endTimeSelect = document.getElementById('booking-end-time');
+    if (endTimeSelect) {
+        endTimeSelect.addEventListener('change', updateChairColors);
     }
 
     // Function to update chair colors based on selected date and time
