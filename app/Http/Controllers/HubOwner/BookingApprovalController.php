@@ -4,6 +4,7 @@ namespace App\Http\Controllers\HubOwner;
 
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
+use App\Notifications\BookingStatusNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -59,6 +60,9 @@ class BookingApprovalController extends Controller
             
         if ($booking->status === 'pending') {
             $booking->update(['status' => 'confirmed']);
+            if ($booking->user) {
+                $booking->user->notify(new BookingStatusNotification($booking->fresh(), 'confirmed'));
+            }
             return response()->json(['success' => true, 'message' => 'Booking approved successfully']);
         }
         
@@ -88,6 +92,9 @@ class BookingApprovalController extends Controller
                 'status' => 'rejected',
                 'notes' => 'Rejected: ' . $request->rejection_reason
             ]);
+            if ($booking->user) {
+                $booking->user->notify(new BookingStatusNotification($booking->fresh(), 'rejected'));
+            }
             return response()->json(['success' => true, 'message' => 'Booking rejected successfully']);
         }
         

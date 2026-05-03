@@ -85,7 +85,6 @@
                         <thead class="bg-gray-50">
                             <tr>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hub</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date & Time</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
@@ -102,9 +101,6 @@
                                             <div class="text-sm text-gray-500">{{ $booking->user->email }}</div>
                                         </div>
                                     </div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm text-gray-900">{{ $booking->hub_name }}</div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="text-sm text-gray-900">{{ $booking->booking_date->format('M d, Y') }}</div>
@@ -125,24 +121,32 @@
                                     @endif
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                    <div class="flex space-x-2">
-                                        <a href="{{ route('hub-owner.bookings.show', $booking) }}" class="text-blue-600 hover:text-blue-900">View</a>
+                                    <div class="flex items-center gap-2 flex-wrap">
+                                        <a href="{{ route('hub-owner.bookings.show', $booking) }}" class="inline-flex items-center px-3 py-1.5 rounded-md border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors">
+                                            👁 View
+                                        </a>
                                         @if($booking->status === 'pending')
                                             <form action="{{ route('hub-owner.bookings.update-status', $booking) }}" method="POST" class="inline">
                                                 @csrf
                                                 <input type="hidden" name="status" value="confirmed">
-                                                <button type="submit" class="text-green-600 hover:text-green-900">Confirm</button>
+                                                <button type="submit" class="inline-flex items-center px-3 py-1.5 rounded-md bg-green-600 text-white hover:bg-green-700 transition-colors">
+                                                    ✓ Confirm
+                                                </button>
                                             </form>
                                             <form action="{{ route('hub-owner.bookings.update-status', $booking) }}" method="POST" class="inline">
                                                 @csrf
                                                 <input type="hidden" name="status" value="cancelled">
-                                                <button type="submit" class="text-red-600 hover:text-red-900">Cancel</button>
+                                                <button type="submit" class="inline-flex items-center px-3 py-1.5 rounded-md border border-red-300 text-red-700 hover:bg-red-50 transition-colors">
+                                                    ✕ Cancel
+                                                </button>
                                             </form>
                                         @elseif($booking->status === 'confirmed')
                                             <form action="{{ route('hub-owner.bookings.update-status', $booking) }}" method="POST" class="inline">
                                                 @csrf
                                                 <input type="hidden" name="status" value="completed">
-                                                <button type="submit" class="text-blue-600 hover:text-blue-900">Mark Complete</button>
+                                                <button type="submit" class="inline-flex items-center px-3 py-1.5 rounded-md bg-indigo-600 text-white hover:bg-indigo-700 transition-colors">
+                                                    ✓ Mark Complete
+                                                </button>
                                             </form>
                                         @endif
                                     </div>

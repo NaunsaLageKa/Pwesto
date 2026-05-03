@@ -3,8 +3,9 @@
 namespace App\Http\Controllers\HubOwner;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\Booking;
+use App\Notifications\BookingStatusNotification;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class BookingController extends Controller
@@ -96,7 +97,14 @@ class BookingController extends Controller
             'status' => 'required|in:pending,confirmed,cancelled,completed',
         ]);
 
+        $previous = $booking->status;
         $booking->update(['status' => $request->status]);
+
+        if ($booking->user && $previous !== $request->status) {
+            if (in_array($request->status, ['confirmed', 'cancelled'], true)) {
+                $booking->user->notify(new BookingStatusNotification($booking->fresh(), $request->status));
+            }
+        }
 
         return redirect()->back()->with('success', 'Booking status updated successfully.');
     }

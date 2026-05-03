@@ -21,9 +21,18 @@
             <a href="#" style="color:#222; text-decoration:none;">Services</a>
             <a href="{{ route('about') }}" style="color:#222; text-decoration:none;">About</a>
             <a href="{{ route('location') }}" style="color:#222; text-decoration:none;">Location</a>
+            @if(Auth::user()->role === 'user')
+            <div style="display:inline-flex; align-items:center; gap:12px;">
+                <x-notification-bell />
+                <a href="{{ route('profile.edit') }}">
+                    <img src="{{ $hasImage ? asset('storage/' . Auth::user()->profile_image) : asset('images/avatar.svg') }}" alt="User" style="width:44px; height:44px; border-radius:50%; object-fit:cover; border:2px solid #eee; {{ !$hasImage ? 'background:#f3f4f6; padding:8px;' : '' }}">
+                </a>
+            </div>
+            @else
             <a href="{{ route('profile.edit') }}">
                 <img src="{{ $hasImage ? asset('storage/' . Auth::user()->profile_image) : asset('images/avatar.svg') }}" alt="User" style="width:44px; height:44px; border-radius:50%; object-fit:cover; border:2px solid #eee; {{ !$hasImage ? 'background:#f3f4f6; padding:8px;' : '' }}">
             </a>
+            @endif
         </div>
     </div>
     <div style="max-width:540px; width:100%; margin:40px auto 0 auto; background:#fff; border-radius:24px; padding:2.5rem 2rem; color:#222; box-shadow:0 4px 32px #0002;">

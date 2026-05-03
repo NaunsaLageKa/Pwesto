@@ -148,27 +148,59 @@
         </div>
     </div>
 
-    <!-- Booking Confirmation Modal -->
-    <div id="booking-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-        <div class="bg-white rounded-lg shadow-xl w-96 mx-4">
-            <div class="p-6 text-center">
-                <div class="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
-                    <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+    <!-- Payment Modal -->
+    <div id="payment-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-[99999] hidden p-4">
+        <div class="pm-modal-card">
+            <div class="pm-modal-header">
+                <div>
+                    <h2>Add Payment Method</h2>
+                    <p>Choose your preferred way to pay securely.</p>
+                </div>
+                <button id="payment-modal-close" type="button" aria-label="Close payment modal">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                     </svg>
-                </div>
-                <h3 class="text-xl font-semibold text-gray-900 mb-4">Booking Confirmed!</h3>
-                <div class="text-left space-y-2 mb-6 text-base">
-                    <p><strong>Seat:</strong> <span id="modal-seat"></span></p>
-                    <p><strong>Date:</strong> <span id="modal-date"></span></p>
-                    <p><strong>Time Start:</strong> <span id="modal-time"></span></p>
-                    <p><strong>End Time:</strong> <span id="modal-endTime"></span></p>
-                    <p><strong>Booking ID:</strong> <span id="modal-booking-id"></span></p>
-                </div>
-                <button id="modal-ok-btn" class="w-full bg-blue-600 text-white px-4 py-3 rounded-md text-base font-medium hover:bg-blue-700 transition-colors">
-                    OK
                 </button>
             </div>
+
+            <div class="pm-payment-options">
+                <button id="method-paypal" type="button" class="pm-option-btn">PayPal</button>
+                <button id="method-applepay" type="button" class="pm-option-btn">Apple Pay</button>
+                <button id="method-gcash" type="button" class="pm-option-btn">GCash</button>
+            </div>
+
+            <div class="pm-separator">
+                <hr class="line">
+                <p>or pay using credit card</p>
+                <hr class="line">
+            </div>
+
+            <button id="method-card" type="button" class="pm-card-pill">Credit Card</button>
+
+            <div class="pm-credit-form">
+                <div class="pm-input-group">
+                    <label>Card holder full name</label>
+                    <input type="text" placeholder="Enter your full name" readonly>
+                </div>
+                <div class="pm-input-group">
+                    <label>Card Number</label>
+                    <input type="text" placeholder="0000 0000 0000 0000" readonly>
+                </div>
+                <div class="pm-split">
+                    <div class="pm-input-group">
+                        <label>Expiry Date</label>
+                        <input type="text" placeholder="01/30" readonly>
+                    </div>
+                    <div class="pm-input-group">
+                        <label>CVV</label>
+                        <input type="text" placeholder="CVV" readonly>
+                    </div>
+                </div>
+            </div>
+
+            <input type="hidden" id="payment-method-input" value="card">
+
+            <button id="payment-checkout-btn" class="pm-checkout-btn" type="button">Checkout - Php 150.00</button>
         </div>
     </div>
 </div>
@@ -249,6 +281,149 @@
     font-weight: bold;
     text-align: center;
     white-space: nowrap;
+}
+
+.pm-modal-card {
+    position: relative;
+    z-index: 100000;
+    width: 100%;
+    max-width: 460px;
+    background: #ffffff;
+    opacity: 1;
+    border-radius: 24px;
+    box-shadow: 0 32px 80px rgba(0, 0, 0, 0.22);
+    padding: 20px;
+}
+
+#payment-modal {
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 99999 !important;
+    background: rgba(0, 0, 0, 0.82) !important;
+}
+
+.pm-modal-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 14px;
+}
+
+.pm-modal-header h2 {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: #1f2937;
+}
+
+.pm-modal-header p {
+    color: #6b7280;
+    font-size: 0.9rem;
+}
+
+.pm-modal-header button {
+    color: #9ca3af;
+}
+
+.pm-payment-options {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.pm-option-btn {
+    height: 46px;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    background: #f3f4f6;
+    font-weight: 700;
+    color: #4b5563;
+}
+
+.pm-option-btn.active {
+    border-color: #2563eb;
+    background: #eff6ff;
+    color: #1d4ed8;
+}
+
+.pm-separator {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 14px;
+}
+
+.pm-separator p {
+    font-size: 11px;
+    font-weight: 700;
+    color: #9ca3af;
+    text-transform: uppercase;
+}
+
+.pm-separator .line {
+    border: 0;
+    height: 1px;
+    background-color: #e5e7eb;
+}
+
+.pm-card-pill {
+    width: 100%;
+    height: 42px;
+    margin-bottom: 14px;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+    background: #f8fafc;
+    color: #374151;
+    font-weight: 700;
+}
+
+.pm-card-pill.active {
+    border-color: #2563eb;
+    background: #eff6ff;
+    color: #1d4ed8;
+}
+
+.pm-credit-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.pm-input-group label {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #6b7280;
+    margin-bottom: 4px;
+}
+
+.pm-input-group input {
+    width: 100%;
+    height: 40px;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+    background: #f3f4f6;
+    padding: 0 12px;
+    color: #374151;
+}
+
+.pm-split {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 10px;
+}
+
+.pm-checkout-btn {
+    width: 100%;
+    margin-top: 16px;
+    height: 50px;
+    border-radius: 12px;
+    border: 0;
+    color: #fff;
+    font-weight: 800;
+    background: linear-gradient(180deg, #333 0%, #111 100%);
 }
 </style>
 
@@ -587,40 +762,7 @@ function initializeSeatSelection() {
                 return;
             }
             
-            // Create booking data
-            const bookingData = {
-                service_type: '{{ $serviceType }}',
-                seat_id: selectedSeat.dataset.id,
-                seat_label: selectedSeat.dataset.seatNumber,
-                booking_date: bookingDate,
-                booking_time: bookingTime,
-                end_time: bookingEndTime || null,
-                _token: '{{ csrf_token() }}'
-            };
-            
-            
-            // Send booking request to backend
-            fetch('{{ route("services.create-booking") }}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                },
-                body: JSON.stringify(bookingData)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Show modal instead of alert
-                    showBookingModal(selectedSeat.dataset.seatNumber, bookingDate, bookingTime, bookingEndTime, data.booking_id);
-                } else {
-                    alert('Error creating booking: ' + data.message);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Error creating booking. Please try again.');
-            });
+            showPaymentModal();
         });
     }
     
@@ -636,25 +778,147 @@ function initializeSeatSelection() {
         updateChairColors();
     }, 1000);
 
-    // Modal functions
-    function showBookingModal(seat, date, time, endTime, bookingId) {
-        document.getElementById('modal-seat').textContent = seat;
-        document.getElementById('modal-date').textContent = date;
-        document.getElementById('modal-time').textContent = time;
-        document.getElementById('modal-endTime').textContent = endTime || 'Not specified';
-        document.getElementById('modal-booking-id').textContent = bookingId;
-        document.getElementById('booking-modal').classList.remove('hidden');
+    // Payment modal functions
+    function showPaymentModal() {
+        document.getElementById('payment-modal').classList.remove('hidden');
     }
 
-    function hideBookingModal() {
-        document.getElementById('booking-modal').classList.add('hidden');
+    function hidePaymentModal() {
+        document.getElementById('payment-modal').classList.add('hidden');
     }
 
-    // Modal event listeners
-    document.getElementById('modal-ok-btn').addEventListener('click', function() {
-        hideBookingModal();
-        window.location.href = '{{ route("booking-history") }}';
+    const paymentModalClose = document.getElementById('payment-modal-close');
+    if (paymentModalClose) {
+        paymentModalClose.addEventListener('click', hidePaymentModal);
+    }
+
+    const paymentModal = document.getElementById('payment-modal');
+    if (paymentModal) {
+        paymentModal.addEventListener('click', function(event) {
+            if (event.target === paymentModal) {
+                hidePaymentModal();
+            }
+        });
+    }
+
+    const methodCardBtn = document.getElementById('method-card');
+    const methodGcashBtn = document.getElementById('method-gcash');
+    const methodPaypalBtn = document.getElementById('method-paypal');
+    const methodApplePayBtn = document.getElementById('method-applepay');
+    const paymentMethodInput = document.getElementById('payment-method-input');
+
+    function setPaymentMethod(method) {
+        if (!paymentMethodInput) {
+            return;
+        }
+
+        paymentMethodInput.value = method;
+        methodCardBtn?.classList.remove('active');
+        methodGcashBtn?.classList.remove('active');
+        methodPaypalBtn?.classList.remove('active');
+        methodApplePayBtn?.classList.remove('active');
+
+        if (method === 'card') {
+            methodCardBtn?.classList.add('active');
+        } else if (method === 'gcash') {
+            methodGcashBtn?.classList.add('active');
+        }
+    }
+
+    methodCardBtn?.addEventListener('click', function() {
+        setPaymentMethod('card');
     });
+
+    methodGcashBtn?.addEventListener('click', function() {
+        setPaymentMethod('gcash');
+    });
+
+    methodPaypalBtn?.addEventListener('click', function() {
+        methodPaypalBtn.classList.add('active');
+        alert('PayPal is not available yet. Please use Card or GCash.');
+        setPaymentMethod('card');
+    });
+
+    methodApplePayBtn?.addEventListener('click', function() {
+        methodApplePayBtn.classList.add('active');
+        alert('Apple Pay is not available yet. Please use Card or GCash.');
+        setPaymentMethod('card');
+    });
+
+    setPaymentMethod('card');
+
+    const paymentCheckoutBtn = document.getElementById('payment-checkout-btn');
+    if (paymentCheckoutBtn) {
+        paymentCheckoutBtn.addEventListener('click', function() {
+            if (!selectedSeat) {
+                alert('Please select a seat first.');
+                return;
+            }
+
+            const bookingDate = document.getElementById('booking-date')?.value;
+            const bookingTime = document.getElementById('booking-time')?.value;
+            const bookingEndTime = document.getElementById('booking-end-time')?.value;
+
+            if (!bookingDate || !bookingTime) {
+                alert('Please select both date and time start.');
+                return;
+            }
+
+            const selectedPaymentMethod = paymentMethodInput?.value || 'card';
+            const bookingData = {
+                service_type: '{{ $serviceType }}',
+                seat_id: selectedSeat.dataset.id,
+                seat_label: selectedSeat.dataset.seatNumber,
+                booking_date: bookingDate,
+                booking_time: bookingTime,
+                end_time: bookingEndTime || null,
+                payment_method: selectedPaymentMethod,
+                _token: '{{ csrf_token() }}'
+            };
+
+            paymentCheckoutBtn.disabled = true;
+            paymentCheckoutBtn.textContent = 'Processing...';
+
+            fetch('{{ route("services.create-booking-payment") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify(bookingData)
+            })
+            .then(async response => {
+                const contentType = response.headers.get('content-type') || '';
+                if (contentType.includes('application/json')) {
+                    return response.json();
+                }
+
+                const text = await response.text();
+                return {
+                    success: false,
+                    message: `Server error (${response.status}).`,
+                    details: text ? text.substring(0, 180) : 'No response body',
+                };
+            })
+            .then(data => {
+                if (data.success && data.checkout_url) {
+                    window.location.href = data.checkout_url;
+                    return;
+                }
+
+                paymentCheckoutBtn.disabled = false;
+                paymentCheckoutBtn.textContent = 'Continue to Secure Payment';
+                const detailedError = data?.details?.errors?.[0]?.detail || data?.error || data?.details;
+                alert('Unable to start payment: ' + (detailedError || data.message || 'Unknown error'));
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                paymentCheckoutBtn.disabled = false;
+                paymentCheckoutBtn.textContent = 'Continue to Secure Payment';
+                alert('Error starting payment. Please try again.');
+            });
+        });
+    }
 
     // Add event listeners for date and time changes
     if (dateInput) {

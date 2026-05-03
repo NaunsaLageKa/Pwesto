@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use App\Models\FloorPlan;
 use App\Models\User;
 use App\Models\Booking;
@@ -164,6 +166,175 @@ class ServiceController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Booking created successfully!',
+            'booking_id' => $booking->id,
+        ]);
+    }
+
+    public function createBookingPayment(Request $request)
+    {
+        if (!auth()->check()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Please log in again before making a payment.',
+            ], 401);
+        }
+
+        $request->validate([
+            'service_type' => 'required|string',
+            'seat_id' => 'required|string',
+            'seat_label' => 'required|string',
+            'booking_date' => 'required|date|after_or_equal:today',
+            'booking_time' => 'required|string',
+            'end_time' => 'nullable|string',
+            'payment_method' => 'required|in:card,gcash',
+        ]);
+
+        $existingBooking = Booking::where('seat_id', $request->seat_id)
+            ->where('booking_date', $request->booking_date)
+            ->where('booking_time', $request->booking_time)
+            ->whereIn('status', ['pending', 'confirmed'])
+            ->first();
+
+        if ($existingBooking) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This seat is already booked for the selected date and time.',
+            ], 400);
+        }
+
+        $floorPlan = $this->getFloorPlanForService($request->service_type);
+
+        if (!$floorPlan) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No floor plan found for this service.',
+            ], 400);
+        }
+
+        $hubOwner = $floorPlan->hubOwner;
+        if (!$hubOwner || $hubOwner->role !== 'hub_owner') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid hub owner configuration.',
+            ], 400);
+        }
+
+        $booking = Booking::create([
+            'user_id' => auth()->id(),
+            'hub_owner_id' => $hubOwner->id,
+            'hub_name' => $hubOwner->company ?: 'PWESTO Workspace',
+            'service_type' => $request->service_type,
+            'seat_id' => $request->seat_id,
+            'seat_label' => $request->seat_label,
+            'booking_date' => $request->booking_date,
+            'booking_time' => $request->booking_time,
+            'start_time' => $request->booking_time,
+            'end_time' => $request->end_time ?: $request->booking_time,
+            'status' => 'pending',
+            'amount' => 150,
+            'notes' => 'Booking created via payment checkout',
+        ]);
+
+        $secretKey = config('services.paymongo.secret_key');
+        if (!$secretKey) {
+            return response()->json([
+                'success' => false,
+                'message' => 'PayMongo secret key is not configured.',
+            ], 500);
+        }
+
+        if (str_starts_with($secretKey, 'pk_')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'PayMongo secret key is invalid. Use an sk_test_ or sk_live_ key for PAYMONGO_SECRET_KEY.',
+            ], 500);
+        }
+
+        $paymentMethodTypes = $request->payment_method === 'gcash' ? ['gcash'] : ['card'];
+        $amountInCentavos = (int) round(((float) $booking->amount) * 100);
+
+        $payload = [
+            'data' => [
+                'attributes' => [
+                    'send_email_receipt' => true,
+                    'show_description' => true,
+                    'show_line_items' => true,
+                    'description' => 'PWESTO seat booking payment',
+                    'line_items' => [[
+                        'currency' => 'PHP',
+                        'amount' => $amountInCentavos,
+                        'name' => 'Seat Booking - ' . $booking->seat_label,
+                        'quantity' => 1,
+                    ]],
+                    'payment_method_types' => $paymentMethodTypes,
+                    'reference_number' => 'BOOKING-' . $booking->id,
+                    'success_url' => route('booking-history') . '?payment=success&booking=' . $booking->id,
+                    'cancel_url' => route('services.select-seat', ['service' => $request->service_type]) . '?payment=cancelled',
+                ],
+            ],
+        ];
+
+        try {
+            $httpClient = Http::withBasicAuth($secretKey, '')
+                ->acceptJson()
+                ->timeout(20);
+
+            // Windows local environments can fail TLS verification if CA bundle is missing.
+            // Allow insecure fallback only for local development.
+            if (app()->environment('local')) {
+                $httpClient = $httpClient->withOptions(['verify' => false]);
+            }
+
+            $response = $httpClient->post('https://api.paymongo.com/v1/checkout_sessions', $payload);
+        } catch (\Throwable $e) {
+            $booking->delete();
+            Log::error('PayMongo checkout session request failed.', [
+                'booking_id' => $booking->id,
+                'payment_method' => $request->payment_method,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Unable to connect to PayMongo. Please try again.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+
+        if (!$response->successful()) {
+            $booking->delete();
+            Log::warning('PayMongo checkout session creation failed.', [
+                'booking_id' => $booking->id,
+                'status' => $response->status(),
+                'body' => $response->json(),
+            ]);
+
+            $detailMessage = data_get($response->json(), 'errors.0.detail')
+                ?? data_get($response->json(), 'errors.0.code')
+                ?? data_get($response->json(), 'data.attributes.message')
+                ?? 'Unable to start PayMongo checkout.';
+
+            return response()->json([
+                'success' => false,
+                'message' => $detailMessage,
+                'status' => $response->status(),
+                'details' => $response->json(),
+            ], 500);
+        }
+
+        $checkoutUrl = data_get($response->json(), 'data.attributes.checkout_url');
+        if (!$checkoutUrl) {
+            $booking->delete();
+
+            return response()->json([
+                'success' => false,
+                'message' => 'PayMongo checkout URL was not returned.',
+            ], 500);
+        }
+
+        return response()->json([
+            'success' => true,
+            'checkout_url' => $checkoutUrl,
             'booking_id' => $booking->id,
         ]);
     }

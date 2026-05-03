@@ -12,9 +12,14 @@ class HubOwnerUserController extends Controller
 {
     public function index(Request $request)
     {
-        // Only show users who have bookings with this hub owner
-        $query = User::whereHas('bookings', function($q) {
-            $q->where('hub_owner_id', auth()->id());
+        $hubOwner = auth()->user();
+
+        // Show users who booked this hub owner by ID or matching company name.
+        $query = User::whereHas('bookings', function($q) use ($hubOwner) {
+            $q->where('hub_owner_id', $hubOwner->id);
+            if ($hubOwner->company) {
+                $q->orWhereRaw('LOWER(hub_name) LIKE ?', ['%' . strtolower($hubOwner->company) . '%']);
+            }
         });
 
         // Filter by status
@@ -45,9 +50,17 @@ class HubOwnerUserController extends Controller
             });
         }
 
-        $users = $query->withCount('bookings')
-                      ->orderBy('created_at', 'desc')
-                      ->paginate(15);
+        $users = $query->withCount([
+                        'bookings as hub_bookings_count' => function ($q) use ($hubOwner) {
+                            $q->where('hub_owner_id', $hubOwner->id);
+                            if ($hubOwner->company) {
+                                $q->orWhereRaw('LOWER(hub_name) LIKE ?', ['%' . strtolower($hubOwner->company) . '%']);
+                            }
+                        }
+                    ])
+                    ->orderByDesc('hub_bookings_count')
+                    ->orderBy('name')
+                    ->paginate(15);
 
         // Get analytics data
         $analytics = $this->getUserAnalytics();

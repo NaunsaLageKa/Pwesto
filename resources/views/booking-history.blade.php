@@ -28,6 +28,12 @@
 
     <!-- Main Content -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        @if(request('payment') === 'success' && request('booking'))
+            <div class="mb-8 bg-green-100 border border-green-300 text-green-800 px-4 py-3 rounded-lg">
+                Payment successful. Your booking is recorded and currently pending hub owner confirmation.
+            </div>
+        @endif
+
         <!-- Header Section -->
         <div class="text-center mb-16">
             <h1 class="text-4xl font-bold text-white mb-4">
@@ -44,7 +50,7 @@
             <div class="flex justify-between items-center mb-8">
                 <h2 class="text-2xl font-semibold text-white">Upcoming & Pending Bookings</h2>
                 <span class="bg-teal-600 text-white px-3 py-1 rounded-full text-sm font-semibold">
-                    {{ $upcomingBookings->count() }} {{ $upcomingBookings->count() === 1 ? 'Booking' : 'Bookings' }}
+                    {{ $upcomingBookings->total() }} {{ $upcomingBookings->total() === 1 ? 'Booking' : 'Bookings' }}
                 </span>
             </div>
             
@@ -115,7 +121,7 @@
             <div class="flex justify-between items-center mb-8">
                 <h2 class="text-2xl font-semibold text-white">Recent & Past Bookings</h2>
                 <span class="bg-gray-600 text-white px-3 py-1 rounded-full text-sm font-semibold">
-                    {{ $pastBookings->count() }} {{ $pastBookings->count() === 1 ? 'Booking' : 'Bookings' }}
+                    {{ $pastBookings->total() }} {{ $pastBookings->total() === 1 ? 'Booking' : 'Bookings' }}
                 </span>
             </div>
             

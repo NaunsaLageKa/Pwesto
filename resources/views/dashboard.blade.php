@@ -19,8 +19,11 @@
             <a href="{{ route('services.index') }}" style="color:#222; text-decoration:none;">Services</a>
             <a href="{{ route('about') }}" style="color:#222; text-decoration:none;">About</a>
             <a href="{{ route('location') }}" style="color:#222; text-decoration:none;">Location</a>
-            <!-- Profile Dropdown for Regular Users Only -->
+            <!-- Notifications + profile -->
             @if(Auth::user()->role === 'user')
+            <div style="display:inline-flex; align-items:center; gap:12px;">
+            <x-notification-bell />
+            <!-- Profile Dropdown for Regular Users Only -->
             <div style="position:relative;" x-data="{ open: false }" @click.outside="open = false">
                 <button @click="open = !open" style="cursor:pointer; border:none; background:none; padding:0;">
                     <img src="{{ Auth::user()->profile_image ? asset('storage/' . Auth::user()->profile_image) : asset('images/avatar.svg') }}" alt="User" style="width:44px; height:44px; border-radius:50%; object-fit:cover; border:2px solid #eee; {{ !Auth::user()->profile_image ? 'background:#f3f4f6; padding:8px;' : '' }}">
@@ -48,6 +51,7 @@
                         </form>
                     </div>
                 </div>
+            </div>
             </div>
             @else
             <!-- Keep original link for admin and hub owner -->

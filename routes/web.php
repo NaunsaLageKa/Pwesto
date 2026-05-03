@@ -29,10 +29,18 @@ Route::get('/services/booking', [App\Http\Controllers\ServiceController::class, 
 Route::get('/services/nest-booking', [App\Http\Controllers\ServiceController::class, 'nestBooking'])->name('services.nest-booking');
 Route::get('/services/select-seat', [App\Http\Controllers\ServiceController::class, 'selectSeat'])->name('services.select-seat');
 Route::post('/services/create-booking', [App\Http\Controllers\ServiceController::class, 'createBooking'])->name('services.create-booking');
+Route::post('/services/create-booking-payment', [App\Http\Controllers\ServiceController::class, 'createBookingPayment'])->name('services.create-booking-payment');
 Route::post('/services/check-booking-status', [App\Http\Controllers\ServiceController::class, 'checkBookingStatus'])->name('services.check-booking-status');
 Route::get('/booking-history', [App\Http\Controllers\BookingHistoryController::class, 'index'])
     ->middleware(['auth'])
     ->name('booking-history');
+
+Route::middleware(['auth'])->group(function () {
+    Route::post('/notifications/{id}/read', [App\Http\Controllers\NotificationController::class, 'read'])
+        ->name('notifications.read');
+    Route::post('/notifications/read-all', [App\Http\Controllers\NotificationController::class, 'readAll'])
+        ->name('notifications.read-all');
+});
 
 Route::post('/booking-history/{id}/cancel', [App\Http\Controllers\BookingHistoryController::class, 'cancel'])
     ->middleware(['auth'])
@@ -104,21 +112,30 @@ Route::middleware(['auth'])->group(function () {
     });
     // Hub Owner Dashboard
     Route::get('/hub-owner/dashboard', function () {
-        // Show only bookings for this specific hub owner
-        $totalBookings = \App\Models\Booking::where('hub_owner_id', auth()->id())->count();
-        $activeUsers = \App\Models\Booking::where('hub_owner_id', auth()->id())
-            ->where('status', 'confirmed')
-            ->distinct('user_id')
-            ->count();
-        $recentBookings = \App\Models\Booking::where('hub_owner_id', auth()->id())
+        $hubOwner = auth()->user();
+
+        // Keep dashboard filters consistent with hub-owner booking pages.
+        $baseQuery = \App\Models\Booking::where(function ($q) use ($hubOwner) {
+            $q->where('hub_owner_id', $hubOwner->id);
+            if ($hubOwner->company) {
+                $q->orWhereRaw('LOWER(hub_name) LIKE ?', ['%' . strtolower($hubOwner->company) . '%']);
+            }
+        });
+
+        $totalBookings = (clone $baseQuery)->count();
+        $activeUsers = (clone $baseQuery)
+            ->whereIn('status', ['confirmed', 'completed'])
+            ->distinct()
+            ->count('user_id');
+        $revenue = (clone $baseQuery)
+            ->whereIn('status', ['confirmed', 'completed'])
+            ->sum('amount');
+        $recentBookings = (clone $baseQuery)
             ->with('user')
             ->orderBy('created_at', 'desc')
             ->paginate(5);
         
-        // Get current user's company name for dynamic title
-        $hubOwner = auth()->user();
-        
-        return view('hub-owner.dashboard', compact('totalBookings', 'activeUsers', 'recentBookings', 'hubOwner'));
+        return view('hub-owner.dashboard', compact('totalBookings', 'activeUsers', 'revenue', 'recentBookings', 'hubOwner'));
     })->name('hub-owner.dashboard');
 
     // Hub Owner Booking Management
