@@ -91,7 +91,7 @@
                     <a href="{{ route('services.nest-booking') }}" style="display:inline-block; transition: transform 0.2s ease;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
                         <img src="{{ asset('images/nest.png') }}" alt="Nest" style="height:240px; width:240px; border-radius:32px; background:#111; padding:0.5rem; object-fit:contain; box-shadow:0 4px 24px #0006;">
                     </a>
-                    <a href="#" style="display:inline-block; transition: transform 0.2s ease;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                    <a href="{{ route('services.mesh-booking') }}" style="display:inline-block; transition: transform 0.2s ease;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
                         <img src="{{ asset('images/media.jpg') }}" alt="Mesh Media" style="height:240px; width:240px; border-radius:32px; background:#111; padding:0.5rem; object-fit:contain; box-shadow:0 4px 24px #0006;">
                     </a>
                 </div>

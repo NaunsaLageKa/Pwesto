@@ -1,6 +1,10 @@
 @extends('layouts.app')
 
 @section('content')
+@php
+    $bookingAmount = $bookingAmount ?? 150;
+    $bookingBackRoute = $bookingBackRoute ?? route('services.booking');
+@endphp
 <div class="min-h-screen bg-gray-800">
     <!-- Navigation Header -->
     <div class="bg-white shadow-xl sticky top-0 z-50">
@@ -130,7 +134,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
                     </svg>
                     <div>
-                        <p class="text-gray-800 font-medium">₱50</p>
+                        <p class="text-gray-800 font-medium">₱{{ number_format($bookingAmount, 0) }}</p>
                         <p id="selected-seat" class="text-gray-600">No seat selected</p>
                     </div>
                 </div>
@@ -139,8 +143,8 @@
 
         <!-- Action Buttons -->
         <div class="flex justify-end space-x-4">
-            <a href="{{ route('services.booking') }}" class="px-6 py-3 bg-gray-500 text-white rounded-lg font-semibold hover:bg-gray-600 transition-colors">
-                Back to Services
+            <a href="{{ $bookingBackRoute }}" class="px-6 py-3 bg-gray-500 text-white rounded-lg font-semibold hover:bg-gray-600 transition-colors">
+                Back
             </a>
             <button id="confirm-booking" class="px-6 py-3 bg-green-500 text-white rounded-lg font-semibold hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
                 Confirm Booking
@@ -200,7 +204,7 @@
 
             <input type="hidden" id="payment-method-input" value="card">
 
-            <button id="payment-checkout-btn" class="pm-checkout-btn" type="button">Checkout - Php 150.00</button>
+            <button id="payment-checkout-btn" class="pm-checkout-btn" type="button" data-amount="{{ number_format($bookingAmount, 2, '.', '') }}">Checkout - Php {{ number_format($bookingAmount, 2) }}</button>
         </div>
     </div>
 </div>
@@ -848,6 +852,7 @@ function initializeSeatSelection() {
     setPaymentMethod('card');
 
     const paymentCheckoutBtn = document.getElementById('payment-checkout-btn');
+    const defaultCheckoutBtnLabel = paymentCheckoutBtn ? paymentCheckoutBtn.textContent.trim() : '';
     if (paymentCheckoutBtn) {
         paymentCheckoutBtn.addEventListener('click', function() {
             if (!selectedSeat) {
@@ -907,14 +912,14 @@ function initializeSeatSelection() {
                 }
 
                 paymentCheckoutBtn.disabled = false;
-                paymentCheckoutBtn.textContent = 'Continue to Secure Payment';
+                paymentCheckoutBtn.textContent = defaultCheckoutBtnLabel;
                 const detailedError = data?.details?.errors?.[0]?.detail || data?.error || data?.details;
                 alert('Unable to start payment: ' + (detailedError || data.message || 'Unknown error'));
             })
             .catch(error => {
                 console.error('Error:', error);
                 paymentCheckoutBtn.disabled = false;
-                paymentCheckoutBtn.textContent = 'Continue to Secure Payment';
+                paymentCheckoutBtn.textContent = defaultCheckoutBtnLabel;
                 alert('Error starting payment. Please try again.');
             });
         });

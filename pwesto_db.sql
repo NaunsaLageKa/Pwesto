@@ -14,6 +14,7 @@ DROP TABLE IF EXISTS password_reset_tokens;
 DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS cache;
 DROP TABLE IF EXISTS jobs; 
+Drop Table IF EXISTS notifications;
 
 -- Create users table
 CREATE TABLE users (
@@ -154,6 +155,19 @@ CREATE TABLE disputes (
     FOREIGN KEY (hub_owner_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE CASCADE,
     FOREIGN KEY (resolved_by) REFERENCES users(id) ON DELETE SET NULL
+);
+
+CREATE TABLE notifications (
+    id CHAR(36) NOT NULL,
+    type VARCHAR(255) NOT NULL,
+    notifiable_type VARCHAR(255) NOT NULL,
+    notifiable_id INT UNSIGNED NOT NULL,
+    data TEXT NOT NULL,
+    read_at TIMESTAMP NULL,
+    created_at TIMESTAMP NULL,
+    updated_at TIMESTAMP NULL,
+    PRIMARY KEY (id),
+    INDEX notifications_notifiable_type_notifiable_id_index (notifiable_type, notifiable_id)
 );
 
 -- Insert sample admin user

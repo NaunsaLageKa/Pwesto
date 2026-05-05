@@ -27,6 +27,7 @@ Route::get('/location', function () {
 Route::get('/services', [App\Http\Controllers\ServiceController::class, 'index'])->name('services.index');
 Route::get('/services/booking', [App\Http\Controllers\ServiceController::class, 'booking'])->name('services.booking');
 Route::get('/services/nest-booking', [App\Http\Controllers\ServiceController::class, 'nestBooking'])->name('services.nest-booking');
+Route::get('/services/mesh-booking', [App\Http\Controllers\ServiceController::class, 'meshBooking'])->name('services.mesh-booking');
 Route::get('/services/select-seat', [App\Http\Controllers\ServiceController::class, 'selectSeat'])->name('services.select-seat');
 Route::post('/services/create-booking', [App\Http\Controllers\ServiceController::class, 'createBooking'])->name('services.create-booking');
 Route::post('/services/create-booking-payment', [App\Http\Controllers\ServiceController::class, 'createBookingPayment'])->name('services.create-booking-payment');

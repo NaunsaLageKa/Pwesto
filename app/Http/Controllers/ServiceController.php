@@ -18,9 +18,18 @@ class ServiceController extends Controller
     {
         return [
             'hot-desk' => 'Produktiv',
-            'private-office' => 'Nest Workspaces', 
+            'private-office' => 'Nest Workspaces',
             'meeting-room' => 'Mesh Media',
         ];
+    }
+
+    private function getBookingAmountForService(string $serviceType): float
+    {
+        return match ($serviceType) {
+            'private-office' => 200.0,
+            'meeting-room' => 175.0,
+            default => 150.0,
+        };
     }
 
     /**
@@ -49,10 +58,22 @@ class ServiceController extends Controller
         return view('services.nest-booking');
     }
 
+    public function meshBooking()
+    {
+        return view('services.mesh-booking');
+    }
+
     public function selectSeat(Request $request)
     {
         $serviceType = $request->query('service', 'hot-desk');
-        
+
+        $bookingAmount = $this->getBookingAmountForService($serviceType);
+        $bookingBackRoute = match ($serviceType) {
+            'private-office' => route('services.nest-booking'),
+            'meeting-room' => route('services.mesh-booking'),
+            default => route('services.booking'),
+        };
+
         // Get the active floor plan for the service type
         $floorPlan = $this->getFloorPlanForService($serviceType);
         
@@ -84,7 +105,13 @@ class ServiceController extends Controller
         }
         
         
-        return view('services.select-seat', compact('serviceType', 'floorPlan', 'bookingStatuses'));
+        return view('services.select-seat', compact(
+            'serviceType',
+            'floorPlan',
+            'bookingStatuses',
+            'bookingAmount',
+            'bookingBackRoute'
+        ));
     }
 
     public function createBooking(Request $request)
@@ -159,7 +186,7 @@ class ServiceController extends Controller
             'start_time' => $request->booking_time,  // Use booking_time as start_time
             'end_time' => $request->booking_time,     // Use booking_time as end_time
             'status' => 'pending',
-            'amount' => 150,
+            'amount' => $this->getBookingAmountForService($request->service_type),
             'notes' => 'Booking created via floor plan selection',
         ]);
 
@@ -231,7 +258,7 @@ class ServiceController extends Controller
             'start_time' => $request->booking_time,
             'end_time' => $request->end_time ?: $request->booking_time,
             'status' => 'pending',
-            'amount' => 150,
+            'amount' => $this->getBookingAmountForService($request->service_type),
             'notes' => 'Booking created via payment checkout',
         ]);
 

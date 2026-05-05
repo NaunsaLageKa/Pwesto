@@ -311,7 +311,7 @@
                         <h3>Mesh Media - Ayala Workspace</h3>
                         <p>F. Ramos St. Cebu City</p>
                         <p>6:00 AM - 10:00 PM</p>
-                        <span style="color: #666; font-style: italic;">Coming Soon</span>
+                        <a href="{{ route('services.mesh-booking') }}" style="color: #4ecdc4; text-decoration: none; font-weight: 600;">Book Now →</a>
                     </div>
                 </div>
                 
@@ -335,9 +335,11 @@
             'produktiv-osmena': {
                 name: "Produktiv - Osmeña Workspace",
                 address: "Osmeña Blvd, Cebu City, 6000 Cebu",
-                Social Media: "https://www.facebook.com/produktivph/",
+                socialMedia: "https://www.facebook.com/produktivph/",
                 rating: "4.9 (174 reviews)",
                 hours: "Open 24 hours",
+                phone: "",
+                website: "https://www.facebook.com/produktivph/",
                 bookingLink: "{{ route('services.booking') }}",
                 lat: 10.3157,
                 lng: 123.8854,
@@ -347,9 +349,11 @@
             'nest-itpark': {
                 name: "Nest - Workspace",
                 address: "Basement 1, Horizons 101, General Maxilom Avenue, Cebu City.",
-                Social Media: "https://www.facebook.com/nestworkspacesph",
+                socialMedia: "https://www.facebook.com/nestworkspacesph",
                 rating: "4.8 (142 reviews)",
                 hours: "Open 24 hours",
+                phone: "",
+                website: "https://www.facebook.com/nestworkspacesph",
                 bookingLink: "{{ route('services.nest-booking') }}",
                 lat: 10.3200,
                 lng: 123.9000,
@@ -359,10 +363,12 @@
             'mesh-ayala': {
                 name: "Mesh Media - Mango Avenue ",
                 address: "F. Ramos St. Cebu City",
-                Social Media: "https://www.instagram.com/meshmedia.space",
+                socialMedia: "https://www.instagram.com/meshmedia.space",
                 rating: "4.7 (98 reviews)",
                 hours: "6:00 AM - 10:00 PM",
-                bookingLink: "#",
+                phone: "",
+                website: "https://www.instagram.com/meshmedia.space",
+                bookingLink: "{{ route('services.mesh-booking') }}",
                 lat: 10.3100,
                 lng: 123.8700,
                 color: '#4ecdc4',
@@ -375,10 +381,11 @@
             // Initialize map centered on Cebu City
             map = L.map('map').setView([10.3157, 123.8854], 13);
 
-            // Add OpenStreetMap tiles
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-                maxZoom: 19
+            // Basemap: CARTO Voyager (OSM-based; distinct style from raw OSM tiles)
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+                subdomains: 'abcd',
+                maxZoom: 20
             }).addTo(map);
 
             // Add markers for each workspace
@@ -405,7 +412,7 @@
                             <h3 style="margin: 0 0 10px 0; color: #222; font-size: 16px;">${workspace.name}</h3>
                             <p style="margin: 5px 0; color: #666; font-size: 14px;">${workspace.address}</p>
                             <p style="margin: 5px 0; color: #666; font-size: 14px;">${workspace.hours}</p>
-                            <p style="margin: 5px 0; color: #666; font-size: 14px;">${workspace.phone}</p>
+                            ${workspace.phone ? `<p style="margin: 5px 0; color: #666; font-size: 14px;">${workspace.phone}</p>` : ''}
                             <p style="margin: 5px 0; color: #999; font-size: 12px; font-style: italic;"> Drag marker to reposition</p>
                             <div style="margin-top: 10px; display: flex; gap: 8px;">
                                 <button onclick="getDirections('${workspace.address}')" style="background: #19c2b8; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 12px;">Directions</button>
@@ -473,8 +480,8 @@
                     </div>
                     <p style="margin: 8px 0; color: #666; font-size: 14px;"> ${workspace.address}</p>
                     <p style="margin: 8px 0; color: #666; font-size: 14px;"> ${workspace.hours}</p>
-                    <p style="margin: 8px 0; color: #666; font-size: 14px;"> ${workspace.phone}</p>
-                    <p style="margin: 8px 0; color: #666; font-size: 14px;"> ${workspace.website}</p>
+                    ${workspace.phone ? `<p style="margin: 8px 0; color: #666; font-size: 14px;">${workspace.phone}</p>` : ''}
+                    ${workspace.website ? `<p style="margin: 8px 0; color: #666; font-size: 14px;"><a href="${workspace.website}" target="_blank" rel="noopener" style="color: #19c2b8;">${workspace.website}</a></p>` : ''}
                     <div style="margin-top: 15px; display: flex; gap: 10px;">
                         <button onclick="getDirections('${workspace.address}')" style="background: #19c2b8; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 14px;">Get Directions</button>
                         <button onclick="bookWorkspace('${workspace.bookingLink}')" style="background: #ff6b6b; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 14px;">Book Now</button>
