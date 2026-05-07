@@ -2,33 +2,7 @@
 
 @section('content')
 <div class="min-h-screen bg-gray-800">
-    <!-- Navigation Header -->
-    <div class="bg-white shadow-xl sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-16">
-                <div class="flex items-center space-x-6">
-                    @if(Auth::user()->role === 'admin')
-                    <a href="{{ route('admin.dashboard') }}" class="admin-button">
-                        Admin Panel
-                    </a>
-                    @endif
-                    <div class="text-2xl font-bold text-teal-600 tracking-wider">PWESTO!</div>
-                </div>
-                <div class="flex items-center space-x-6">
-                    <a href="{{ route('dashboard') }}" class="nav-link">Home</a>
-                    <a href="{{ route('booking-history') }}" class="nav-link">Booking History</a>
-                    <a href="{{ route('services.index') }}" class="nav-link">Services</a>
-                    @if(Auth::user()->role === 'hub_owner')
-                    <a href="{{ route('hub-owner.dashboard') }}" class="nav-link">Dashboard</a>
-                    <a href="{{ route('hub-owner.floor-plan') }}" class="nav-link">Floor Plan</a>
-                    @endif
-                    <a href="{{ route('about') }}" class="nav-link">About</a>
-                    <a href="{{ route('location') }}" class="nav-link">Location</a>
-                    <x-profile-dropdown />
-                </div>
-            </div>
-        </div>
-    </div>
+    @include('partials.dashboard-navbar', ['active' => 'services'])
 
     <!-- Main Content -->
     <div class="min-h-screen relative px-4 sm:px-6 lg:px-8">
@@ -97,7 +71,7 @@
 .mesh-title {
     font-size: 5rem;
     font-weight: bold;
-    color: #4ecdc4;
+    color: #fbbf24;
     margin-bottom: 1.5rem;
     line-height: 0.9;
     letter-spacing: -0.02em;
@@ -120,38 +94,39 @@
 
 .description-text {
     position: absolute;
-    font-size: 2rem;
+    font-size: 3rem;
     font-weight: bold;
     color: white;
     line-height: 1.3;
     max-width: 400px;
-    left: 50%;
-    transform: translateX(-50%);
-    bottom: 72px;
+    left: 230px;
+    top: 400px;
     text-align: center;
-    width: 90%;
+    width: 100%;
     z-index: 5;
 }
 
 .mesh-book-btn {
     display: inline-block;
-    background-color: #2a9d8f;
+    background-color: #4a5d23;
     color: white;
-    padding: 2rem 4rem;
-    border-radius: 1rem;
-    text-decoration: none;
     font-weight: bold;
-    font-size: 2rem;
+    padding: 1.2rem 3rem;
+    border-radius: 0.5rem;
+    font-size: 1.5rem;
+    text-decoration: none;
     transition: all 0.3s ease;
-    box-shadow: 0 8px 25px rgba(42, 157, 143, 0.35);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
     border: none;
     cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
 }
 
 .mesh-book-btn:hover {
-    background-color: #238f82;
-    transform: translateY(-3px);
-    box-shadow: 0 12px 35px rgba(42, 157, 143, 0.45);
+    background-color: #5a6d33;
+    transform: translateY(-2px);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
 }
 
 .image-container {

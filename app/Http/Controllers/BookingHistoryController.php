@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Booking;
+use App\Notifications\BookingStatusNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -14,6 +15,30 @@ class BookingHistoryController extends Controller
         $recentPaidBookingId = $request->query('payment') === 'success'
             ? (int) $request->query('booking')
             : null;
+
+        if ($recentPaidBookingId) {
+            $paidBooking = Booking::where('id', $recentPaidBookingId)
+                ->where('user_id', $user->id)
+                ->first();
+
+            if ($paidBooking) {
+                $alreadyNotified = $user->notifications()
+                    ->where('type', BookingStatusNotification::class)
+                    ->latest()
+                    ->limit(50)
+                    ->get()
+                    ->contains(function ($notification) use ($recentPaidBookingId) {
+                        $data = $notification->data;
+                        return is_array($data)
+                            && ($data['status'] ?? null) === 'paid'
+                            && (int) ($data['booking_id'] ?? 0) === $recentPaidBookingId;
+                    });
+
+                if (!$alreadyNotified) {
+                    $user->notify(new BookingStatusNotification($paidBooking, 'paid'));
+                }
+            }
+        }
         
         // Get upcoming and pending bookings with pagination
         $upcomingBookings = Booking::where('user_id', $user->id)

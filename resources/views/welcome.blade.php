@@ -6,190 +6,270 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
     <style>
-        body { font-family: Arial, sans-serif; background: #f5faff; margin: 0; }
-        .container { max-width: 1200px; margin: auto; padding: 2rem; }
-        .header, .footer { text-align: center; }
-        .features, .testimonials, .blog, .collab { margin: 3rem 0; }
-        .features-list, .testimonials-list, .blog-list, .collab-list { display: flex; gap: 2rem; flex-wrap: wrap; justify-content: center; }
-        .card { background: #fff; border-radius: 10px; box-shadow: 0 2px 8px #0001; padding: 1.5rem; flex: 1 1 250px; min-width: 250px; }
-        .cta { background: #fff; padding: 2rem; border-radius: 10px; text-align: center; margin: 2rem 0; }
-        .cta button { background: #1abc9c; color: #fff; border: none; padding: 1rem 2rem; border-radius: 5px; font-size: 1.2rem; cursor: pointer; }
-        .footer { background: #222; color: #fff; padding: 2rem 0; }
-        .footer a { color: #fff; margin: 0 1rem; text-decoration: none; }
-        .logo { font-size: 2.5rem; font-weight: bold; color: #009688; }
-        .tagline { color: #009688; font-size: 1.2rem; }
-        .section-title { font-size: 2rem; font-weight: bold; margin-bottom: 1.5rem; text-align: center; }
-        .section-subtitle { color: #555; text-align: center; margin-bottom: 2rem; }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: 'Inter', Arial, sans-serif;
+            background: #f3f6fb;
+            color: #111827;
+        }
+        .page {
+            width: 100%;
+            max-width: none;
+            margin: 0;
+            padding: 18px 18px 0;
+        }
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 8px 0 18px;
+        }
+        .brand {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 800;
+            font-size: 30px;
+            color: #0ea5a0;
+            letter-spacing: 1px;
+        }
+        .brand-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 999px;
+            background: #19c2b8;
+            box-shadow: 0 0 0 6px rgba(25, 194, 184, 0.2);
+        }
+
+        .hero {
+            background: #fff;
+            border: 1px solid #e8edf3;
+            border-radius: 26px;
+            box-shadow: 0 12px 28px rgba(2, 6, 23, 0.07);
+            overflow: hidden;
+            margin-bottom: 24px;
+        }
+        .hero-grid {
+            display: grid;
+            grid-template-columns: 0.95fr 1.05fr;
+            align-items: stretch;
+        }
+        .hero-copy {
+            padding: 54px 48px;
+        }
+        .hero-copy h1 {
+            margin: 0 0 14px;
+            font-size: clamp(2.5rem, 5.4vw, 4.2rem);
+            line-height: 1.05;
+            letter-spacing: -0.5px;
+            font-weight: 900;
+            color: #111827;
+        }
+        .hero-copy .accent {
+            color: #19c2b8;
+        }
+        .hero-copy p {
+            margin: 0 0 26px;
+            color: #4b5563;
+            max-width: 430px;
+            line-height: 1.7;
+            font-size: 1.1rem;
+        }
+        .hero-copy .cta {
+            display: inline-block;
+            background: linear-gradient(135deg, #0f172a, #111827);
+            color: #fff;
+            padding: 14px 34px;
+            border-radius: 999px;
+            font-weight: 800;
+            text-decoration: none;
+            font-size: 1.05rem;
+            letter-spacing: 0.2px;
+            box-shadow: 0 10px 18px rgba(15, 23, 42, 0.25);
+            transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+        }
+        .hero-copy .cta:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 14px 24px rgba(15, 23, 42, 0.32);
+            background: linear-gradient(135deg, #111827, #0b1220);
+        }
+        .hero-art {
+            position: relative;
+            min-height: 560px;
+            background:
+                linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.15)),
+                url('{{ asset('images/collab.jpg') }}') center/cover no-repeat;
+        }
+        .hero-art::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background:
+                linear-gradient(90deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.12) 100%),
+                repeating-linear-gradient(
+                    90deg,
+                    transparent 0,
+                    transparent 92px,
+                    rgba(17, 24, 39, 0.18) 92px,
+                    rgba(17, 24, 39, 0.18) 94px
+                );
+        }
+        .hero-card {
+            position: absolute;
+            right: 34px;
+            bottom: 30px;
+            z-index: 2;
+            background: rgba(255,255,255,0.9);
+            backdrop-filter: blur(2px);
+            border-radius: 16px;
+            border: 1px solid #e5e7eb;
+            padding: 12px;
+            width: 220px;
+        }
+        .hero-card img {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 10px;
+            display: block;
+        }
+
+        .partners {
+            background: #fff;
+            border: 1px solid #e8edf3;
+            border-radius: 18px;
+            padding: 18px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 18px;
+            flex-wrap: wrap;
+        }
+        .partner {
+            width: 110px;
+            height: 90px;
+            border-radius: 14px;
+            border: 1px solid #e7eaf0;
+            background: #f9fafb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+        }
+        .partner img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .footer {
+            background: #0f1115;
+            color: #c9d1dd;
+            border-radius: 18px 18px 0 0;
+            padding: 28px 28px 18px;
+            margin-top: 10px;
+        }
+        .footer-grid {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 22px;
+        }
+        .footer h4 {
+            margin: 0 0 12px;
+            color: #fff;
+            font-size: 0.85rem;
+            letter-spacing: 0.4px;
+        }
+        .footer p {
+            margin: 0 0 6px;
+            font-size: 0.88rem;
+            line-height: 1.35;
+        }
+        .footer-brand {
+            margin-top: 18px;
+            color: #fff;
+            font-weight: 700;
+            font-size: 1rem;
+        }
+        @media (max-width: 980px) {
+            .hero-grid { grid-template-columns: 1fr; }
+            .hero-art { min-height: 300px; }
+            .hero-copy { padding: 38px 28px 24px; }
+            .hero-card { display: none; }
+            .footer-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <!-- Hero/Header -->
-        <div style="width:100%;text-align:center;margin-top:2.5rem;margin-bottom:3rem;">
-            <div style="font-size:3.5rem;font-weight:900;color:#19c2b8;letter-spacing:3px;line-height:1;">
-                PWESTO!
+    <div class="page">
+        <header class="topbar">
+            <div class="brand">
+                <span class="brand-dot"></span>
+                PWESTO
             </div>
-            <div style="font-size:2rem;font-weight:600;color:#222;margin-top:1rem;">
-                Reserve Your Space, Work Your Way
-            </div>
-        </div>
+        </header>
 
-        <!-- Features/Intro -->
-        <div style="display: flex; align-items: center; justify-content: center; gap: 5rem; margin: 5rem 0;">
-            <!-- Images Section -->
-            <div style="position: relative; width: 540px; min-width: 400px; height: 440px;">
-                <img src="{{ asset('images/worker1.jpg') }}" alt="Main" style="width: 420px; height: 440px; object-fit: cover; border-radius: 32px; box-shadow: 0 6px 32px #0002;">
-                <img src="{{ asset('images/worker2.jpg') }}" alt="Overlay" style="position: absolute; top: 40px; left: -80px; width: 200px; height: 220px; object-fit: cover; border-radius: 24px; border: 10px solid #fff; box-shadow: 0 6px 24px #0002;">
-            </div>
-
-            <!-- Text and Features Section -->
-            <div>
-                <h2 style="font-size: 2.7rem; font-weight: 800; margin-bottom: 1.2rem; color: #222; line-height: 1.2;">
-                    Best creative working environments that suits your business.
-                </h2>
-                <p style="color: #555; margin-bottom: 2.7rem; font-size: 1.2rem;">
-                Experience a professional and inspiring workspace designed to support productivity, innovation, and growth. Our facilities cater to individuals and teams seeking a flexible and efficient working environment.
-                </p>
-                <div style="display: flex; flex-direction: column; gap: 2rem;">
-                    <div style="display: flex; align-items: center; gap: 1.5rem;">
-                        <span style="background: #22c55e; color: #fff; border-radius: 14px; padding: 0.9rem; display: flex; align-items: center;">
-                            <!-- Example icon: clock -->
-                            <svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="2"><circle cx="16" cy="16" r="14"/><path d="M16 8v9l6 2"/></svg>
-                        </span>
-                        <div>
-                            <div style="font-weight: 700; font-size: 1.3rem;">Open 24 hours</div>
-                            <div style="color: #555; font-size: 1.05rem;">Access your workspace at any time. There facility remains open 24/7 to accommodate your unique schedule and working preferences.</div>
-                        </div>
-                    </div>
-                    <div style="display: flex; align-items: center; gap: 1.5rem;">
-                        <span style="background: #22c55e; color: #fff; border-radius: 14px; padding: 0.9rem; display: flex; align-items: center;">
-                            <!-- Example icon: cup -->
-                            <svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 15h18v2a9 9 0 01-18 0v-2z"/><path d="M25 15V9a2 2 0 00-2-2H9a2 2 0 00-2 2v6"/></svg>
-                        </span>
-                        <div>
-                            <div style="font-weight: 700; font-size: 1.3rem;">Services Coffee, drink and snacks</div>
-                            <div style="color: #555; font-size: 1.05rem;">Stay refreshed and focused with There curated selection of complimentary coffee, beverages, and light snacks—designed to keep you energized and inspired throughout your workday.</div>
-                        </div>
-                    </div>
-                    <div style="display: flex; align-items: center; gap: 1.5rem;">
-                        <span style="background: #22c55e; color: #fff; border-radius: 14px; padding: 0.9rem; display: flex; align-items: center;">
-                            <!-- Example icon: game controller -->
-                            <svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="10" width="24" height="12" rx="8"/><path d="M10 16h.01"/><path d="M22 16h.01"/><path d="M16 20v.01"/><path d="M16 12v.01"/></svg>
-                        </span>
-                        <div>
-                            <div style="font-weight: 700; font-size: 1.3rem;">Services Equipment</div>
-                            <div style="color: #555; font-size: 1.05rem;">They provide essential tech accessories on loan to ensure your workflow remains uninterrupted.</div>
-                        </div>
+        <section class="hero">
+            <div class="hero-grid">
+                <div class="hero-copy">
+                    <h1>Find a Perfect <span class="accent">Working Space</span> Near You!</h1>
+                    <p>
+                        Discover flexible, inspiring coworking spaces built for solo work and team collaboration.
+                        Book in minutes and work your way.
+                    </p>
+                    <a href="{{ route('login') }}" class="cta">Book Now</a>
+                </div>
+                <div class="hero-art">
+                    <div class="hero-card">
+                        <img src="{{ asset('images/nest 1.webp') }}" alt="Workspace scene">
                     </div>
                 </div>
             </div>
-        </div>
+        </section>
 
-        <!-- Call to Action -->
-        <div class="cta">
-            <h2>The Easiest Way to Book Your Workspace</h2>
-            <a href="{{ route('login') }}" style="display:inline-block; background:#22c55e; color:#fff; border:none; padding:1rem 2.5rem; border-radius:8px; font-size:1.2rem; font-weight:600; text-decoration:none; margin-top:1rem; transition:background 0.2s;">BOOK NOW</a>
-        </div>
+        <section class="partners">
+            <div class="partner"><img src="{{ asset('images/produktiv.png') }}" alt="Produktiv"></div>
+            <div class="partner"><img src="{{ asset('images/Nest.png') }}" alt="Nest"></div>
+            <div class="partner"><img src="{{ asset('images/media.jpg') }}" alt="Mesh Media"></div>
+        </section>
 
-        <!-- Testimonials -->
-        <div class="testimonials">
-            <div class="section-title">They Satisfied With Our PWESTO</div>
-            <div class="testimonials-list">
-                <div class="card">
-                    <p>"Great place to work and collaborate!"</p>
-                    <strong>John Doe</strong>
-                    <div>⭐⭐⭐⭐⭐</div>
-                </div>
-                <div class="card">
-                    <p>"Amazing amenities and friendly staff."</p>
-                    <strong>Jane Smith</strong>
-                    <div>⭐⭐⭐⭐⭐</div>
-                </div>
-                <div class="card">
-                    <p>"Flexible booking and great atmosphere."</p>
-                    <strong>Alex Lee</strong>
-                    <div>⭐⭐⭐⭐⭐</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Blog Section -->
-        <div class="blog">
-            <div class="section-title">Our Latest Blog</div>
-            <div class="blog-list">
-                <div class="card">
-                    <img src="{{ asset('images/blog1.jpg') }}" alt="Blog 1" style="width:100%; border-radius:8px;">
-                    <h4>Why use a co-working space?</h4>
-                    <p>Discover the benefits of flexible workspaces for your business.</p>
-                </div>
-                <div class="card">
-                    <img src="{{ asset('images/blog2.jpg') }}" alt="Blog 2" style="width:100%; border-radius:8px;">
-                    <h4>Easy Tips for First Timers</h4>
-                    <p>How to get the most out of your first co-working experience.</p>
-                </div>
-                <div class="card">
-                    <img src="{{ asset('images/blog3.jpg') }}" alt="Blog 3" style="width:100%; border-radius:8px;">
-                    <h4>Creating a Creative Space</h4>
-                    <p>How to design a workspace that inspires productivity.</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Company Collaboration -->
-        <div style="position:relative; margin-top:4rem;">
-            <div style="background:url('{{ asset('images/collab.jpg') }}') center/cover no-repeat; min-height:320px; border-radius:24px 24px 0 0;">
-                <div style="background:rgba(0,0,0,0.5); min-height:320px; border-radius:24px 24px 0 0; display:flex; align-items:center; justify-content:center;">
-                    <h2 style="color:#fff; font-size:5rem; font-weight:900; text-align:center; letter-spacing:2px;">
-                        Pwesto Company<br>Collaboration
-                    </h2>
-                </div>
-            </div>
-            <div style="background:#fbeec1; display:flex; justify-content:center; align-items:center; gap:5rem; padding:3.5rem 0; border-radius:0 0 24px 24px;">
-                <img src='{{ asset('images/produktiv.png') }}' alt='Produktiv' style='height:180px; border-radius:28px; background:#fff; padding:2rem;'>
-                <img src='{{ asset('images/Nest.png') }}' alt='Nest' style='height:180px; border-radius:28px; background:#fff; padding:2rem;'>
-                <img src='{{ asset('images/media.jpg') }}' alt='Mesh Media' style='height:180px; border-radius:28px; background:#fff; padding:2rem;'>
-            </div>
-        </div>
-
-        <!-- Footer -->
-        <div style="background:#111; color:#fff; padding:3rem 0 1.5rem 0; margin-top:0;">
-            <div style="max-width:1200px; margin:auto; display:flex; flex-wrap:wrap; justify-content:space-between; gap:2rem;">
+        <footer class="footer">
+            <div class="footer-grid">
                 <div>
-                    <div style="font-weight:700; margin-bottom:1rem;">FEATURE</div>
-                    <div>Team Management</div>
-                    <div>Tasks Schedule</div>
-                    <div>File Manager</div>
+                    <h4>FEATURE</h4>
+                    <p>Team Management</p>
+                    <p>Tasks Schedule</p>
+                    <p>File Manager</p>
                 </div>
                 <div>
-                    <div style="font-weight:700; margin-bottom:1rem;">RESOURCES</div>
-                    <div>Blog</div>
-                    <div>Support</div>
-                    <div>Newsletter</div>
+                    <h4>RESOURCES</h4>
+                    <p>Blog</p>
+                    <p>Support</p>
+                    <p>Newsletter</p>
                 </div>
                 <div>
-                    <div style="font-weight:700; margin-bottom:1rem;">COMMUNITY</div>
-                    <div>Twitter</div>
-                    <div>Instagram</div>
-                    <div>Facebook</div>
-                    <div>Youtube</div>
+                    <h4>COMMUNITY</h4>
+                    <p>Twitter</p>
+                    <p>Instagram</p>
+                    <p>Facebook</p>
+                    <p>YouTube</p>
                 </div>
                 <div>
-                    <div style="font-weight:700; margin-bottom:1rem;">SUPPORT</div>
-                    <div>My Account</div>
-                    <div>Help & Support</div>
-                    <div>Contact Us</div>
+                    <h4>SUPPORT</h4>
+                    <p>My Account</p>
+                    <p>Help & Support</p>
+                    <p>Contact Us</p>
                 </div>
                 <div>
-                    <div style="font-weight:700; margin-bottom:1rem;">COMPANY</div>
-                    <div>Privacy Policy</div>
-                    <div>Terms of Service</div>
-                    <div>Code of Conduct</div>
+                    <h4>COMPANY</h4>
+                    <p>Privacy Policy</p>
+                    <p>Terms of Service</p>
+                    <p>Code of Conduct</p>
                 </div>
             </div>
-            <div style="text-align:left; margin-top:2rem; font-size:1.1rem; font-weight:600;">
-                Pwesto
-            </div>
-        </div>
+            <div class="footer-brand">Pwesto</div>
+        </footer>
     </div>
 </body>
 </html>

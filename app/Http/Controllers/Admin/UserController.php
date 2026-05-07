@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Booking;
 use App\Models\FloorPlan;
+use Illuminate\Support\Facades\DB;
 
 class UserController extends Controller
 {
@@ -17,14 +18,57 @@ class UserController extends Controller
         $totalBookings = Booking::count();
         $totalFloorPlans = FloorPlan::count();
         $recentUsers = User::latest()->take(5)->get();
+        $peakUsageTimes = $this->getPeakUsageTimes();
+        $highDemandLocations = $this->getHighDemandLocations();
         
         return view('admin.dashboard', compact(
             'totalUsers', 
             'hubOwnerStats',
             'totalBookings',
             'totalFloorPlans',
-            'recentUsers'
+            'recentUsers',
+            'peakUsageTimes',
+            'highDemandLocations'
         ));
+    }
+
+    protected function getHubOwnerStats(): array
+    {
+        return [
+            'total' => User::where('role', 'hub_owner')->count(),
+            'pending' => User::where('role', 'hub_owner')->where('status', 'pending')->count(),
+        ];
+    }
+
+    private function getPeakUsageTimes()
+    {
+        return Booking::query()
+            ->select('booking_time')
+            ->selectRaw('COUNT(*) as booking_count')
+            ->whereIn('status', ['pending', 'confirmed', 'completed'])
+            ->whereNotNull('booking_time')
+            ->groupBy('booking_time')
+            ->orderByDesc('booking_count')
+            ->limit(5)
+            ->get()
+            ->map(function ($row) {
+                $row->time_label = date('g:i A', strtotime((string) $row->booking_time));
+                return $row;
+            });
+    }
+
+    private function getHighDemandLocations()
+    {
+        return Booking::query()
+            ->select('hub_name')
+            ->selectRaw('COUNT(*) as booking_count')
+            ->whereIn('status', ['pending', 'confirmed', 'completed'])
+            ->whereNotNull('hub_name')
+            ->where('hub_name', '!=', '')
+            ->groupBy('hub_name')
+            ->orderByDesc('booking_count')
+            ->limit(5)
+            ->get();
     }
 
     public function index(Request $request)

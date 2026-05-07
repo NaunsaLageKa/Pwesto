@@ -2,32 +2,17 @@
 
 @section('content')
 <div class="min-h-screen bg-gray-800">
-    <!-- Navigation Header -->
-    <div class="bg-white shadow-xl sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-16">
-                <div class="flex items-center space-x-6">
-                    @if(Auth::user()->role === 'admin')
-                    <a href="{{ route('admin.dashboard') }}" class="admin-button">
-                        Admin Panel
-                    </a>
-                    @endif
-                    <div class="text-2xl font-bold text-teal-600 tracking-wider">PWESTO!</div>
-                </div>
-                <div class="flex items-center space-x-6">
-                    <a href="{{ route('dashboard') }}" class="nav-link">Home</a>
-                    <a href="{{ route('booking-history') }}" class="nav-link active">Booking History</a>
-                    <a href="{{ route('services.index') }}" class="nav-link">Services</a>
-                    <a href="{{ route('about') }}" class="nav-link">About</a>
-                    <a href="{{ route('location') }}" class="nav-link">Location</a>
-                    <x-profile-dropdown />
-                </div>
-            </div>
-        </div>
-    </div>
+    @include('partials.dashboard-navbar', ['active' => 'booking-history'])
 
     <!-- Main Content -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div class="mb-8 rounded-lg border border-yellow-300 bg-yellow-100 px-5 py-4 shadow-sm">
+            <h2 class="text-lg font-bold text-gray-900 mb-1">Cancellation Policy</h2>
+            <p class="text-sm font-medium text-gray-800">
+                Pending bookings can be cancelled from this page. Confirmed, completed, and previously cancelled bookings are no longer eligible for cancellation.
+            </p>
+        </div>
+
         @if(request('payment') === 'success' && request('booking'))
             <div class="mb-8 bg-green-100 border border-green-300 text-green-800 px-4 py-3 rounded-lg">
                 Payment successful. Your booking is recorded and currently pending hub owner confirmation.
@@ -127,6 +112,13 @@
             
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 @forelse($pastBookings as $booking)
+                    @php
+                        $rebookRoute = match ($booking->service_type) {
+                            'private-office' => route('services.nest-booking'),
+                            'meeting-room' => route('services.mesh-booking'),
+                            default => route('services.booking'),
+                        };
+                    @endphp
                     <div class="bg-gray-700 rounded-lg p-6">
                         <div class="w-full h-32 rounded-lg overflow-hidden bg-gray-600 mb-4 flex items-center justify-center">
                             @if($booking->service_type === 'hot-desk')
@@ -173,14 +165,24 @@
                                     </button>
                                 </div>
                             @else
-                                <button class="w-full px-4 py-2 bg-gray-400 text-white rounded-lg font-semibold cursor-not-allowed" disabled>
-                                    Feedback Submitted ✓
-                                </button>
+                                <div class="space-y-2">
+                                    <button class="w-full px-4 py-2 bg-gray-400 text-white rounded-lg font-semibold cursor-not-allowed" disabled>
+                                        Feedback Submitted ✓
+                                    </button>
+                                    <a href="{{ $rebookRoute }}" class="block w-full px-4 py-2 bg-teal-600 text-white rounded-lg font-semibold hover:bg-teal-700 transition-colors text-center">
+                                        Book Again
+                                    </a>
+                                </div>
                             @endif
                         @else
-                            <button class="w-full px-4 py-2 bg-gray-400 text-white rounded-lg font-semibold cursor-not-allowed" disabled>
-                                {{ ucfirst($booking->status) }}
-                            </button>
+                            <div class="space-y-2">
+                                <button class="w-full px-4 py-2 bg-gray-400 text-white rounded-lg font-semibold cursor-not-allowed" disabled>
+                                    {{ ucfirst($booking->status) }}
+                                </button>
+                                <a href="{{ $rebookRoute }}" class="block w-full px-4 py-2 bg-teal-600 text-white rounded-lg font-semibold hover:bg-teal-700 transition-colors text-center">
+                                    Book Again
+                                </a>
+                            </div>
                         @endif
                     </div>
                 @empty

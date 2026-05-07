@@ -19,9 +19,8 @@ Route::get('/about', function () {
     return view('about');
 })->name('about');
 
-Route::get('/location', function () {
-    return view('location');
-})->name('location');
+Route::get('/location', [App\Http\Controllers\FeedbackController::class, 'publicReviews'])
+    ->name('location');
 
 
 Route::get('/services', [App\Http\Controllers\ServiceController::class, 'index'])->name('services.index');
@@ -80,6 +79,7 @@ Route::middleware(['auth', 'hub.owner'])->prefix('hub-owner')->name('hub-owner.'
     
     // Hub Owner Feedback Routes
     Route::get('/feedback', [App\Http\Controllers\HubOwner\FeedbackController::class, 'index'])->name('feedback.index');
+    Route::post('/feedback/{review}/respond', [App\Http\Controllers\HubOwner\FeedbackController::class, 'respond'])->name('feedback.respond');
 });
 
 Route::middleware(['auth'])->group(function () {

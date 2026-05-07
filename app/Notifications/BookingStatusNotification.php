@@ -27,6 +27,7 @@ class BookingStatusNotification extends Notification
         $date = $this->booking->booking_date?->format('M j, Y') ?? '';
 
         $title = match ($this->eventStatus) {
+            'paid' => 'Booking paid',
             'confirmed' => 'Booking approved',
             'cancelled' => 'Booking cancelled',
             'rejected' => 'Booking declined',
@@ -34,6 +35,7 @@ class BookingStatusNotification extends Notification
         };
 
         $message = match ($this->eventStatus) {
+            'paid' => "Payment received for your booking at {$hub}".($date ? " on {$date}" : '').'.',
             'confirmed' => "Your booking at {$hub}".($date ? " on {$date}" : '').' has been approved.',
             'cancelled' => "Your booking at {$hub}".($date ? " on {$date}" : '').' has been cancelled.',
             'rejected' => "Your booking at {$hub}".($date ? " on {$date}" : '').' was declined by the hub.',

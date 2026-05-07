@@ -43,6 +43,34 @@ class ServiceController extends Controller
         return $this->getActiveFloorPlanForCompany($targetCompany);
     }
 
+    /**
+     * Resolve hub owner for booking/payment even when floor plan is missing.
+     */
+    private function getHubOwnerForService(string $serviceType, $floorPlan = null): ?User
+    {
+        if ($floorPlan && $floorPlan->hubOwner && $floorPlan->hubOwner->role === 'hub_owner') {
+            return $floorPlan->hubOwner;
+        }
+
+        $serviceMapping = $this->getServiceMapping();
+        $targetCompany = $serviceMapping[$serviceType] ?? 'Produktiv';
+
+        $hubOwner = User::where('role', 'hub_owner')
+            ->where('status', 'approved')
+            ->whereRaw('LOWER(company) LIKE ?', ['%' . strtolower($targetCompany) . '%'])
+            ->orderBy('updated_at', 'desc')
+            ->first();
+
+        if ($hubOwner) {
+            return $hubOwner;
+        }
+
+        return User::where('role', 'hub_owner')
+            ->where('status', 'approved')
+            ->orderBy('updated_at', 'desc')
+            ->first();
+    }
+
     public function index()
     {
         return view('services.index');
@@ -156,21 +184,13 @@ class ServiceController extends Controller
             ], 400);
         }
 
-        // Get the active floor plan for the service type
         $floorPlan = $this->getFloorPlanForService($request->service_type);
-        
-        if (!$floorPlan) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No floor plan found for this service.',
-            ], 400);
-        }
-        
-        $hubOwner = $floorPlan->hubOwner;
+        $hubOwner = $this->getHubOwnerForService($request->service_type, $floorPlan);
+
         if (!$hubOwner || $hubOwner->role !== 'hub_owner') {
             return response()->json([
                 'success' => false,
-                'message' => 'Invalid hub owner configuration.',
+                'message' => 'No available hub owner found for this service.',
             ], 400);
         }
 
@@ -230,19 +250,12 @@ class ServiceController extends Controller
         }
 
         $floorPlan = $this->getFloorPlanForService($request->service_type);
+        $hubOwner = $this->getHubOwnerForService($request->service_type, $floorPlan);
 
-        if (!$floorPlan) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No floor plan found for this service.',
-            ], 400);
-        }
-
-        $hubOwner = $floorPlan->hubOwner;
         if (!$hubOwner || $hubOwner->role !== 'hub_owner') {
             return response()->json([
                 'success' => false,
-                'message' => 'Invalid hub owner configuration.',
+                'message' => 'No available hub owner found for this service.',
             ], 400);
         }
 
@@ -264,6 +277,15 @@ class ServiceController extends Controller
 
         $secretKey = config('services.paymongo.secret_key');
         if (!$secretKey) {
+            if (app()->environment('local')) {
+                return response()->json([
+                    'success' => true,
+                    'checkout_url' => route('booking-history') . '?payment=success&booking=' . $booking->id . '&mock=1',
+                    'booking_id' => $booking->id,
+                ]);
+            }
+
+            $booking->delete();
             return response()->json([
                 'success' => false,
                 'message' => 'PayMongo secret key is not configured.',

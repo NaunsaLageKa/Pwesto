@@ -7,11 +7,25 @@ use Illuminate\Http\Request;
 use App\Models\Review;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Schema;
 
 class ReviewController extends Controller
 {
     public function index(Request $request)
     {
+        if (!Schema::hasTable('reviews')) {
+            $emptyReviews = new LengthAwarePaginator([], 0, 15, 1, [
+                'path' => request()->url(),
+                'query' => request()->query(),
+            ]);
+
+            return view('admin.reviews.index', [
+                'reviews' => $emptyReviews,
+                'stats' => $this->emptyStats(),
+            ])->with('error', 'Reviews table is missing. Run database migrations to enable review moderation.');
+        }
+
         // Default to showing pending reviews with priority
         if (!$request->filled('status')) {
             $query = Review::pendingPriority()->with('user', 'hubOwner', 'booking');
@@ -156,6 +170,10 @@ class ReviewController extends Controller
      */
     private function getStats()
     {
+        if (!Schema::hasTable('reviews')) {
+            return $this->emptyStats();
+        }
+
         return [
             'pending_count' => Review::where('status', 'pending')->count(),
             'flagged_count' => Review::where('is_flagged', true)->where('status', 'pending')->count(),
@@ -167,6 +185,19 @@ class ReviewController extends Controller
                 ->orderBy('created_at', 'desc')
                 ->limit(5)
                 ->get(),
+        ];
+    }
+
+    private function emptyStats()
+    {
+        return [
+            'pending_count' => 0,
+            'flagged_count' => 0,
+            'high_priority_count' => 0,
+            'average_rating' => 0,
+            'total_reviews' => 0,
+            'approved_reviews' => 0,
+            'recent_activity' => collect(),
         ];
     }
 

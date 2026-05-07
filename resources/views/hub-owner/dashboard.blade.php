@@ -25,6 +25,14 @@
                         Floor Plan
                     </a>
                 </nav>
+                <div class="mt-6 pt-4 border-t border-gray-700">
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <button type="submit" class="w-full text-left block px-4 py-3 text-sm font-medium text-red-300 hover:bg-red-700/20 hover:text-red-200 rounded-lg transition-colors">
+                            Log Out
+                        </button>
+                    </form>
+                </div>
             </div>
         </aside>
 

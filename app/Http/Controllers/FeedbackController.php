@@ -6,10 +6,57 @@ use Illuminate\Http\Request;
 use App\Models\Review;
 use App\Models\User;
 use App\Models\Booking;
+use App\Notifications\FeedbackSubmittedNotification;
 use Illuminate\Support\Facades\Auth;
 
 class FeedbackController extends Controller
 {
+    /**
+     * Show public approved workspace reviews for decision guidance.
+     */
+    public function publicReviews()
+    {
+        $approvedWorkspaceReviews = Review::where('status', 'approved')
+            ->where('feedback_type', 'workspace')
+            ->with(['user:id,name', 'hubOwner:id,name,company', 'booking:id,hub_name'])
+            ->latest()
+            ->get();
+
+        $publicReviews = $approvedWorkspaceReviews->map(function (Review $review) {
+            $workspaceName = $review->booking?->hub_name
+                ?: ($review->hubOwner?->company ?: ($review->hubOwner?->name ?: 'Pwesto Workspace'));
+
+            $reviewerName = trim((string) ($review->user?->name ?? 'Anonymous'));
+            $maskedReviewer = $reviewerName !== ''
+                ? strtoupper(substr($reviewerName, 0, 1)) . str_repeat('*', 4)
+                : 'Anonymous';
+
+            return [
+                'workspace' => $workspaceName,
+                'reviewer' => $maskedReviewer,
+                'rating' => (int) $review->rating,
+                'comment' => $review->comment,
+                'created_at' => $review->created_at,
+            ];
+        });
+
+        $reviewsByWorkspace = $publicReviews
+            ->groupBy('workspace')
+            ->map(fn ($items) => $items->take(5)->values())
+            ->sortKeys();
+
+        $workspaceStats = $publicReviews
+            ->groupBy('workspace')
+            ->map(function ($items) {
+                return [
+                    'review_count' => $items->count(),
+                    'average_rating' => round($items->avg('rating'), 1),
+                ];
+            });
+
+        return view('location', compact('reviewsByWorkspace', 'workspaceStats'));
+    }
+
     /**
      * Show feedback form
      */
@@ -105,6 +152,8 @@ class FeedbackController extends Controller
             'is_flagged' => $isFlagged,
             'priority' => $isFlagged ? 1 : 0, // Flagged content gets high priority
         ]);
+
+        Auth::user()?->notify(new FeedbackSubmittedNotification($review));
 
         return redirect()->route('profile.feedback')
             ->with('success', 'Thank you for your feedback! It is pending admin approval.');

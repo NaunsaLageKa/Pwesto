@@ -6,29 +6,7 @@
     $bookingBackRoute = $bookingBackRoute ?? route('services.booking');
 @endphp
 <div class="min-h-screen bg-gray-800">
-    <!-- Navigation Header -->
-    <div class="bg-white shadow-xl sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-16">
-                <div class="flex items-center space-x-6">
-                    @if(Auth::user()->role === 'admin')
-                    <a href="{{ route('admin.dashboard') }}" class="admin-button">
-                        Admin Panel
-                    </a>
-                    @endif
-                    <div class="text-2xl font-bold text-teal-600 tracking-wider">PWESTO!</div>
-                </div>
-                <div class="flex items-center space-x-6">
-                    <a href="{{ route('dashboard') }}" class="nav-link">Home</a>
-                    <a href="{{ route('booking-history') }}" class="nav-link">Booking History</a>
-                    <a href="{{ route('services.index') }}" class="nav-link">Services</a>
-                    <a href="{{ route('about') }}" class="nav-link">About</a>
-                    <a href="{{ route('location') }}" class="nav-link">Location</a>
-                    <x-profile-dropdown />
-                </div>
-            </div>
-        </div>
-    </div>
+    @include('partials.dashboard-navbar', ['active' => 'services'])
 
     <!-- Main Content -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -556,34 +534,40 @@ function createFloorPlanItems(items) {
                 case 'available':
                     newItem.style.backgroundColor = '#10B981'; // Green
                     newItem.classList.add('available');
-                    newItem.addEventListener('click', function() {
+                    newItem.onclick = function() {
                         selectSeat(newItem);
-                    });
+                    };
                     newItem.style.cursor = 'pointer';
+                    newItem.style.pointerEvents = 'auto';
                     newItem.style.boxShadow = '0 2px 4px rgba(0,0,0,0.2)';
                     newItem.title = 'Click to book this chair';
                     break;
                 case 'confirmed':
                     newItem.style.backgroundColor = '#DC2626'; // Dark red - very distinct from orange
                     newItem.classList.add('booked', 'confirmed');
+                    newItem.onclick = null;
                     newItem.style.cursor = 'not-allowed';
+                    newItem.style.pointerEvents = 'none';
                     newItem.style.opacity = '0.7';
                     newItem.title = 'This chair is confirmed';
                     break;
                 case 'pending':
-                    newItem.style.backgroundColor = '#FFA500'; // Bright orange - very distinct from red
+                    newItem.style.backgroundColor = '#DC2626'; // Unavailable seats should be red
                     newItem.classList.add('booked', 'pending');
+                    newItem.onclick = null;
                     newItem.style.cursor = 'not-allowed';
+                    newItem.style.pointerEvents = 'none';
                     newItem.style.opacity = '0.7';
-                    newItem.title = 'This chair is pending';
+                    newItem.title = 'This chair is not available';
                     break;
                 default:
-                    newItem.style.backgroundColor = '#9CA3AF'; // Default chair color
+                    newItem.style.backgroundColor = '#10B981'; // Treat unknown as available
                     newItem.classList.add('available');
-                    newItem.addEventListener('click', function() {
+                    newItem.onclick = function() {
                         selectSeat(newItem);
-                    });
+                    };
                     newItem.style.cursor = 'pointer';
+                    newItem.style.pointerEvents = 'auto';
                     newItem.style.boxShadow = '0 2px 4px rgba(0,0,0,0.2)';
                     newItem.title = 'Click to book this chair';
                     break;
@@ -995,36 +979,58 @@ function initializeSeatSelection() {
                     case 'available':
                         item.style.backgroundColor = '#10B981'; // Green
                         item.classList.add('available');
+                        item.onclick = function() { selectSeat(item); };
                         item.style.cursor = 'pointer';
+                        item.style.pointerEvents = 'auto';
                         item.style.opacity = '1';
                         item.title = 'Click to book this chair';
                         break;
                     case 'confirmed':
                         item.style.backgroundColor = '#DC2626'; // Dark red - very distinct from orange
                         item.classList.add('booked', 'confirmed');
+                        item.onclick = null;
                         item.style.cursor = 'not-allowed';
+                        item.style.pointerEvents = 'none';
                         item.style.opacity = '0.7';
                         item.title = 'This chair is confirmed';
                         break;
                     case 'pending':
-                        item.style.backgroundColor = '#FFA500'; // Bright orange - very distinct from red
+                        item.style.backgroundColor = '#DC2626'; // Unavailable seats should be red
                         item.classList.add('booked', 'pending');
+                        item.onclick = null;
                         item.style.cursor = 'not-allowed';
+                        item.style.pointerEvents = 'none';
                         item.style.opacity = '0.7';
-                        item.title = 'This chair is pending';
+                        item.title = 'This chair is not available';
                         break;
                     default:
-                        // Default chair color if no booking status
-                        item.style.backgroundColor = '#9CA3AF'; // Default chair color
+                        // If status is missing/unknown, keep it available
+                        item.style.backgroundColor = '#10B981';
                         item.classList.add('available');
+                        item.onclick = function() { selectSeat(item); };
                         item.style.cursor = 'pointer';
+                        item.style.pointerEvents = 'auto';
                         item.style.opacity = '1';
                         item.title = 'Click to book this chair';
                         break;
                 }
+
+                // If currently selected chair becomes unavailable, clear selection immediately.
+                if (item.classList.contains('selected') && (status === 'confirmed' || status === 'pending')) {
+                    item.classList.remove('selected');
+                    if (selectedSeatElement) {
+                        selectedSeatElement.textContent = 'No seat selected';
+                    }
+                    selectedSeat = null;
+                    if (confirmBookingBtn) {
+                        confirmBookingBtn.disabled = true;
+                    }
+                }
             } else {
                 // For non-chair items, restore original colors and make them non-clickable
+                item.onclick = null;
                 item.style.cursor = 'default';
+                item.style.pointerEvents = 'none';
                 item.style.opacity = '1';
                 item.title = '';
                 

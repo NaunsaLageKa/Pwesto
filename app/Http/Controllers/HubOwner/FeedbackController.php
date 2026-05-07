@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Review;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 
 class FeedbackController extends Controller
 {
@@ -75,7 +76,6 @@ class FeedbackController extends Controller
                 ->where('created_at', '>=', now()->subDays(7))
                 ->count(),
         ];
-
         // Mask user information for privacy (mask names only)
         foreach ($reviews as $review) {
             if ($review->user) {
@@ -88,6 +88,38 @@ class FeedbackController extends Controller
             }
         }
 
-        return view('hub-owner.feedback.index', compact('reviews', 'stats'));
+        return view('hub-owner.feedback.index', [
+            'reviews' => $reviews,
+            'stats' => $stats,
+            'canRespond' => $this->hasResponseColumns(),
+        ]);
+    }
+
+    public function respond(Request $request, Review $review)
+    {
+        if ((int) $review->hub_owner_id !== (int) Auth::id() || $review->status !== 'approved') {
+            abort(403, 'Unauthorized review response.');
+        }
+
+        if (!$this->hasResponseColumns()) {
+            return redirect()->back()->with('error', 'Response feature is not ready yet.');
+        }
+
+        $validated = $request->validate([
+            'hub_owner_response' => 'required|string|max:500',
+        ]);
+
+        $review->update([
+            'hub_owner_response' => trim($validated['hub_owner_response']),
+            'hub_owner_responded_at' => now(),
+        ]);
+
+        return redirect()->back()->with('success', 'Response posted successfully.');
+    }
+
+    private function hasResponseColumns(): bool
+    {
+        return Schema::hasColumn('reviews', 'hub_owner_response')
+            && Schema::hasColumn('reviews', 'hub_owner_responded_at');
     }
 }

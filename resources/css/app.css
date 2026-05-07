@@ -4,6 +4,44 @@
 
 /* Professional styles for services page */
 @layer components {
+    .dashboard-navbar {
+        @apply sticky top-0 z-20 w-full h-[72px] bg-white border-b border-slate-200 flex justify-between items-center px-4 md:px-6;
+    }
+
+    .dashboard-navbar-left,
+    .dashboard-navbar-right {
+        @apply flex items-center gap-3 md:gap-4;
+    }
+
+    .dashboard-brand {
+        @apply text-[2.25rem] leading-none font-black tracking-[0.08em] text-teal-500;
+    }
+
+    .dashboard-admin-btn {
+        @apply bg-teal-500 text-white px-3 py-2 rounded-md text-sm font-bold no-underline;
+    }
+
+    .dash-link {
+        @apply text-gray-800 no-underline font-semibold text-sm px-4 py-2 rounded-md bg-gray-100 border border-gray-200 transition-all duration-150;
+    }
+
+    .dash-link:hover {
+        @apply bg-gray-200;
+    }
+
+    .dash-link.active {
+        @apply bg-teal-50 border-teal-400 text-gray-900 font-semibold;
+    }
+
+    .dashboard-user-tools {
+        @apply inline-flex items-center gap-2;
+    }
+
+    .dashboard-user-tools svg {
+        width: 20px;
+        height: 20px;
+    }
+
     .service-card {
         @apply relative overflow-hidden rounded-2xl shadow-2xl transform transition-all duration-500 hover:scale-105 bg-white;
         box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);

@@ -11,20 +11,25 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (Schema::hasTable('disputes')) {
+            return;
+        }
+
         Schema::create('disputes', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->foreignId('hub_owner_id')->constrained('users')->onDelete('cascade');
-            $table->foreignId('booking_id')->nullable()->constrained()->onDelete('set null');
+            // Keep IDs flexible to work with imported schemas where key types may differ.
+            $table->unsignedBigInteger('user_id');
+            $table->unsignedBigInteger('hub_owner_id');
+            $table->unsignedBigInteger('booking_id')->nullable();
             $table->enum('type', ['payment', 'service', 'behavior', 'other']);
             $table->text('description');
             $table->text('evidence')->nullable();
             $table->enum('status', ['open', 'resolved', 'escalated'])->default('open');
             $table->text('resolution')->nullable();
-            $table->foreignId('resolved_by')->nullable()->constrained('users')->onDelete('set null');
+            $table->unsignedBigInteger('resolved_by')->nullable();
             $table->timestamp('resolved_at')->nullable();
             $table->timestamp('escalated_at')->nullable();
-            $table->foreignId('created_by')->constrained('users')->onDelete('cascade');
+            $table->unsignedBigInteger('created_by');
             $table->timestamps();
         });
     }

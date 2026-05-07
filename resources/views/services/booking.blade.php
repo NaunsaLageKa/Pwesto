@@ -2,29 +2,7 @@
 
 @section('content')
 <div class="min-h-screen bg-gray-800">
-    <!-- Navigation Header -->
-    <div class="bg-white shadow-xl sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-16">
-                <div class="flex items-center space-x-6">
-                    @if(Auth::user()->role === 'admin')
-                    <a href="{{ route('admin.dashboard') }}" class="admin-button">
-                        Admin Panel
-                    </a>
-                    @endif
-                    <div class="text-2xl font-bold text-teal-600 tracking-wider">PWESTO!</div>
-                </div>
-                <div class="flex items-center space-x-6">
-                    <a href="{{ route('dashboard') }}" class="nav-link">Home</a>
-                    <a href="{{ route('booking-history') }}" class="nav-link">Booking History</a>
-                    <a href="{{ route('services.index') }}" class="nav-link">Services</a>
-                    <a href="{{ route('about') }}" class="nav-link">About</a>
-                    <a href="{{ route('location') }}" class="nav-link">Location</a>
-                    <x-profile-dropdown />
-                </div>
-            </div>
-        </div>
-    </div>
+    @include('partials.dashboard-navbar', ['active' => 'services'])
 
     <!-- Main Content -->
     <div class="min-h-screen relative px-4 sm:px-6 lg:px-8">

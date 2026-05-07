@@ -23,7 +23,9 @@ class Review extends Model
         'rejected_at',
         'approved_by',
         'rejected_by',
-        'moderation_notes'
+        'moderation_notes',
+        'hub_owner_response',
+        'hub_owner_responded_at',
     ];
 
     protected $casts = [
@@ -31,7 +33,8 @@ class Review extends Model
         'priority' => 'integer',
         'is_flagged' => 'boolean',
         'approved_at' => 'datetime',
-        'rejected_at' => 'datetime'
+        'rejected_at' => 'datetime',
+        'hub_owner_responded_at' => 'datetime',
     ];
 
     public function user()

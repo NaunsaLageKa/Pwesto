@@ -2,39 +2,7 @@
 
 @section('content')
 <div class="min-h-screen bg-gray-800">
-    <!-- Navigation Header -->
-    <div class="bg-white shadow-xl sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-16">
-                <div class="flex items-center space-x-6">
-                    @if(Auth::user()->role === 'admin')
-                    <a href="{{ route('admin.dashboard') }}" class="admin-button">
-                        Admin Panel
-                    </a>
-                    @endif
-                    <div class="text-2xl font-bold text-teal-600 tracking-wider">PWESTO!</div>
-                </div>
-                <div class="flex items-center space-x-6">
-                    <a href="{{ route('dashboard') }}" class="nav-link">Home</a>
-                    <a href="{{ route('booking-history') }}" class="nav-link">Booking History</a>
-                    <a href="{{ route('services.index') }}" class="nav-link">Services</a>
-                    @if(Auth::user()->role === 'hub_owner')
-                    <a href="{{ route('hub-owner.dashboard') }}" class="nav-link">Dashboard</a>
-                    <a href="{{ route('hub-owner.floor-plan') }}" class="nav-link">Floor Plan</a>
-                    @endif
-                    <a href="{{ route('about') }}" class="nav-link">About</a>
-                    <a href="{{ route('location') }}" class="nav-link">Location</a>
-                    <div class="flex items-center space-x-2">
-                        <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5 5v-5z"></path>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 002 2v14a2 2 0 002 2z"></path>
-                        </svg>
-                        <x-profile-dropdown />
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    @include('partials.dashboard-navbar', ['active' => 'services'])
 
     <!-- Main Content -->
     <div class="min-h-screen relative px-4 sm:px-6 lg:px-8">

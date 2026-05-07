@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Location - PWESTO!</title>
-    <link rel="stylesheet" href="{{ asset('css/app.css') }}">
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
           integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
@@ -199,6 +199,71 @@
         .cta-button:hover {
             transform: translateY(-2px);
         }
+
+        .public-reviews-wrap {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .public-reviews-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.25rem;
+        }
+
+        .workspace-review-card {
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 1rem;
+            background: #f9fafb;
+        }
+
+        .workspace-review-title {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 0.35rem;
+        }
+
+        .workspace-review-meta {
+            font-size: 0.85rem;
+            color: #4b5563;
+            margin-bottom: 0.8rem;
+        }
+
+        .review-item {
+            border-top: 1px dashed #d1d5db;
+            padding-top: 0.7rem;
+            margin-top: 0.7rem;
+        }
+
+        .review-item:first-child {
+            border-top: none;
+            padding-top: 0;
+            margin-top: 0;
+        }
+
+        .review-rating {
+            font-weight: 700;
+            color: #0f766e;
+            font-size: 0.9rem;
+        }
+
+        .review-comment {
+            font-size: 0.9rem;
+            color: #374151;
+            line-height: 1.4;
+            margin-top: 0.25rem;
+        }
+
+        .review-footer {
+            font-size: 0.78rem;
+            color: #6b7280;
+            margin-top: 0.3rem;
+        }
         
         @media (max-width: 768px) {
             .nav-container {
@@ -225,20 +290,7 @@
     </style>
 </head>
 <body>
-    <header class="header">
-        <div class="nav-container">
-            <a href="{{ route('welcome') }}" class="logo">PWESTO!</a>
-            <nav>
-                <ul class="nav-links">
-                    <li><a href="{{ route('dashboard') }}">Home</a></li>
-                    <li><a href="{{ route('booking-history') }}">Booking History</a></li>
-                    <li><a href="{{ route('services.index') }}">Services</a></li>
-                    <li><a href="{{ route('about') }}">About</a></li>
-                    <li><a href="{{ route('location') }}" class="active">Location</a></li>
-                </ul>
-            </nav>
-        </div>
-    </header>
+    @include('partials.dashboard-navbar', ['active' => 'location'])
 
     <main class="main-content">
         <div class="location-header">
@@ -315,6 +367,42 @@
                     </div>
                 </div>
                 
+            </div>
+        </div>
+
+        <div class="public-reviews-wrap">
+            <h2 style="text-align:center; margin-bottom:0.5rem; color:#222; font-size:2rem;">Reviews</h2>
+            <p style="text-align:center; color:#6b7280; margin-bottom:1.5rem;">
+                Community feedback to guide your coworking space decision.
+            </p>
+
+            <div class="public-reviews-grid">
+                @forelse(($reviewsByWorkspace ?? collect()) as $workspaceName => $workspaceReviews)
+                    @php
+                        $stats = ($workspaceStats ?? collect())->get($workspaceName, ['review_count' => 0, 'average_rating' => 0]);
+                    @endphp
+                    <div class="workspace-review-card">
+                        <div class="workspace-review-title">{{ $workspaceName }}</div>
+                        <div class="workspace-review-meta">
+                            ⭐ {{ number_format($stats['average_rating'], 1) }}/5
+                            • {{ $stats['review_count'] }} {{ $stats['review_count'] === 1 ? 'review' : 'reviews' }}
+                        </div>
+
+                        @foreach($workspaceReviews as $review)
+                            <div class="review-item">
+                                <div class="review-rating">Rating: {{ $review['rating'] }}/5</div>
+                                <div class="review-comment">{{ \Illuminate\Support\Str::limit($review['comment'], 120) }}</div>
+                                <div class="review-footer">
+                                    By {{ $review['reviewer'] }} • {{ $review['created_at']->diffForHumans() }}
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                @empty
+                    <div style="grid-column: 1 / -1; text-align:center; color:#6b7280; padding:1.5rem 0;">
+                        No approved public reviews yet.
+                    </div>
+                @endforelse
             </div>
         </div>
 

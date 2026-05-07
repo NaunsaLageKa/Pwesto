@@ -35,6 +35,17 @@
                 <p class="text-gray-600">View approved feedback from your customers</p>
             </div>
 
+        @if(session('success'))
+            <div class="mb-6 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-green-800">
+                {{ session('success') }}
+            </div>
+        @endif
+        @if(session('error'))
+            <div class="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-red-700">
+                {{ session('error') }}
+            </div>
+        @endif
+
         <!-- Statistics Cards -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             <div class="bg-white p-6 rounded-lg shadow border">
@@ -127,6 +138,35 @@
                             {{ ucfirst($review->feedback_type) }}
                         </span>
                     </div>
+
+                    @if(!empty($review->hub_owner_response))
+                        <div class="mt-4 rounded-md border border-blue-100 bg-blue-50 p-3">
+                            <p class="text-sm font-semibold text-blue-900">Your Response</p>
+                            <p class="mt-1 text-sm text-blue-900">{{ $review->hub_owner_response }}</p>
+                            @if($review->hub_owner_responded_at)
+                                <p class="mt-1 text-xs text-blue-700">Posted {{ $review->hub_owner_responded_at->diffForHumans() }}</p>
+                            @endif
+                        </div>
+                    @elseif($canRespond ?? false)
+                        <form action="{{ route('hub-owner.feedback.respond', $review->id) }}" method="POST" class="mt-4">
+                            @csrf
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Respond</label>
+                            <textarea
+                                name="hub_owner_response"
+                                rows="3"
+                                maxlength="500"
+                                required
+                                class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                placeholder="Thank the customer and address their feedback."
+                            ></textarea>
+                            <div class="mt-2 flex justify-end">
+                                <button type="submit" class="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">
+                                    Post Response
+                                </button>
+                            </div>
+                        </form>
+                    @endif
+
                 </div>
             @empty
                 <div class="p-12 text-center">
