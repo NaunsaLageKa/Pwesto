@@ -384,7 +384,7 @@
                     <div class="workspace-review-card">
                         <div class="workspace-review-title">{{ $workspaceName }}</div>
                         <div class="workspace-review-meta">
-                            ⭐ {{ number_format($stats['average_rating'], 1) }}/5
+                             {{ number_format($stats['average_rating'], 1) }}/5
                             • {{ $stats['review_count'] }} {{ $stats['review_count'] === 1 ? 'review' : 'reviews' }}
                         </div>
 
