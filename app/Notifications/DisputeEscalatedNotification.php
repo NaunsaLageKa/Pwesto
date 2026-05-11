@@ -6,12 +6,7 @@ use App\Models\Dispute;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
 
-/**
- * In-app notification fired when an admin escalates a dispute to senior review.
- *
- * Sent to both parties (reporter + reported) so they know the case is still
- * being investigated and is not closed.
- */
+
 class DisputeEscalatedNotification extends Notification
 {
     use Queueable;

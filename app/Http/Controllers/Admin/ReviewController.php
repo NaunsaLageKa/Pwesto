@@ -211,13 +211,10 @@ class ReviewController extends Controller
         ];
     }
 
-    /**
-     * Simple moderation log (you can enhance this with a dedicated table)
-     */
+   
     private function logModeration($review, $action, $notes)
     {
-        // For now, we'll store it in moderation_notes
-        // In production, create a separate moderation_logs table
+       
         $log = [
             'action' => $action,
             'admin_id' => Auth::id(),

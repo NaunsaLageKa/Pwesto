@@ -1,8 +1,3 @@
--- =============================================================================
--- Pwesto — full manual database setup (MySQL 8+)
--- Aligns with Laravel migrations in database/migrations (including
--- transaction_number on bookings). Use utf8mb4.
--- =============================================================================
 
 CREATE DATABASE IF NOT EXISTS pwesto_db
   CHARACTER SET utf8mb4
@@ -28,9 +23,6 @@ DROP TABLE IF EXISTS migrations;
 
 SET FOREIGN_KEY_CHECKS = 1;
 
--- -----------------------------------------------------------------------------
--- users (0001_01_01_000000 + phone, role, status, company fields)
--- -----------------------------------------------------------------------------
 CREATE TABLE users (
     id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
     name VARCHAR(255) NOT NULL,
@@ -72,9 +64,7 @@ CREATE TABLE sessions (
     KEY sessions_last_activity_index (last_activity)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- -----------------------------------------------------------------------------
--- cache, cache_locks (0001_01_01_000001)
--- -----------------------------------------------------------------------------
+
 CREATE TABLE cache (
     `key` VARCHAR(255) NOT NULL,
     value MEDIUMTEXT NOT NULL,
@@ -89,9 +79,7 @@ CREATE TABLE cache_locks (
     PRIMARY KEY (`key`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- -----------------------------------------------------------------------------
--- jobs, job_batches, failed_jobs (0001_01_01_000002)
--- -----------------------------------------------------------------------------
+
 CREATE TABLE jobs (
     id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
     queue VARCHAR(255) NOT NULL,
@@ -130,9 +118,7 @@ CREATE TABLE failed_jobs (
     UNIQUE KEY failed_jobs_uuid_unique (uuid)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- -----------------------------------------------------------------------------
--- bookings (core + seat fields + rejected + transaction_number)
--- -----------------------------------------------------------------------------
+
 CREATE TABLE bookings (
     id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
     user_id BIGINT UNSIGNED NOT NULL,
@@ -159,9 +145,8 @@ CREATE TABLE bookings (
     CONSTRAINT bookings_hub_owner_id_foreign FOREIGN KEY (hub_owner_id) REFERENCES users (id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- -----------------------------------------------------------------------------
--- floor_plans
--- -----------------------------------------------------------------------------
+
+
 CREATE TABLE floor_plans (
     id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
     hub_owner_id BIGINT UNSIGNED NOT NULL,
@@ -176,9 +161,7 @@ CREATE TABLE floor_plans (
     CONSTRAINT floor_plans_hub_owner_id_foreign FOREIGN KEY (hub_owner_id) REFERENCES users (id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- -----------------------------------------------------------------------------
--- reviews
--- -----------------------------------------------------------------------------
+
 CREATE TABLE reviews (
     id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
     user_id BIGINT UNSIGNED NOT NULL,
@@ -212,9 +195,7 @@ CREATE TABLE reviews (
     CONSTRAINT reviews_rejected_by_foreign FOREIGN KEY (rejected_by) REFERENCES users (id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- -----------------------------------------------------------------------------
--- disputes (2025_08_07_163834)
--- -----------------------------------------------------------------------------
+
 CREATE TABLE disputes (
     id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
     user_id BIGINT UNSIGNED NOT NULL,
@@ -244,9 +225,7 @@ CREATE TABLE disputes (
     CONSTRAINT disputes_created_by_foreign FOREIGN KEY (created_by) REFERENCES users (id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- -----------------------------------------------------------------------------
--- notifications (2026_05_03_120000)
--- -----------------------------------------------------------------------------
+
 CREATE TABLE notifications (
     id CHAR(36) NOT NULL,
     type VARCHAR(255) NOT NULL,
@@ -260,9 +239,7 @@ CREATE TABLE notifications (
     KEY notifications_notifiable_type_notifiable_id_index (notifiable_type, notifiable_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- -----------------------------------------------------------------------------
--- Laravel migrations bookkeeping (so `php artisan migrate` skips already-built)
--- -----------------------------------------------------------------------------
+
 CREATE TABLE migrations (
     id INT UNSIGNED NOT NULL AUTO_INCREMENT,
     migration VARCHAR(255) NOT NULL,
@@ -294,10 +271,7 @@ INSERT INTO migrations (migration, batch) VALUES
 ('2026_05_07_032500_add_hub_owner_response_to_reviews_table', 1),
 ('2026_05_11_000001_add_transaction_number_to_bookings_table', 1);
 
--- -----------------------------------------------------------------------------
--- Sample data (optional — remove if you want an empty DB)
--- Password for all sample users below: "password" (Laravel default hash)
--- -----------------------------------------------------------------------------
+
 INSERT INTO users (id, name, email, password, role, status, created_at, updated_at) VALUES
 (1, 'Admin User', 'admin@pwesto.com', '$2y$12$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin', 'approved', NOW(), NOW()),
 (2, 'Carl Admin', 'carl@gmail.com', '$2y$12$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin', 'approved', NOW(), NOW()),
@@ -318,7 +292,7 @@ INSERT INTO bookings (
 (2, 4, 3, 'PWESTO Workspace', 'private-office', 'office_a', 'Office A',
  '2026-09-16', '10:00:00', '10:00:00', '18:00:00', 'pending', 50.00, NULL, NULL, NOW(), NOW());
 
--- Optional: match older seed passwords for admin accounts
+
 UPDATE users SET password = '$2y$10$mbMvKKc2IJpsxlx86mK.4ehZ0zjJghTstcj5RjHm1SmfaXuztWVM.'
 WHERE email IN ('admin@pwesto.com', 'carl@gmail.com');
 

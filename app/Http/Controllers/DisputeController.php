@@ -7,14 +7,7 @@ use App\Models\Dispute;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
-/**
- * Public dispute reporting for customers and hub owners.
- *
- * - Customers can report a hub owner about one of their bookings.
- * - Hub owners can report a customer about one of their bookings.
- *
- * Admin-side dispute management lives in App\Http\Controllers\Admin\DisputeController.
- */
+
 class DisputeController extends Controller
 {
     /**

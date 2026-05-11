@@ -10,9 +10,7 @@ use Illuminate\Support\Facades\Schema;
 
 class FeedbackController extends Controller
 {
-    /**
-     * Mask name for privacy (e.g., Angel Cortez -> AN*** CO****)
-     */
+    
     private function maskName($name)
     {
         if (!$name || trim($name) === '') {

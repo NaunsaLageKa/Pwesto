@@ -62,14 +62,7 @@ class Review extends Model
         return $this->belongsTo(Booking::class);
     }
 
-    /**
-     * Scope for pending reviews ordered by priority.
-     *
-     * Effective priority is the higher of:
-     *   - the stored `priority` flag (0/1), or
-     *   - whether the rating is a low-star complaint (rating <= 2 => 1, else 0).
-     * Flagged content breaks ties, then newest tied reviews appear last.
-     */
+    
     public function scopePendingPriority($query)
     {
         return $query->where('status', 'pending')
@@ -80,7 +73,7 @@ class Review extends Model
 
     /**
      * Whether this review should be treated as high priority for moderation.
-     * Used by the UI to render badges and row styling consistently.
+     
      */
     public function isHighPriority(): bool
     {
