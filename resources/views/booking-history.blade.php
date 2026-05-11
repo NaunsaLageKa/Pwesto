@@ -25,6 +25,28 @@
             </div>
         @endif
 
+        @if(session('success'))
+            <div class="mb-8 bg-green-100 border border-green-300 text-green-800 px-4 py-3 rounded-lg">
+                {{ session('success') }}
+            </div>
+        @endif
+
+        @if(session('error'))
+            <div class="mb-8 bg-red-100 border border-red-300 text-red-800 px-4 py-3 rounded-lg">
+                {{ session('error') }}
+            </div>
+        @endif
+
+        @if($errors->any())
+            <div class="mb-8 bg-red-100 border border-red-300 text-red-800 px-4 py-3 rounded-lg">
+                <ul class="list-disc list-inside">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
         <!-- Header Section -->
         <div class="text-center mb-16">
             <h1 class="text-4xl font-bold text-white mb-4">
@@ -85,12 +107,23 @@
                                 <p class="font-semibold">{{ \Carbon\Carbon::parse($booking->booking_time)->format('g:i A') }}</p>
                             </div>
                             @if($booking->status === 'pending')
-                                <button class="px-4 py-2 bg-red-500 text-white rounded-lg font-semibold hover:bg-red-600 transition-colors"
-                                        onclick="cancelBooking({{ $booking->id }})">
-                                    Cancel
-                                </button>
+                                <div class="flex flex-col gap-2">
+                                    <button class="px-4 py-2 bg-red-500 text-white rounded-lg font-semibold hover:bg-red-600 transition-colors"
+                                            onclick="cancelBooking({{ $booking->id }})">
+                                        Cancel
+                                    </button>
+                                    <button type="button"
+                                            class="px-4 py-2 bg-orange-500 text-white rounded-lg font-semibold hover:bg-orange-600 transition-colors text-sm"
+                                            onclick="showReportModal({{ $booking->id }})">
+                                        Report Issue
+                                    </button>
+                                </div>
                             @else
-                                <div class="px-4 py-2"></div>
+                                <button type="button"
+                                        class="px-4 py-2 bg-orange-500 text-white rounded-lg font-semibold hover:bg-orange-600 transition-colors text-sm"
+                                        onclick="showReportModal({{ $booking->id }})">
+                                    Report Issue
+                                </button>
                             @endif
                         </div>
                     </div>
@@ -186,6 +219,11 @@
                                     </a>
                                 </div>
                             @endif
+                            <button type="button"
+                                    onclick="showReportModal({{ $booking->id }})"
+                                    class="block w-full mt-2 px-4 py-2 bg-orange-500 text-white rounded-lg font-semibold hover:bg-orange-600 transition-colors text-sm">
+                                Report Issue
+                            </button>
                         @else
                             <div class="space-y-2">
                                 <button class="w-full px-4 py-2 bg-gray-400 text-white rounded-lg font-semibold cursor-not-allowed" disabled>
@@ -194,6 +232,11 @@
                                 <a href="{{ $rebookRoute }}" class="block w-full px-4 py-2 bg-teal-600 text-white rounded-lg font-semibold hover:bg-teal-700 transition-colors text-center">
                                     Book Again
                                 </a>
+                                <button type="button"
+                                        onclick="showReportModal({{ $booking->id }})"
+                                        class="block w-full px-4 py-2 bg-orange-500 text-white rounded-lg font-semibold hover:bg-orange-600 transition-colors text-sm">
+                                    Report Issue
+                                </button>
                             </div>
                         @endif
                     </div>
@@ -294,6 +337,70 @@ function hidePlatformFeedbackModal() {
     </div>
 </div>
 
+<!-- Report Issue Modal -->
+<div id="report-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
+        <form action="{{ route('disputes.report-hub-owner') }}" method="POST" class="p-6">
+            @csrf
+            <input type="hidden" name="booking_id" id="report-booking-id" value="">
+
+            <div class="flex justify-between items-start mb-4">
+                <div>
+                    <h3 class="text-xl font-semibold text-gray-900">Report an Issue</h3>
+                    <p class="text-sm text-gray-600 mt-1">Tell us what went wrong with this booking. An admin will review your report.</p>
+                </div>
+                <button type="button" onclick="hideReportModal()" class="text-gray-400 hover:text-gray-700">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="space-y-4">
+                <div>
+                    <label for="report-type" class="block text-sm font-medium text-gray-700 mb-1">Issue Type <span class="text-red-500">*</span></label>
+                    <select name="type" id="report-type" required class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500">
+                        <option value="">Select an issue type</option>
+                        <option value="service">Service Quality (workspace condition, equipment, etc.)</option>
+                        <option value="payment">Payment Issue (overcharged, refund, double-billing)</option>
+                        <option value="behavior">Hub Owner Behavior (rudeness, harassment, no-show)</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="report-description" class="block text-sm font-medium text-gray-700 mb-1">What happened? <span class="text-red-500">*</span></label>
+                    <textarea name="description" id="report-description" rows="4" required minlength="10" maxlength="2000"
+                              placeholder="Describe the issue in detail. Include dates, times, and any relevant context (min 10 chars)."
+                              class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500"></textarea>
+                </div>
+
+                <div>
+                    <label for="report-evidence" class="block text-sm font-medium text-gray-700 mb-1">Evidence (optional)</label>
+                    <textarea name="evidence" id="report-evidence" rows="2" maxlength="2000"
+                              placeholder="Paste links to photos, screenshots, transaction IDs, or other supporting info."
+                              class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500"></textarea>
+                </div>
+
+                <div class="bg-yellow-50 border border-yellow-200 rounded-md p-3 text-sm text-yellow-800">
+                    <strong>Note:</strong> False or malicious reports may result in account penalties. Only file a report when there is a genuine issue.
+                </div>
+            </div>
+
+            <div class="flex gap-3 mt-6">
+                <button type="button" onclick="hideReportModal()"
+                        class="flex-1 bg-gray-500 text-white px-4 py-2 rounded-md font-medium hover:bg-gray-600 transition-colors">
+                    Cancel
+                </button>
+                <button type="submit"
+                        class="flex-1 bg-orange-600 text-white px-4 py-2 rounded-md font-medium hover:bg-orange-700 transition-colors">
+                    Submit Report
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <style>
 .nav-link {
     @apply text-gray-700 hover:text-teal-600 font-medium transition-colors;
@@ -333,6 +440,19 @@ let currentBookingId = null;
 function cancelBooking(bookingId) {
     currentBookingId = bookingId;
     showCancelModal();
+}
+
+// Report Issue modal
+function showReportModal(bookingId) {
+    document.getElementById('report-booking-id').value = bookingId;
+    document.getElementById('report-modal').classList.remove('hidden');
+}
+
+function hideReportModal() {
+    document.getElementById('report-modal').classList.add('hidden');
+    document.getElementById('report-type').value = '';
+    document.getElementById('report-description').value = '';
+    document.getElementById('report-evidence').value = '';
 }
 
 function showCancelModal() {

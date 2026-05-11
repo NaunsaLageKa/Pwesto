@@ -42,9 +42,15 @@ class ReviewController extends Controller
             $query->where('is_flagged', $request->input('flagged') == '1');
         }
         
-        // Filter by priority
+        // Filter by priority (treat rating <= 2 as high priority regardless of stored value)
         if ($request->filled('priority')) {
-            $query->where('priority', $request->input('priority'));
+            if ($request->input('priority') == '1') {
+                $query->where(function ($q) {
+                    $q->where('priority', 1)->orWhere('rating', '<=', 2);
+                });
+            } else {
+                $query->where('priority', 0)->where('rating', '>', 2);
+            }
         }
         
         // Search
@@ -177,7 +183,11 @@ class ReviewController extends Controller
         return [
             'pending_count' => Review::where('status', 'pending')->count(),
             'flagged_count' => Review::where('is_flagged', true)->where('status', 'pending')->count(),
-            'high_priority_count' => Review::where('priority', 1)->where('status', 'pending')->count(),
+            'high_priority_count' => Review::where('status', 'pending')
+                ->where(function ($q) {
+                    $q->where('priority', 1)->orWhere('rating', '<=', 2);
+                })
+                ->count(),
             'average_rating' => Review::where('status', 'approved')->avg('rating'),
             'total_reviews' => Review::count(),
             'approved_reviews' => Review::where('status', 'approved')->count(),

@@ -86,13 +86,26 @@ class UserController extends Controller
 
 
         if ($request->filled('role')) {
-            $query->where('role', $request->input('role'));
+            $role = $request->input('role');
+
+            // "Company" in the UI represents users with company records (usually hub owners).
+            if ($role === 'company') {
+                $query->where(function ($q) {
+                    $q->where('role', 'hub_owner')
+                      ->orWhere(function ($subQuery) {
+                          $subQuery->whereNotNull('company')
+                                   ->whereRaw('TRIM(company) != ""');
+                      });
+                });
+            } else {
+                $query->where('role', $role);
+            }
         }
 
 
         if ($request->filled('company')) {
-            $company = $request->input('company');
-            $query->where('company', 'like', "%$company%");
+            $company = trim($request->input('company'));
+            $query->whereRaw('LOWER(TRIM(company)) LIKE ?', ['%' . strtolower($company) . '%']);
         }
 
     

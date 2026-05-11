@@ -46,6 +46,15 @@ Route::post('/booking-history/{id}/cancel', [App\Http\Controllers\BookingHistory
     ->middleware(['auth'])
     ->name('booking-history.cancel');
 
+// Dispute Reporting (customers + hub owners)
+Route::post('/disputes/report-hub-owner', [App\Http\Controllers\DisputeController::class, 'reportHubOwner'])
+    ->middleware(['auth'])
+    ->name('disputes.report-hub-owner');
+
+Route::post('/disputes/report-user', [App\Http\Controllers\DisputeController::class, 'reportUser'])
+    ->middleware(['auth', 'hub.owner'])
+    ->name('disputes.report-user');
+
 
 
 Route::middleware('auth')->group(function () {

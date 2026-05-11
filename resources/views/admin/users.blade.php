@@ -18,7 +18,7 @@
             <option value="">All Roles</option>
             <option value="user" @if(request('role')=='user') selected @endif>User</option>
             <option value="hub_owner" @if(request('role')=='hub_owner') selected @endif>Hub Owner</option>
-            <option value="company" @if(request('role')=='company') selected @endif>Company</option>
+            <option value="company" @if(request('role')=='company') selected @endif>Company (Hub Owner)</option>
             <option value="admin" @if(request('role')=='admin') selected @endif>Admin</option>
         </select>
 

@@ -28,7 +28,10 @@
                 <div class="mt-6 pt-4 border-t border-gray-700">
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
-                        <button type="submit" class="w-full text-left block px-4 py-3 text-sm font-medium text-red-300 hover:bg-red-700/20 hover:text-red-200 rounded-lg transition-colors">
+                        <button type="submit" class="w-full flex items-center gap-2 px-4 py-3 text-sm font-semibold text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors shadow-sm">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                            </svg>
                             Log Out
                         </button>
                     </form>
@@ -198,23 +201,6 @@
                 </div>
             @endif
         </div>
-            <!-- User Activity Section -->
-            <div class="bg-white rounded-lg border border-gray-200">
-                <div class="px-6 py-4 border-b border-gray-100">
-                    <h2 class="text-lg font-semibold text-gray-900">User Activity</h2>
-                </div>
-                <div class="p-6">
-                    <div class="h-48 flex items-center justify-center bg-gray-50 rounded-lg">
-                        <div class="text-center">
-                            <svg class="mx-auto h-10 w-10 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-                            </svg>
-                            <h3 class="mt-2 text-sm font-medium text-gray-900">No activity data</h3>
-                            <p class="mt-1 text-sm text-gray-500">User activity chart will appear here when data is available.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
     </main>
     </div>
 </div>

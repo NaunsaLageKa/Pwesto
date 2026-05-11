@@ -66,7 +66,6 @@ class FloorPlanController extends Controller
                 'is_active' => true,
             ]);
 
-
             // Return success response with floor plan ID
             return response()->json([
                 'success' => true,

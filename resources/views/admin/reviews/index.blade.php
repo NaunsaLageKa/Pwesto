@@ -94,7 +94,7 @@
             </thead>
             <tbody class="bg-white divide-y divide-gray-100" id="reviews-tbody">
                 @forelse ($reviews as $review)
-                <tr class="hover:bg-gray-50 transition {{ $review->is_flagged ? 'bg-red-50' : '' }} {{ $review->priority == 1 ? 'border-l-4 border-orange-500' : '' }}">
+                <tr class="hover:bg-gray-50 transition {{ $review->is_flagged ? 'bg-red-50' : '' }} {{ $review->isHighPriority() ? 'border-l-4 border-orange-500' : '' }}">
                     <td class="py-2 px-4">
                         <input type="checkbox" name="review_ids[]" value="{{ $review->id }}" class="review-checkbox rounded">
                     </td>
@@ -129,8 +129,11 @@
                             @if($review->is_flagged)
                                 <span class="inline-flex px-2 py-0.5 text-xs font-semibold rounded-full bg-red-100 text-red-800 mt-1">⚠️ Flagged</span>
                             @endif
-                            @if($review->priority == 1)
+                            @if($review->isHighPriority())
                                 <span class="inline-flex px-2 py-0.5 text-xs font-semibold rounded-full bg-orange-100 text-orange-800 mt-1">High Priority</span>
+                            @endif
+                            @if($review->rating <= 2)
+                                <span class="inline-flex px-2 py-0.5 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800 mt-1">Low Rating</span>
                             @endif
                         </div>
                     </td>

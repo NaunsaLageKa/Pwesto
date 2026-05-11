@@ -25,6 +25,17 @@
                         Floor Plan
                     </a>
                 </nav>
+                <div class="mt-6 pt-4 border-t border-gray-700">
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <button type="submit" class="w-full flex items-center gap-2 px-4 py-3 text-sm font-semibold text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors shadow-sm">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                            </svg>
+                            Log Out
+                        </button>
+                    </form>
+                </div>
             </div>
         </aside>
 
@@ -41,6 +52,22 @@
         @if(session('success'))
             <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-6">
                 {{ session('success') }}
+            </div>
+        @endif
+
+        @if(session('error'))
+            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
+                {{ session('error') }}
+            </div>
+        @endif
+
+        @if($errors->any())
+            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
+                <ul class="list-disc list-inside text-sm">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
             </div>
         @endif
 
@@ -149,6 +176,11 @@
                                                 </button>
                                             </form>
                                         @endif
+                                        <button type="button"
+                                                onclick="showReportCustomerModal({{ $booking->id }}, '{{ addslashes($booking->user->name) }}')"
+                                                class="inline-flex items-center px-3 py-1.5 rounded-md border border-orange-300 text-orange-700 bg-orange-50 hover:bg-orange-100 transition-colors">
+                                            ⚠ Report Customer
+                                        </button>
                                     </div>
                                 </td>
                             </tr>
@@ -168,4 +200,83 @@
         </div>
     </main>
 </div>
+
+<!-- Report Customer Modal -->
+<div id="report-customer-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
+        <form action="{{ route('disputes.report-user') }}" method="POST" class="p-6">
+            @csrf
+            <input type="hidden" name="booking_id" id="report-customer-booking-id" value="">
+
+            <div class="flex justify-between items-start mb-4">
+                <div>
+                    <h3 class="text-xl font-semibold text-gray-900">Report Customer</h3>
+                    <p class="text-sm text-gray-600 mt-1">Filing a report for <span id="report-customer-name" class="font-semibold text-gray-800">this customer</span>. An admin will review your report.</p>
+                </div>
+                <button type="button" onclick="hideReportCustomerModal()" class="text-gray-400 hover:text-gray-700">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="space-y-4">
+                <div>
+                    <label for="report-customer-type" class="block text-sm font-medium text-gray-700 mb-1">Issue Type <span class="text-red-500">*</span></label>
+                    <select name="type" id="report-customer-type" required class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500">
+                        <option value="">Select an issue type</option>
+                        <option value="behavior">Customer Behavior (rude, harassment, no-show)</option>
+                        <option value="payment">Payment Issue (chargeback, fraud, unpaid balance)</option>
+                        <option value="service">Property Damage / Misuse of Workspace</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="report-customer-description" class="block text-sm font-medium text-gray-700 mb-1">What happened? <span class="text-red-500">*</span></label>
+                    <textarea name="description" id="report-customer-description" rows="4" required minlength="10" maxlength="2000"
+                              placeholder="Describe the issue in detail. Include dates, times, and any relevant context (min 10 chars)."
+                              class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500"></textarea>
+                </div>
+
+                <div>
+                    <label for="report-customer-evidence" class="block text-sm font-medium text-gray-700 mb-1">Evidence (optional)</label>
+                    <textarea name="evidence" id="report-customer-evidence" rows="2" maxlength="2000"
+                              placeholder="Paste links to photos, CCTV stills, repair invoices, or other supporting info."
+                              class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500"></textarea>
+                </div>
+
+                <div class="bg-yellow-50 border border-yellow-200 rounded-md p-3 text-sm text-yellow-800">
+                    <strong>Note:</strong> False or malicious reports may result in account penalties. Only file a report when there is a genuine issue.
+                </div>
+            </div>
+
+            <div class="flex gap-3 mt-6">
+                <button type="button" onclick="hideReportCustomerModal()"
+                        class="flex-1 bg-gray-500 text-white px-4 py-2 rounded-md font-medium hover:bg-gray-600 transition-colors">
+                    Cancel
+                </button>
+                <button type="submit"
+                        class="flex-1 bg-orange-600 text-white px-4 py-2 rounded-md font-medium hover:bg-orange-700 transition-colors">
+                    Submit Report
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function showReportCustomerModal(bookingId, customerName) {
+    document.getElementById('report-customer-booking-id').value = bookingId;
+    document.getElementById('report-customer-name').textContent = customerName;
+    document.getElementById('report-customer-modal').classList.remove('hidden');
+}
+
+function hideReportCustomerModal() {
+    document.getElementById('report-customer-modal').classList.add('hidden');
+    document.getElementById('report-customer-type').value = '';
+    document.getElementById('report-customer-description').value = '';
+    document.getElementById('report-customer-evidence').value = '';
+}
+</script>
 @endsection 

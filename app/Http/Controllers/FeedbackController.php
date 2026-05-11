@@ -141,6 +141,10 @@ class FeedbackController extends Controller
         // Auto-flag suspicious content
         $isFlagged = $this->checkForProfanity($request->comment);
 
+        // High priority if flagged OR if rating is 1-2 stars (likely complaint)
+        $isLowRating = (int) $request->rating <= 2;
+        $isHighPriority = $isFlagged || $isLowRating;
+
         $review = Review::create([
             'user_id' => Auth::id(),
             'hub_owner_id' => $request->hub_owner_id,
@@ -150,7 +154,7 @@ class FeedbackController extends Controller
             'feedback_type' => $request->feedback_type,
             'status' => 'pending',
             'is_flagged' => $isFlagged,
-            'priority' => $isFlagged ? 1 : 0, // Flagged content gets high priority
+            'priority' => $isHighPriority ? 1 : 0,
         ]);
 
         Auth::user()?->notify(new FeedbackSubmittedNotification($review));
