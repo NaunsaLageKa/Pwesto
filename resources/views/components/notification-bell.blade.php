@@ -47,6 +47,7 @@
                     $data = $n->data;
                     $title = is_array($data) ? ($data['title'] ?? 'Update') : 'Update';
                     $message = is_array($data) ? ($data['message'] ?? '') : '';
+                    $txn = is_array($data) ? ($data['transaction_number'] ?? null) : null;
                     $isUnread = $n->read_at === null;
                 @endphp
                 <form action="{{ route('notifications.read', $n->id) }}" method="POST" style="margin:0; border-bottom:1px solid #f3f4f6;">
@@ -57,6 +58,9 @@
                         <div style="font-weight:{{ $isUnread ? '700' : '600' }}; font-size:13px; color:#111; margin-bottom:4px;">{{ $title }}</div>
                         @if($message)
                             <div style="font-size:12px; color:#555; line-height:1.4;">{{ \Illuminate\Support\Str::limit($message, 120) }}</div>
+                        @endif
+                        @if($txn)
+                            <div style="font-size:11px; color:#444; margin-top:6px; font-family:ui-monospace,monospace;">Ref {{ $txn }}</div>
                         @endif
                         <div style="font-size:11px; color:#888; margin-top:6px;">{{ $n->created_at->diffForHumans() }}</div>
                     </button>

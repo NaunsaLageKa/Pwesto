@@ -16,12 +16,15 @@ class BookingHistoryController extends Controller
             ? (int) $request->query('booking')
             : null;
 
+        $paymentSuccessBooking = null;
+
         if ($recentPaidBookingId) {
             $paidBooking = Booking::where('id', $recentPaidBookingId)
                 ->where('user_id', $user->id)
                 ->first();
 
             if ($paidBooking) {
+                $paymentSuccessBooking = $paidBooking;
                 $alreadyNotified = $user->notifications()
                     ->where('type', BookingStatusNotification::class)
                     ->latest()
@@ -64,7 +67,7 @@ class BookingHistoryController extends Controller
             ->orderBy('booking_date', 'desc')
             ->paginate(6, ['*'], 'past_page');
             
-        return view('booking-history', compact('upcomingBookings', 'pastBookings'));
+        return view('booking-history', compact('upcomingBookings', 'pastBookings', 'paymentSuccessBooking'));
     }
 
     public function cancel($id)

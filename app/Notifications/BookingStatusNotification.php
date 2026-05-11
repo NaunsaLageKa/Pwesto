@@ -47,6 +47,9 @@ class BookingStatusNotification extends Notification
             'status' => $this->eventStatus,
             'title' => $title,
             'message' => $message,
+            'transaction_number' => $this->eventStatus === 'paid'
+                ? $this->booking->transaction_number
+                : null,
             'url' => route('booking-history'),
         ];
     }

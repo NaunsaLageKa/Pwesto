@@ -16,7 +16,12 @@
 
         @if(request('payment') === 'success' && request('booking'))
             <div class="mb-8 bg-green-100 border border-green-300 text-green-800 px-4 py-3 rounded-lg">
-                Payment successful. Your booking is recorded and currently pending hub owner confirmation.
+                <p class="font-semibold">Payment successful. Your booking is recorded and currently pending hub owner confirmation.</p>
+                @if($paymentSuccessBooking && $paymentSuccessBooking->transaction_number)
+                    <p class="text-sm mt-2 text-green-900">
+                        Transaction number: <span class="font-mono font-semibold">{{ $paymentSuccessBooking->transaction_number }}</span>
+                    </p>
+                @endif
             </div>
         @endif
 
@@ -65,6 +70,9 @@
                                         <span class="px-2 py-1 bg-green-500 text-white text-xs rounded-full font-semibold">Confirmed</span>
                                     @endif
                                 </div>
+                                @if($booking->transaction_number)
+                                    <p class="text-gray-400 text-xs mt-2 font-mono">Txn {{ $booking->transaction_number }}</p>
+                                @endif
                             </div>
                         </div>  
                         <div class="flex items-start text-white" style="gap: 5rem;">
@@ -136,6 +144,9 @@
                             <h3 class="font-semibold text-lg mb-2">{{ ucfirst(str_replace('-', ' ', $booking->service_type)) }}</h3>
                             <p class="text-gray-300 text-sm mb-2">{{ $booking->seat_label }}</p>
                             <p class="text-gray-400 text-xs">{{ \Carbon\Carbon::parse($booking->booking_date)->format('M d, Y') }} at {{ \Carbon\Carbon::parse($booking->booking_time)->format('g:iA') }}</p>
+                            @if($booking->transaction_number)
+                                <p class="text-gray-500 text-xs font-mono mt-1">Txn {{ $booking->transaction_number }}</p>
+                            @endif
                             <div class="mt-2">
                                 @if($booking->status === 'completed')
                                     <span class="px-2 py-1 bg-green-500 text-white text-xs rounded-full">Completed</span>

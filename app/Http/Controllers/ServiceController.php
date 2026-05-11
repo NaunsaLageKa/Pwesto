@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use App\Models\FloorPlan;
 use App\Models\User;
 use App\Models\Booking;
@@ -21,6 +22,18 @@ class ServiceController extends Controller
             'private-office' => 'Nest Workspaces',
             'meeting-room' => 'Mesh Media',
         ];
+    }
+
+    /**
+     * Human-readable reference shown to the customer and sent to PayMongo as reference_number.
+     */
+    private function generateBookingTransactionNumber(): string
+    {
+        do {
+            $txn = 'PWE-' . now()->format('Ymd') . '-' . strtoupper(Str::random(8));
+        } while (Booking::where('transaction_number', $txn)->exists());
+
+        return $txn;
     }
 
     private function getBookingAmountForService(string $serviceType): float
@@ -259,6 +272,8 @@ class ServiceController extends Controller
             ], 400);
         }
 
+        $transactionNumber = $this->generateBookingTransactionNumber();
+
         $booking = Booking::create([
             'user_id' => auth()->id(),
             'hub_owner_id' => $hubOwner->id,
@@ -272,6 +287,7 @@ class ServiceController extends Controller
             'end_time' => $request->end_time ?: $request->booking_time,
             'status' => 'pending',
             'amount' => $this->getBookingAmountForService($request->service_type),
+            'transaction_number' => $transactionNumber,
             'notes' => 'Booking created via payment checkout',
         ]);
 
@@ -282,6 +298,7 @@ class ServiceController extends Controller
                     'success' => true,
                     'checkout_url' => route('booking-history') . '?payment=success&booking=' . $booking->id . '&mock=1',
                     'booking_id' => $booking->id,
+                    'transaction_number' => $transactionNumber,
                 ]);
             }
 
@@ -316,7 +333,7 @@ class ServiceController extends Controller
                         'quantity' => 1,
                     ]],
                     'payment_method_types' => $paymentMethodTypes,
-                    'reference_number' => 'BOOKING-' . $booking->id,
+                    'reference_number' => $transactionNumber,
                     'success_url' => route('booking-history') . '?payment=success&booking=' . $booking->id,
                     'cancel_url' => route('services.select-seat', ['service' => $request->service_type]) . '?payment=cancelled',
                 ],
@@ -385,6 +402,7 @@ class ServiceController extends Controller
             'success' => true,
             'checkout_url' => $checkoutUrl,
             'booking_id' => $booking->id,
+            'transaction_number' => $transactionNumber,
         ]);
     }
 
