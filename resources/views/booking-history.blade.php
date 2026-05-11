@@ -10,6 +10,7 @@
             <h2 class="text-lg font-bold text-gray-900 mb-1">Cancellation Policy</h2>
             <p class="text-sm font-medium text-gray-800">
                 Pending bookings can be cancelled from this page. Confirmed, completed, and previously cancelled bookings are no longer eligible for cancellation.
+                If you cancel a pending booking, any payment already made is non-refundable and will not be returned.
             </p>
         </div>
 
@@ -273,7 +274,8 @@ function hidePlatformFeedbackModal() {
                 </svg>
             </div>
             <h3 class="text-xl font-semibold text-gray-900 mb-4">Booking Cancelled!</h3>
-            <p class="text-base text-gray-600 mb-6">Your booking has been successfully cancelled.</p>
+            <p class="text-base text-gray-600 mb-2">Your booking has been successfully cancelled.</p>
+            <p class="text-sm text-gray-500 mb-6">Any payment made for this booking is non-refundable.</p>
             <button id="success-modal-ok-btn" class="w-full bg-blue-600 text-white px-4 py-3 rounded-md text-base font-medium hover:bg-blue-700 transition-colors">
                 OK
             </button>
