@@ -64,7 +64,7 @@
                     </td>
                     <td class="py-2 px-4">
                         @if($user->company_id)
-                            <a href="{{ asset('storage/' . $user->company_id) }}" target="_blank" class="text-blue-600 underline hover:text-blue-800">View</a>
+                            <a href="{{ route('admin.users.company-id', $user) }}" target="_blank" class="text-blue-600 underline hover:text-blue-800">View</a>
                         @else
                             <span class="text-gray-400">N/A</span>
                         @endif

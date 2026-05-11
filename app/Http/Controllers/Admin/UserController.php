@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use App\Models\User;
 use App\Models\Booking;
 use App\Models\FloorPlan;
@@ -114,6 +115,23 @@ class UserController extends Controller
                        ->withQueryString();
 
         return view('admin.users', compact('users'));
+    }
+
+    /**
+     * Serve hub owner company ID document (stored on the public disk).
+     * Using a controller avoids relying on the public/storage symlink alone.
+     */
+    public function companyIdDocument(User $user)
+    {
+        if (empty($user->company_id)) {
+            abort(404);
+        }
+
+        if (! Storage::disk('public')->exists($user->company_id)) {
+            abort(404);
+        }
+
+        return Storage::disk('public')->response($user->company_id);
     }
 
     public function updateRole(Request $request, $id)

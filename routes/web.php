@@ -96,6 +96,7 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware(['admin'])->group(function () {
         Route::get('/admin/dashboard', [UserController::class, 'dashboard'])->name('admin.dashboard');
         Route::get('/admin/users', [UserController::class, 'index'])->name('admin.users');
+        Route::get('/admin/users/{user}/company-id', [UserController::class, 'companyIdDocument'])->name('admin.users.company-id');
         Route::post('/admin/users/{id}/role', [UserController::class, 'updateRole'])->name('admin.users.updateRole');
         Route::post('/admin/users/{id}/ban', [UserController::class, 'toggleBan'])->name('admin.users.toggleBan');
         Route::post('/admin/users/{id}/approve', [UserController::class, 'approve'])->name('admin.users.approve');
