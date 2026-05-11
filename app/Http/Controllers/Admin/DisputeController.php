@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use App\Models\Dispute;
 use App\Models\User;
 use App\Models\Booking;
+use App\Notifications\DisputeResolvedNotification;
+use App\Notifications\DisputeEscalatedNotification;
 
 class DisputeController extends Controller
 {
@@ -39,7 +41,7 @@ class DisputeController extends Controller
             'action' => 'required|in:warning,suspension,ban,refund,no_action'
         ]);
 
-        $dispute = Dispute::findOrFail($id);
+        $dispute = Dispute::with(['user', 'hubOwner'])->findOrFail($id);
         $dispute->status = 'resolved';
         $dispute->resolution = $request->resolution;
         $dispute->resolved_by = auth()->id();
@@ -48,33 +50,37 @@ class DisputeController extends Controller
 
         // Take action based on resolution
         switch ($request->action) {
-            case 'warning':
-                // Send warning email
-                break;
             case 'suspension':
                 $user = $dispute->user;
-                $user->status = 'suspended';
-                $user->save();
+                if ($user) {
+                    $user->status = 'suspended';
+                    $user->save();
+                }
                 break;
             case 'ban':
                 $user = $dispute->user;
-                $user->status = 'banned';
-                $user->save();
+                if ($user) {
+                    $user->status = 'banned';
+                    $user->save();
+                }
                 break;
-            case 'refund':
-                // Process refund logic
-                break;
+            // 'warning', 'refund', 'no_action' don't change DB state directly; the
+            // notification below is what informs the affected user.
         }
+
+        $this->notifyDisputeResolved($dispute, $request->action, $request->resolution);
 
         return redirect()->route('admin.disputes.index')->with('success', 'Dispute resolved successfully.');
     }
 
     public function escalate($id)
     {
-        $dispute = Dispute::findOrFail($id);
+        $dispute = Dispute::with(['user', 'hubOwner'])->findOrFail($id);
         $dispute->status = 'escalated';
         $dispute->escalated_at = now();
         $dispute->save();
+
+        $this->notifyDisputeEscalated($dispute);
 
         return redirect()->back()->with('success', 'Dispute escalated to senior management.');
     }
@@ -102,5 +108,48 @@ class DisputeController extends Controller
         ]);
 
         return redirect()->route('admin.disputes.index')->with('success', 'Dispute created successfully.');
+    }
+
+    /**
+     * Notify both parties (reporter + reported) that the dispute is resolved.
+     *
+     * Roles are derived from the dispute's `created_by` field:
+     *   - If the customer filed the report, the customer is the reporter.
+     *   - If the hub owner filed the report, the hub owner is the reporter.
+     *   - Anyone else (e.g. an admin-created dispute) is treated as 'reported'.
+     */
+    private function notifyDisputeResolved(Dispute $dispute, string $action, ?string $resolution): void
+    {
+        $customer = $dispute->user;
+        $hubOwner = $dispute->hubOwner;
+
+        if ($customer) {
+            $role = $dispute->created_by === $customer->id ? 'reporter' : 'reported';
+            $customer->notify(new DisputeResolvedNotification($dispute, $role, $action, $resolution));
+        }
+
+        if ($hubOwner) {
+            $role = $dispute->created_by === $hubOwner->id ? 'reporter' : 'reported';
+            $hubOwner->notify(new DisputeResolvedNotification($dispute, $role, $action, $resolution));
+        }
+    }
+
+    /**
+     * Notify both parties that the dispute has been escalated.
+     */
+    private function notifyDisputeEscalated(Dispute $dispute): void
+    {
+        $customer = $dispute->user;
+        $hubOwner = $dispute->hubOwner;
+
+        if ($customer) {
+            $role = $dispute->created_by === $customer->id ? 'reporter' : 'reported';
+            $customer->notify(new DisputeEscalatedNotification($dispute, $role));
+        }
+
+        if ($hubOwner) {
+            $role = $dispute->created_by === $hubOwner->id ? 'reporter' : 'reported';
+            $hubOwner->notify(new DisputeEscalatedNotification($dispute, $role));
+        }
     }
 }
