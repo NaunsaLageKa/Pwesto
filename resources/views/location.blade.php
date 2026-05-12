@@ -110,17 +110,12 @@
         .custom-marker {
             background: transparent !important;
             border: none !important;
-            cursor: move !important;
+            cursor: pointer !important;
         }
 
         .custom-marker:hover {
             transform: scale(1.1);
             transition: transform 0.2s;
-        }
-
-        /* Make marker cursor indicate it's draggable */
-        .leaflet-marker-draggable {
-            cursor: move !important;
         }
         
         .location-info {
@@ -310,23 +305,23 @@
                         <div style="width: 20px; height: 20px; background: #19c2b8; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 12px;">P</div>
                         <div>
                             <div style="font-weight: 600; color: #222;">Produktiv - Osmeña</div>
-                            <div style="font-size: 12px; color: #666;">Osmeña Blvd, Cebu City</div>
+                            <div style="font-size: 12px; color: #666;">Revilles Bldg, Osmeña Blvd</div>
                         </div>
                     </button>
                     
                     <button onclick="showWorkspaceInfo('nest-itpark'); focusMarker('nest-itpark');" onmouseover="this.style.background='#fff5f5'; this.style.transform='translateX(-2px)';" onmouseout="this.style.background='white'; this.style.transform='translateX(0)';" style="display: flex; align-items: center; gap: 10px; padding: 12px; border: 2px solid #ff6b6b; background: white; border-radius: 8px; cursor: pointer; text-align: left; transition: all 0.2s;">
                         <div style="width: 20px; height: 20px; background: #ff6b6b; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 12px;">N</div>
                         <div>
-                            <div style="font-weight: 600; color: #222;">Nest - IT Park</div>
-                            <div style="font-size: 12px; color: #666;">Mango Avenue</div>
+                            <div style="font-weight: 600; color: #222;">Nest - Horizons 101</div>
+                            <div style="font-size: 12px; color: #666;">74 Gen. Maxilom Ave.</div>
                         </div>
                     </button>
                     
                     <button onclick="showWorkspaceInfo('mesh-ayala'); focusMarker('mesh-ayala');" onmouseover="this.style.background='#f0fdfc'; this.style.transform='translateX(-2px)';" onmouseout="this.style.background='white'; this.style.transform='translateX(0)';" style="display: flex; align-items: center; gap: 10px; padding: 12px; border: 2px solid #4ecdc4; background: white; border-radius: 8px; cursor: pointer; text-align: left; transition: all 0.2s;">
                         <div style="width: 20px; height: 20px; background: #4ecdc4; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 12px;">M</div>
                         <div>
-                            <div style="font-weight: 600; color: #222;">Mesh Media - Mango</div>
-                            <div style="font-size: 12px; color: #666;">Ramos Street</div>
+                            <div style="font-weight: 600; color: #222;">Mesh Media</div>
+                            <div style="font-size: 12px; color: #666;">F. Ramos St.</div>
                         </div>
                     </button>
                     
@@ -341,7 +336,7 @@
                     <div class="info-icon" style="background: #19c2b8;">P</div>
                     <div class="info-text">
                         <h3>Produktiv - Osmeña Workspace</h3>
-                        <p>Osmeña Blvd, Cebu City</p>
+                        <p>2F Revilles Building, cor. J. Llorente St. &amp; Osmeña Blvd, Capitol Site, Cebu City</p>
                         <p>Open 24 hours</p>
                         <a href="{{ route('services.booking') }}" style="color: #19c2b8; text-decoration: none; font-weight: 600;">Book Now →</a>
                     </div>
@@ -350,8 +345,8 @@
                 <div class="info-item">
                     <div class="info-icon" style="background: #ff6b6b;">N</div>
                     <div class="info-text">
-                        <h3>Nest - IT Park Workspace</h3>
-                        <p>Basement 1, Horizons 101, General Maxilom Avenue, Cebu City.</p>
+                        <h3>Nest - Horizons 101</h3>
+                        <p>B1 Horizons 101, 74 Gen. Maxilom Ave. (Mango Ave), Cebu City</p>
                         <p>Open 24 hours</p>
                         <a href="{{ route('services.nest-booking') }}" style="color: #ff6b6b; text-decoration: none; font-weight: 600;">Book Now →</a>
                     </div>
@@ -360,8 +355,8 @@
                 <div class="info-item">
                     <div class="info-icon" style="background: #4ecdc4;">M</div>
                     <div class="info-text">
-                        <h3>Mesh Media - Ayala Workspace</h3>
-                        <p>F. Ramos St. Cebu City</p>
+                        <h3>Mesh Media</h3>
+                        <p>F. Ramos St., Santa Cruz, Cebu City</p>
                         <p>6:00 AM - 10:00 PM</p>
                         <a href="{{ route('services.mesh-booking') }}" style="color: #4ecdc4; text-decoration: none; font-weight: 600;">Book Now →</a>
                     </div>
@@ -418,47 +413,47 @@
         let map;
         let markers = {};
 
-        // Workspace data with coordinates
+        // Workspace data — lat/lng aligned to venue addresses (OSM / published listings)
         const workspaces = {
             'produktiv-osmena': {
                 name: "Produktiv - Osmeña Workspace",
-                address: "Osmeña Blvd, Cebu City, 6000 Cebu",
+                address: "2F Revilles Building, cor. J. Llorente St. & Osmeña Blvd, Capitol Site, Cebu City, Philippines",
                 socialMedia: "https://www.facebook.com/produktivph/",
                 rating: "4.9 (174 reviews)",
                 hours: "Open 24 hours",
                 phone: "",
                 website: "https://www.facebook.com/produktivph/",
                 bookingLink: "{{ route('services.booking') }}",
-                lat: 10.3157,
-                lng: 123.8854,
+                lat: 10.3113185,
+                lng: 123.8927123,
                 color: '#19c2b8',
                 label: 'P'
             },
             'nest-itpark': {
-                name: "Nest - Workspace",
-                address: "Basement 1, Horizons 101, General Maxilom Avenue, Cebu City.",
+                name: "Nest - Horizons 101",
+                address: "B1, Horizons 101, 74 General Maxilom Avenue, Cebu City, Philippines",
                 socialMedia: "https://www.facebook.com/nestworkspacesph",
                 rating: "4.8 (142 reviews)",
                 hours: "Open 24 hours",
                 phone: "",
                 website: "https://www.facebook.com/nestworkspacesph",
                 bookingLink: "{{ route('services.nest-booking') }}",
-                lat: 10.3200,
-                lng: 123.9000,
+                lat: 10.3105944,
+                lng: 123.8974477,
                 color: '#ff6b6b',
                 label: 'N'
             },
             'mesh-ayala': {
-                name: "Mesh Media - Mango Avenue ",
-                address: "F. Ramos St. Cebu City",
+                name: "Mesh Media",
+                address: "F. Ramos Street, Santa Cruz, Cebu City, Philippines",
                 socialMedia: "https://www.instagram.com/meshmedia.space",
                 rating: "4.7 (98 reviews)",
                 hours: "6:00 AM - 10:00 PM",
                 phone: "",
                 website: "https://www.instagram.com/meshmedia.space",
                 bookingLink: "{{ route('services.mesh-booking') }}",
-                lat: 10.3100,
-                lng: 123.8700,
+                lat: 10.3084279,
+                lng: 123.8954492,
                 color: '#4ecdc4',
                 label: 'M'
             },
@@ -466,8 +461,7 @@
 
         // Initialize map when page loads
         document.addEventListener('DOMContentLoaded', function() {
-            // Initialize map centered on Cebu City
-            map = L.map('map').setView([10.3157, 123.8854], 13);
+            map = L.map('map');
 
             // Basemap: CARTO Voyager (OSM-based; distinct style from raw OSM tiles)
             L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
@@ -475,6 +469,8 @@
                 subdomains: 'abcd',
                 maxZoom: 20
             }).addTo(map);
+
+            const bounds = L.latLngBounds([]);
 
             // Add markers for each workspace
             Object.keys(workspaces).forEach(workspaceId => {
@@ -489,10 +485,9 @@
                     popupAnchor: [0, -20]
                 });
 
-                // Create draggable marker
-                const marker = L.marker([workspace.lat, workspace.lng], { 
+                const marker = L.marker([workspace.lat, workspace.lng], {
                     icon: customIcon,
-                    draggable: true
+                    draggable: false
                 })
                     .addTo(map)
                     .bindPopup(`
@@ -501,7 +496,6 @@
                             <p style="margin: 5px 0; color: #666; font-size: 14px;">${workspace.address}</p>
                             <p style="margin: 5px 0; color: #666; font-size: 14px;">${workspace.hours}</p>
                             ${workspace.phone ? `<p style="margin: 5px 0; color: #666; font-size: 14px;">${workspace.phone}</p>` : ''}
-                            <p style="margin: 5px 0; color: #999; font-size: 12px; font-style: italic;"> Drag marker to reposition</p>
                             <div style="margin-top: 10px; display: flex; gap: 8px;">
                                 <button onclick="getDirections('${workspace.address}')" style="background: #19c2b8; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 12px;">Directions</button>
                                 <button onclick="bookWorkspace('${workspace.bookingLink}')" style="background: #ff6b6b; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 12px;">Book Now</button>
@@ -509,39 +503,15 @@
                         </div>
                     `);
 
-                // Store marker reference
                 markers[workspaceId] = marker;
+                bounds.extend([workspace.lat, workspace.lng]);
 
-                // Add click event to marker
                 marker.on('click', function() {
                     showWorkspaceInfo(workspaceId);
                 });
-
-                // Add drag event listeners to update coordinates
-                marker.on('dragstart', function() {
-                    // Optional: Add visual feedback when dragging starts
-                    marker.setOpacity(0.7);
-                });
-
-                marker.on('dragend', function() {
-                    // Update workspace coordinates when marker is moved
-                    const newPosition = marker.getLatLng();
-                    workspaces[workspaceId].lat = newPosition.lat;
-                    workspaces[workspaceId].lng = newPosition.lng;
-                    
-                    // Reset opacity
-                    marker.setOpacity(1);
-                    
-                    // Show updated coordinates
-                    console.log(`${workspace.name} moved to:`, newPosition.lat, newPosition.lng);
-                    
-                    // Optional: Show a notification
-                    const popup = marker.getPopup();
-                    if (popup) {
-                        marker.openPopup();
-                    }
-                });
             });
+
+            map.fitBounds(bounds, { padding: [48, 48], maxZoom: 16 });
         });
 
         // Function to focus on a specific marker
