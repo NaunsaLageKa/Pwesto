@@ -4,7 +4,7 @@
 <div class="min-h-screen bg-gradient-to-br from-slate-50 via-cyan-50 to-indigo-100 py-10">
 <div class="container mx-auto">
     <div class="flex items-center justify-between mb-8 bg-white/70 backdrop-blur-sm border border-white rounded-2xl px-6 py-5 shadow-sm">
-        <h1 class="text-3xl font-extrabold bg-gradient-to-r from-cyan-600 to-indigo-700 bg-clip-text text-transparent">Admin Dashboard</h1>
+        <h1 class="text-3xl font-extrabold bg-gradient-to-r from-cyan-600 to-indigo-700 bg-clip-text text-transparent">Admin</h1>
         <form method="POST" action="{{ route('logout') }}">
             @csrf
             <button type="submit" class="inline-flex items-center px-4 py-2 rounded-lg bg-red-500 text-white font-medium hover:bg-red-600 shadow-sm transition-colors">
