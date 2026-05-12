@@ -49,8 +49,7 @@ class AuthenticatedSessionController extends Controller
             Auth::logout();
             return redirect()->route('login')->withErrors(['email' => 'Your account has been banned.']);
         }
-        // Redirect to the main dashboard after login
-        return redirect()->route('dashboard');
+        return redirect()->intended(route('dashboard', absolute: false));
     }
 
     /**

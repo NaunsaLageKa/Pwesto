@@ -1,15 +1,12 @@
 <div style="display:inline-flex; align-items:center; gap:12px;">
-@if(Auth::user()->role === 'user')
     <x-notification-bell />
-@endif
 
-@if(Auth::user()->role === 'user')
 <div style="position:relative;" x-data="{ open: false }" @click.outside="open = false">
-    <button @click="open = !open" style="cursor:pointer; border:none; background:none; padding:0;">
+    <button type="button" @click="open = !open" x-bind:aria-expanded="open" style="cursor:pointer; border:none; background:none; padding:0;">
         <img src="{{ Auth::user()->profile_image ? asset('storage/' . Auth::user()->profile_image) : asset('images/avatar.svg') }}" alt="User" style="width:44px; height:44px; border-radius:50%; object-fit:cover; border:2px solid #eee; {{ !Auth::user()->profile_image ? 'background:#f3f4f6; padding:8px;' : '' }}">
     </button>
-    
-    <div x-show="open" 
+
+    <div x-show="open"
          x-transition:enter="transition ease-out duration-200"
          x-transition:enter-start="opacity-0 scale-95"
          x-transition:enter-end="opacity-100 scale-100"
@@ -31,9 +28,4 @@
         </div>
     </div>
 </div>
-@else
-<a href="{{ route('profile.edit') }}">
-    <img src="{{ Auth::user()->profile_image ? asset('storage/' . Auth::user()->profile_image) : asset('images/avatar.svg') }}" alt="User" style="width:44px; height:44px; border-radius:50%; object-fit:cover; border:2px solid #eee; {{ !Auth::user()->profile_image ? 'background:#f3f4f6; padding:8px;' : '' }}">
-</a>
-@endif
 </div>
