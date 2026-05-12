@@ -7,15 +7,10 @@
     
     <!-- Dashboard Stats -->
     @if(isset($stats))
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
         <div class="bg-white p-6 rounded-lg shadow border">
             <p class="text-sm font-medium text-gray-600">Pending Reviews</p>
             <p class="text-2xl font-semibold text-gray-900">{{ $stats['pending_count'] }}</p>
-        </div>
-        
-        <div class="bg-white p-6 rounded-lg shadow border">
-            <p class="text-sm font-medium text-gray-600">Flagged Content</p>
-            <p class="text-2xl font-semibold text-gray-900">{{ $stats['flagged_count'] }}</p>
         </div>
         
         <div class="bg-white p-6 rounded-lg shadow border">
@@ -38,11 +33,6 @@
             <option value="pending" @if(request('status')=='pending') selected @endif>Pending</option>
             <option value="approved" @if(request('status')=='approved') selected @endif>Approved</option>
             <option value="rejected" @if(request('status')=='rejected') selected @endif>Rejected</option>
-        </select>
-        <select name="flagged" class="border rounded px-3 py-2">
-            <option value="">All</option>
-            <option value="1" @if(request('flagged')=='1') selected @endif>Flagged Only</option>
-            <option value="0" @if(request('flagged')=='0') selected @endif>Not Flagged</option>
         </select>
         <select name="priority" class="border rounded px-3 py-2">
             <option value="">All Priorities</option>
