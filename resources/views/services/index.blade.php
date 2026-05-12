@@ -29,7 +29,7 @@
                     <div class="service-overlay"></div>
                     <div class="absolute bottom-8 left-8">
                         <h3 class="service-title">
-                            <span class="text-yellow-400">S</span>ERVES FOOD
+                            <span class="text-yellow-400">S</span>ERVICES FOOD
                         </h3>
                         <p class="service-subtitle">Gourmet meals & refreshments</p>
                     </div>

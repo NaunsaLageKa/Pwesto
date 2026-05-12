@@ -235,8 +235,8 @@ class FeedbackController extends Controller
     {
         return [
             ['id' => 'produktiv', 'name' => 'Produktiv - Osmeña Workspace'],
-            ['id' => 'nest', 'name' => 'Nest - IT Park Workspace'],
-            ['id' => 'mesh-media', 'name' => 'Mesh Media - Ayala Workspace'],
+            ['id' => 'nest', 'name' => 'Nest - Horizons 101'],
+            ['id' => 'mesh-media', 'name' => 'Mesh Media'],
             ['id' => 'pwesto', 'name' => 'Pwesto Platform'],
         ];
     }
