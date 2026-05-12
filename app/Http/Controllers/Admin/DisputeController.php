@@ -64,7 +64,6 @@ class DisputeController extends Controller
                     $user->save();
                 }
                 break;
-            // 'warning', 'refund', 'no_action' don't change DB state directly; the
             // notification below is what informs the affected user.
         }
 
@@ -110,14 +109,7 @@ class DisputeController extends Controller
         return redirect()->route('admin.disputes.index')->with('success', 'Dispute created successfully.');
     }
 
-    /**
-     * Notify both parties (reporter + reported) that the dispute is resolved.
-     *
-     * Roles are derived from the dispute's `created_by` field:
-     *   - If the customer filed the report, the customer is the reporter.
-     *   - If the hub owner filed the report, the hub owner is the reporter.
-     *   - Anyone else (e.g. an admin-created dispute) is treated as 'reported'.
-     */
+
     private function notifyDisputeResolved(Dispute $dispute, string $action, ?string $resolution): void
     {
         $customer = $dispute->user;
