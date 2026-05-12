@@ -6,13 +6,7 @@ use App\Models\Dispute;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
 
-/**
- * In-app notification fired when an admin resolves a dispute.
- *
- * The same notification class is used for both parties (the user who filed
- * the report and the user who was reported). The recipient's role determines
- * the wording so each side reads a message that makes sense to them.
- */
+
 class DisputeResolvedNotification extends Notification
 {
     use Queueable;

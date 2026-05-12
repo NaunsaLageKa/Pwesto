@@ -118,7 +118,7 @@ class UserController extends Controller
     }
 
     /**
-     * Serve hub owner company ID document (stored on the public disk).
+     * Serve hub owner company ID document.
      * Using a controller avoids relying on the public/storage symlink alone.
      */
     public function companyIdDocument(User $user)
