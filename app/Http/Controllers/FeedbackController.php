@@ -12,9 +12,32 @@ use Illuminate\Support\Facades\Auth;
 class FeedbackController extends Controller
 {
     /**
+     * Landing page with approved public workspace reviews.
+     */
+    public function welcome()
+    {
+        $data = $this->buildPublicWorkspaceReviews();
+        $data['reviewsHeading'] = 'REVIEWS';
+        $data['reviewsSubheading'] = 'Real feedback from guests who booked our partner workspaces.';
+        $data['showReviewsLocationLink'] = true;
+
+        return view('welcome', $data);
+    }
+
+    /**
      * Show public approved workspace reviews for decision guidance.
      */
     public function publicReviews()
+    {
+        return view('location', $this->buildPublicWorkspaceReviews());
+    }
+
+    /**
+     * Approved workspace feedback grouped by hub / booking name for public display.
+     *
+     * @return array{reviewsByWorkspace: \Illuminate\Support\Collection, workspaceStats: \Illuminate\Support\Collection}
+     */
+    protected function buildPublicWorkspaceReviews(): array
     {
         $approvedWorkspaceReviews = Review::where('status', 'approved')
             ->where('feedback_type', 'workspace')
@@ -23,8 +46,25 @@ class FeedbackController extends Controller
             ->get();
 
         $publicReviews = $approvedWorkspaceReviews->map(function (Review $review) {
-            $workspaceName = $review->booking?->hub_name
-                ?: ($review->hubOwner?->company ?: ($review->hubOwner?->name ?: 'Pwesto Workspace'));
+            // Title shown per card: booking venue name, then company, then hub owner's name — but skip
+            // placeholder values like "Hub Owner" (common default account name / bad hub_name).
+            $workspaceName = null;
+            foreach ([
+                $review->booking?->hub_name,
+                $review->hubOwner?->company,
+                $review->hubOwner?->name,
+            ] as $candidate) {
+                $t = trim((string) ($candidate ?? ''));
+                if ($t === '') {
+                    continue;
+                }
+                if (preg_match('/^hub\s*owner$/i', $t)) {
+                    continue;
+                }
+                $workspaceName = $t;
+                break;
+            }
+            $workspaceName ??= 'Pwesto Workspace';
 
             $reviewerName = trim((string) ($review->user?->name ?? 'Anonymous'));
             $maskedReviewer = $reviewerName !== ''
@@ -54,7 +94,7 @@ class FeedbackController extends Controller
                 ];
             });
 
-        return view('location', compact('reviewsByWorkspace', 'workspaceStats'));
+        return compact('reviewsByWorkspace', 'workspaceStats');
     }
 
     /**

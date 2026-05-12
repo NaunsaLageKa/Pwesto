@@ -163,6 +163,114 @@
             object-fit: contain;
         }
 
+        .public-reviews-section {
+            margin-bottom: 20px;
+        }
+
+        .public-reviews-wrap {
+            background: #fff;
+            border: 1px solid #e8edf3;
+            border-radius: 18px;
+            box-shadow: 0 8px 22px rgba(2, 6, 23, 0.06);
+            padding: 2rem 1.5rem;
+        }
+
+        .public-reviews-title {
+            text-align: center;
+            margin: 0 0 0.5rem;
+            color: #111827;
+            font-size: clamp(1.5rem, 3vw, 2rem);
+            font-weight: 800;
+        }
+
+        .public-reviews-sub {
+            text-align: center;
+            color: #6b7280;
+            margin: 0 0 1.5rem;
+            font-size: 1rem;
+            line-height: 1.5;
+        }
+
+        .public-reviews-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.25rem;
+        }
+
+        .workspace-review-card {
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 1.1rem;
+            background: #f9fafb;
+        }
+
+        .workspace-review-title {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 0.35rem;
+        }
+
+        .workspace-review-meta {
+            font-size: 0.85rem;
+            color: #4b5563;
+            margin-bottom: 0.8rem;
+        }
+
+        .review-item {
+            border-top: 1px dashed #d1d5db;
+            padding-top: 0.7rem;
+            margin-top: 0.7rem;
+        }
+
+        .review-item:first-child {
+            border-top: none;
+            padding-top: 0;
+            margin-top: 0;
+        }
+
+        .review-rating {
+            font-weight: 700;
+            color: #0f766e;
+            font-size: 0.9rem;
+        }
+
+        .review-comment {
+            font-size: 0.9rem;
+            color: #374151;
+            line-height: 1.4;
+            margin-top: 0.25rem;
+        }
+
+        .review-footer {
+            font-size: 0.78rem;
+            color: #6b7280;
+            margin-top: 0.3rem;
+        }
+
+        .public-reviews-empty {
+            grid-column: 1 / -1;
+            text-align: center;
+            color: #6b7280;
+            padding: 1.5rem 0;
+        }
+
+        .public-reviews-more {
+            text-align: center;
+            margin: 1.25rem 0 0;
+        }
+
+        .public-reviews-more a {
+            color: #19c2b8;
+            font-weight: 700;
+            text-decoration: none;
+            font-size: 0.95rem;
+        }
+
+        .public-reviews-more a:hover {
+            text-decoration: underline;
+        }
+
         .footer {
             background: #0f1115;
             color: #c9d1dd;
@@ -227,6 +335,12 @@
                 </div>
             </div>
         </section>
+
+        @if(($reviewsByWorkspace ?? collect())->isNotEmpty())
+        <section class="public-reviews-section" aria-label="Public reviews">
+            @include('partials.public-workspace-reviews')
+        </section>
+        @endif
 
         <section class="partners">
             <div class="partner"><img src="{{ asset('images/produktiv.png') }}" alt="Produktiv"></div>

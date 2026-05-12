@@ -259,6 +259,41 @@
             color: #6b7280;
             margin-top: 0.3rem;
         }
+
+        .public-reviews-title {
+            text-align: center;
+            margin: 0 0 0.5rem;
+            color: #222;
+            font-size: 2rem;
+        }
+
+        .public-reviews-sub {
+            text-align: center;
+            color: #6b7280;
+            margin: 0 0 1.5rem;
+        }
+
+        .public-reviews-more {
+            text-align: center;
+            margin: 1.25rem 0 0;
+        }
+
+        .public-reviews-more a {
+            color: #19c2b8;
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .public-reviews-more a:hover {
+            text-decoration: underline;
+        }
+
+        .public-reviews-empty {
+            grid-column: 1 / -1;
+            text-align: center;
+            color: #6b7280;
+            padding: 1.5rem 0;
+        }
         
         @media (max-width: 768px) {
             .nav-container {
@@ -365,41 +400,9 @@
             </div>
         </div>
 
-        <div class="public-reviews-wrap">
-            <h2 style="text-align:center; margin-bottom:0.5rem; color:#222; font-size:2rem;">Reviews</h2>
-            <p style="text-align:center; color:#6b7280; margin-bottom:1.5rem;">
-                Community feedback to guide your coworking space decision.
-            </p>
-
-            <div class="public-reviews-grid">
-                @forelse(($reviewsByWorkspace ?? collect()) as $workspaceName => $workspaceReviews)
-                    @php
-                        $stats = ($workspaceStats ?? collect())->get($workspaceName, ['review_count' => 0, 'average_rating' => 0]);
-                    @endphp
-                    <div class="workspace-review-card">
-                        <div class="workspace-review-title">{{ $workspaceName }}</div>
-                        <div class="workspace-review-meta">
-                             {{ number_format($stats['average_rating'], 1) }}/5
-                            • {{ $stats['review_count'] }} {{ $stats['review_count'] === 1 ? 'review' : 'reviews' }}
-                        </div>
-
-                        @foreach($workspaceReviews as $review)
-                            <div class="review-item">
-                                <div class="review-rating">Rating: {{ $review['rating'] }}/5</div>
-                                <div class="review-comment">{{ \Illuminate\Support\Str::limit($review['comment'], 120) }}</div>
-                                <div class="review-footer">
-                                    By {{ $review['reviewer'] }} • {{ $review['created_at']->diffForHumans() }}
-                                </div>
-                            </div>
-                        @endforeach
-                    </div>
-                @empty
-                    <div style="grid-column: 1 / -1; text-align:center; color:#6b7280; padding:1.5rem 0;">
-                        No approved public reviews yet.
-                    </div>
-                @endforelse
-            </div>
-        </div>
+        @if(($reviewsByWorkspace ?? collect())->isNotEmpty())
+            @include('partials.public-workspace-reviews')
+        @endif
 
         <div class="cta-section">
             <h2 class="cta-title">Ready to Book Your Workspace?</h2>
