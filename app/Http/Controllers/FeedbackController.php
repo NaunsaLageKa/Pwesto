@@ -3,11 +3,13 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use App\Models\Review;
 use App\Models\User;
 use App\Models\Booking;
 use App\Notifications\FeedbackSubmittedNotification;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 
 class FeedbackController extends Controller
 {
@@ -25,24 +27,40 @@ class FeedbackController extends Controller
     }
 
     /**
-     * Show public approved workspace reviews for decision guidance.
+     * Location page (map + workspace info). Public review cards are shown on the home page only.
      */
     public function publicReviews()
     {
-        return view('location', $this->buildPublicWorkspaceReviews());
+        return view('location');
     }
 
     /**
-     * Approved workspace feedback grouped by hub / booking name for public display.
+     * Workspace reviews that are approved and published for public Location / welcome pages.
+     * New workspace feedback is published automatically on submit (published_to_public_at set in store).
      *
      * @return array{reviewsByWorkspace: \Illuminate\Support\Collection, workspaceStats: \Illuminate\Support\Collection}
      */
     protected function buildPublicWorkspaceReviews(): array
     {
-        $approvedWorkspaceReviews = Review::where('status', 'approved')
-            ->where('feedback_type', 'workspace')
+        if (! Schema::hasColumn('reviews', 'published_to_public_at')) {
+            return [
+                'reviewsByWorkspace' => collect(),
+                'workspaceStats' => collect(),
+            ];
+        }
+
+        $approvedQuery = Review::query()
+            ->where('reviews.status', 'approved')
+            ->where('reviews.feedback_type', 'workspace')
+            ->whereNotNull('reviews.published_to_public_at');
+
+        if (Schema::hasColumn('reviews', 'deleted_at')) {
+            $approvedQuery->whereNull('reviews.deleted_at');
+        }
+
+        $approvedWorkspaceReviews = $approvedQuery
             ->with(['user:id,name', 'hubOwner:id,name,company', 'booking:id,hub_name'])
-            ->latest()
+            ->latest('reviews.created_at')
             ->get();
 
         $publicReviews = $approvedWorkspaceReviews->map(function (Review $review) {
@@ -110,36 +128,30 @@ class FeedbackController extends Controller
         if ($bookingId) {
             $booking = Booking::where('id', $bookingId)
                 ->where('user_id', Auth::id())
+                ->where('status', 'completed')
                 ->first();
             if ($booking) {
                 $hubOwnerId = $booking->hub_owner_id;
             }
-        } else {
-            // Get hub owner based on workspace selection
-            if ($workspace) {
-                $hubOwner = $this->getHubOwnerByWorkspace($workspace);
-                if ($hubOwner) {
-                    $hubOwnerId = $hubOwner->id;
-                } else {
-                    // Fallback: get first approved hub owner or admin for platform feedback
-                    if ($workspace === 'pwesto') {
-                        $hubOwner = User::where('role', 'admin')->first();
-                    } else {
-                        $hubOwner = User::where('role', 'hub_owner')
-                            ->where('status', 'approved')
-                            ->first();
-                    }
-                    if ($hubOwner) {
-                        $hubOwnerId = $hubOwner->id;
-                    }
-                }
+        } elseif ($workspace) {
+            $hubOwner = $this->resolveHubOwnerForWorkspace($workspace);
+            if ($hubOwner) {
+                $hubOwnerId = $hubOwner->id;
             }
         }
 
         // Get workspace list for dropdown
         $workspaces = $this->getAvailableWorkspaces();
 
-        return view('feedback.create', compact('booking', 'workspace', 'hubOwnerId', 'workspaces'));
+        $bookableWorkspaceIds = [];
+        foreach (['produktiv', 'nest', 'mesh-media'] as $wid) {
+            $ho = $this->resolveHubOwnerForWorkspace($wid);
+            if ($ho && $this->userHasBookingForHub(Auth::user(), $ho)) {
+                $bookableWorkspaceIds[] = $wid;
+            }
+        }
+
+        return view('feedback.create', compact('booking', 'workspace', 'hubOwnerId', 'workspaces', 'bookableWorkspaceIds'));
     }
 
     /**
@@ -152,11 +164,58 @@ class FeedbackController extends Controller
             'rating' => 'required|integer|min:1|max:5',
             'comment' => 'required|string',
             'feedback_type' => 'required|in:workspace,platform',
-            'booking_id' => 'nullable|exists:bookings,id'
+            'booking_id' => 'nullable|exists:bookings,id',
+            'workspace' => 'nullable|string|in:produktiv,nest,mesh-media,pwesto',
         ], [
             'rating.required' => 'Please provide a rating.',
             'comment.required' => 'Please provide your feedback.',
         ]);
+
+        if ($request->booking_id) {
+            $linkedBooking = Booking::where('id', $request->booking_id)
+                ->where('user_id', Auth::id())
+                ->first();
+            if (! $linkedBooking || $linkedBooking->status !== 'completed') {
+                throw ValidationException::withMessages([
+                    'booking_id' => 'Feedback can only be linked to a completed booking.',
+                ]);
+            }
+        }
+
+        $workspace = $request->input('workspace');
+
+        if ($request->feedback_type === 'workspace') {
+            if ($workspace === 'pwesto') {
+                throw ValidationException::withMessages([
+                    'feedback_type' => 'For Pwesto app feedback, choose “Platform Feedback”. To review a coworking space, select Produktiv, Nest, or Mesh Media.',
+                ]);
+            }
+
+            $resolvedHub = $workspace ? $this->resolveHubOwnerForWorkspace($workspace) : null;
+            if (! $resolvedHub || (int) $resolvedHub->id !== (int) $request->hub_owner_id) {
+                throw ValidationException::withMessages([
+                    'workspace' => 'The selected workspace does not match the hub. Refresh the page and try again.',
+                ]);
+            }
+
+            if (! $this->userHasBookingForHub(Auth::user(), $resolvedHub)) {
+                throw ValidationException::withMessages([
+                    'workspace' => 'You can submit workspace feedback only after a visit at that coworking space has been marked complete.',
+                ]);
+            }
+        } elseif ($request->feedback_type === 'platform') {
+            $resolvedPlatform = $this->resolveHubOwnerForWorkspace('pwesto');
+            if (! $resolvedPlatform || (int) $resolvedPlatform->id !== (int) $request->hub_owner_id) {
+                throw ValidationException::withMessages([
+                    'workspace' => 'Platform feedback must use “Pwesto Platform” as the workspace.',
+                ]);
+            }
+            if (($workspace ?? '') !== 'pwesto') {
+                throw ValidationException::withMessages([
+                    'workspace' => 'Select “Pwesto Platform” for platform feedback.',
+                ]);
+            }
+        }
 
         // Validate word count (500 words maximum)
         $wordCount = str_word_count($request->comment);
@@ -166,18 +225,6 @@ class FeedbackController extends Controller
                 ->withErrors(['comment' => 'Feedback must not exceed 500 words. You have ' . $wordCount . ' words.']);
         }
 
-        // Check if user already submitted feedback for this booking (if linked)
-        if ($request->booking_id) {
-            $existingReview = Review::where('booking_id', $request->booking_id)
-                ->where('user_id', Auth::id())
-                ->first();
-            if ($existingReview) {
-                return redirect()->back()
-                    ->withInput()
-                    ->with('error', 'You have already submitted feedback for this booking.');
-            }
-        }
-
         // Auto-flag suspicious content
         $isFlagged = $this->checkForProfanity($request->comment);
 
@@ -185,22 +232,41 @@ class FeedbackController extends Controller
         $isLowRating = (int) $request->rating <= 2;
         $isHighPriority = $isFlagged || $isLowRating;
 
-        $review = Review::create([
+        $isWorkspace = $request->feedback_type === 'workspace';
+
+        // Workspace feedback: approved for the hub owner dashboard immediately; also published to
+        // public Location / welcome when the schema supports it (published_to_public_at).
+        $reviewAttributes = [
             'user_id' => Auth::id(),
             'hub_owner_id' => $request->hub_owner_id,
             'booking_id' => $request->booking_id,
             'rating' => $request->rating,
             'comment' => $request->comment,
             'feedback_type' => $request->feedback_type,
-            'status' => 'pending',
+            'status' => $isWorkspace ? 'approved' : 'pending',
+            'approved_at' => $isWorkspace ? now() : null,
+            'approved_by' => null,
             'is_flagged' => $isFlagged,
             'priority' => $isHighPriority ? 1 : 0,
-        ]);
+        ];
+
+        if ($isWorkspace && Schema::hasColumn('reviews', 'published_to_public_at')) {
+            $reviewAttributes['published_to_public_at'] = now();
+            if (Schema::hasColumn('reviews', 'published_to_public_by')) {
+                $reviewAttributes['published_to_public_by'] = null;
+            }
+        }
+
+        $review = Review::create($reviewAttributes);
 
         Auth::user()?->notify(new FeedbackSubmittedNotification($review));
 
+        $successMessage = $isWorkspace
+            ? 'Thank you for your feedback! The venue can see it right away, and it is shown on our public reviews as well.'
+            : 'Thank you for your feedback! Platform feedback is pending admin approval.';
+
         return redirect()->route('profile.feedback')
-            ->with('success', 'Thank you for your feedback! It is pending admin approval.');
+            ->with('success', $successMessage);
     }
 
     /**
@@ -217,55 +283,98 @@ class FeedbackController extends Controller
     }
 
     /**
-     * Get hub owner by workspace name
+     * Resolve the hub owner or admin for a workspace key.
+     * Uses ordered company candidates (most specific first) and prefers recently updated rows,
+     * so feedback is stored against the same hub owner the app uses for Nest / Produktiv / Mesh bookings.
      */
-    private function getHubOwnerByWorkspace($workspace)
+    private function resolveHubOwnerForWorkspace(?string $workspace): ?User
     {
-        $workspaceMap = [
-            'produktiv' => ['Produktiv', 'produktiv'],
-            'nest' => ['Nest', 'nest'],
-            'mesh-media' => ['Mesh Media', 'mesh media', 'mesh'],
-            'pwesto' => null, // Platform feedback, no specific hub owner
-        ];
+        if (! $workspace) {
+            return null;
+        }
 
-        // For Pwesto platform feedback, return a default admin user
-        if ($workspace === 'pwesto' || !isset($workspaceMap[$workspace])) {
+        if ($workspace === 'pwesto') {
             return User::where('role', 'admin')->first();
         }
 
-        $searchTerms = $workspaceMap[$workspace];
-        
-        // First, try to find by company name
-        $hubOwner = User::where('role', 'hub_owner')
-            ->where(function($query) use ($searchTerms) {
-                foreach ($searchTerms as $term) {
-                    $query->orWhereRaw('LOWER(company) LIKE ?', ['%' . strtolower($term) . '%']);
+        /** @var list<string> $companyCandidates longest / canonical names first */
+        $companyCandidates = match ($workspace) {
+            'produktiv' => ['Produktiv'],
+            'nest' => ['Nest Workspaces', 'Nest'],
+            'mesh-media' => ['Mesh Media', 'Mesh'],
+            default => [],
+        };
+
+        if ($companyCandidates === []) {
+            return null;
+        }
+
+        foreach ($companyCandidates as $needle) {
+            $n = strtolower(trim($needle));
+            if ($n === '') {
+                continue;
+            }
+            $hub = User::where('role', 'hub_owner')
+                ->where('status', 'approved')
+                ->whereRaw('LOWER(TRIM(company)) = ?', [$n])
+                ->orderByDesc('updated_at')
+                ->first();
+            if ($hub) {
+                return $hub;
+            }
+        }
+
+        foreach ($companyCandidates as $needle) {
+            $n = strtolower(trim($needle));
+            if ($n === '') {
+                continue;
+            }
+            $hub = User::where('role', 'hub_owner')
+                ->where('status', 'approved')
+                ->whereRaw('LOWER(company) LIKE ?', ['%' . $n . '%'])
+                ->orderByDesc('updated_at')
+                ->first();
+            if ($hub) {
+                return $hub;
+            }
+        }
+
+        foreach ($companyCandidates as $needle) {
+            $n = strtolower(trim($needle));
+            if ($n === '') {
+                continue;
+            }
+            $hub = User::where('role', 'hub_owner')
+                ->where('status', 'approved')
+                ->whereRaw('LOWER(name) LIKE ?', ['%' . $n . '%'])
+                ->orderByDesc('updated_at')
+                ->first();
+            if ($hub) {
+                return $hub;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Whether the user has at least one completed booking at this hub (by hub_owner_id or hub_name vs company).
+     */
+    private function userHasBookingForHub(User $user, User $hubOwner): bool
+    {
+        if ($hubOwner->role === 'admin') {
+            return true;
+        }
+
+        return Booking::where('user_id', $user->id)
+            ->where('status', 'completed')
+            ->where(function ($q) use ($hubOwner) {
+                $q->where('hub_owner_id', $hubOwner->id);
+                if ($hubOwner->company) {
+                    $q->orWhereRaw('LOWER(hub_name) LIKE ?', ['%' . strtolower($hubOwner->company) . '%']);
                 }
             })
-            ->where('status', 'approved')
-            ->first();
-
-        // If not found by company, try to find by name
-        if (!$hubOwner) {
-            $hubOwner = User::where('role', 'hub_owner')
-                ->where(function($query) use ($searchTerms) {
-                    foreach ($searchTerms as $term) {
-                        $query->orWhereRaw('LOWER(name) LIKE ?', ['%' . strtolower($term) . '%']);
-                    }
-                })
-                ->where('status', 'approved')
-                ->first();
-        }
-
-        // If still not found, return the first approved hub owner as fallback
-        // This allows feedback to still be submitted
-        if (!$hubOwner) {
-            $hubOwner = User::where('role', 'hub_owner')
-                ->where('status', 'approved')
-                ->first();
-        }
-
-        return $hubOwner;
+            ->exists();
     }
 
     /**
@@ -348,12 +457,12 @@ class FeedbackController extends Controller
             ], 400);
         }
         
-        $hubOwner = $this->getHubOwnerByWorkspace($workspace);
-        
+        $hubOwner = $this->resolveHubOwnerForWorkspace($workspace);
+
         return response()->json([
-            'hub_owner_id' => $hubOwner ? $hubOwner->id : null,
+            'hub_owner_id' => $hubOwner?->id,
             'success' => $hubOwner !== null,
-            'message' => $hubOwner ? 'Hub owner found.' : 'Using default hub owner.'
+            'message' => $hubOwner ? 'Hub owner found.' : 'No hub owner is configured for this workspace.',
         ]);
     }
 }

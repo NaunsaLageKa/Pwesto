@@ -69,8 +69,8 @@
                             </svg>
                         </div>
                         <div class="ml-4">
-                            <p class="text-sm font-medium text-gray-600">Active Users</p>
-                            <p class="text-xl font-bold text-gray-900">{{ $activeUsers ?? 0 }}</p>
+                            <p class="text-sm font-medium text-gray-600">Total users</p>
+                            <p class="text-xl font-bold text-gray-900">{{ $totalUsers ?? 0 }}</p>
                         </div>
                     </div>
                 </div>
@@ -201,7 +201,105 @@
                 </div>
             @endif
         </div>
+            <!-- Total booked chart -->
+            <div class="bg-white rounded-lg border border-gray-200 mt-8">
+                <div class="px-6 py-4 border-b border-gray-100">
+                    <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                        <div>
+                            <h2 class="text-lg font-semibold text-gray-900">{{ $bookingsChart['title'] ?? 'Total booked' }}</h2>
+                            <p class="text-sm text-gray-500 mt-0.5">{{ $bookingsChart['subtitle'] ?? '' }}</p>
+                            <p class="mt-2 text-2xl font-bold text-teal-600">{{ $bookingsChart['total'] ?? 0 }} <span class="text-sm font-medium text-gray-500">booking{{ ($bookingsChart['total'] ?? 0) === 1 ? '' : 's' }}</span></p>
+                        </div>
+                        <form method="GET" action="{{ route('hub-owner.dashboard') }}" class="flex flex-wrap items-end gap-2">
+                            <div>
+                                <label for="chart_view" class="block text-xs font-medium text-gray-500 mb-1">View</label>
+                                <select name="chart_view" id="chart_view" class="rounded-md border border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                    <option value="month" @selected(($chartView ?? 'month') === 'month')>By month (daily)</option>
+                                    <option value="year" @selected(($chartView ?? '') === 'year')>By year (monthly)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="chart_month" class="block text-xs font-medium text-gray-500 mb-1">Month</label>
+                                <select name="chart_month" id="chart_month" class="rounded-md border border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500" @disabled(($chartView ?? 'month') === 'year')>
+                                    @for($m = 1; $m <= 12; $m++)
+                                        <option value="{{ $m }}" @selected(($chartMonth ?? now()->month) == $m)>{{ \Carbon\Carbon::create(null, $m, 1)->format('F') }}</option>
+                                    @endfor
+                                </select>
+                            </div>
+                            <div>
+                                <label for="chart_year" class="block text-xs font-medium text-gray-500 mb-1">Year</label>
+                                <select name="chart_year" id="chart_year" class="rounded-md border border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                    @foreach($availableYears ?? [now()->year] as $y)
+                                        <option value="{{ $y }}" @selected(($chartYear ?? now()->year) == $y)>{{ $y }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <button type="submit" class="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">Apply</button>
+                        </form>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <div class="h-72">
+                        <canvas id="hubBookingsChart" aria-label="Total bookings chart"></canvas>
+                    </div>
+                </div>
+            </div>
     </main>
     </div>
 </div>
-@endsection 
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+(function () {
+    const chartView = document.getElementById('chart_view');
+    const chartMonth = document.getElementById('chart_month');
+    if (chartView && chartMonth) {
+        chartView.addEventListener('change', function () {
+            chartMonth.disabled = chartView.value === 'year';
+        });
+    }
+
+    const bookingsChart = @json($bookingsChart ?? ['labels' => [], 'data' => [], 'title' => 'Total booked']);
+    const canvas = document.getElementById('hubBookingsChart');
+    if (!canvas) return;
+
+    if (!bookingsChart.labels || !bookingsChart.labels.length) {
+        canvas.parentElement.innerHTML = '<p class="text-sm text-gray-500 text-center py-16">No bookings for this period.</p>';
+        return;
+    }
+
+    new Chart(canvas.getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: bookingsChart.labels,
+            datasets: [{
+                label: 'Bookings',
+                data: bookingsChart.data,
+                backgroundColor: 'rgba(13, 148, 136, 0.75)',
+                borderColor: 'rgb(13, 148, 136)',
+                borderWidth: 1,
+                borderRadius: 4,
+            }],
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function (ctx) {
+                            return ctx.parsed.y + ' booking' + (ctx.parsed.y === 1 ? '' : 's');
+                        },
+                    },
+                },
+            },
+            scales: {
+                x: { ticks: { maxRotation: 45, autoSkip: true, maxTicksLimit: 16 } },
+                y: { beginAtZero: true, ticks: { stepSize: 1, precision: 0 } },
+            },
+        },
+    });
+})();
+</script>
+@endsection

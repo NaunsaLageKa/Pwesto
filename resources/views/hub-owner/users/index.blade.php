@@ -46,6 +46,11 @@
                 <p class="text-gray-600 mt-1">Manage and track all users</p>
             </div>
 
+            @if(session('success'))
+                <div class="mb-4 rounded-lg bg-green-50 border border-green-200 text-green-800 px-4 py-3 text-sm">
+                    {{ session('success') }}
+                </div>
+            @endif
 
         <!-- Search -->
         <div class="bg-white p-4 rounded-lg shadow mb-6 border">
@@ -58,7 +63,8 @@
         <!-- Users Table -->
         <div class="bg-white rounded-lg shadow border">
             <div class="px-6 py-4 border-b border-gray-200">
-                <h2 class="text-lg font-semibold">Users ({{ $users->total() }} total)</h2>
+                <h2 class="text-lg font-semibold text-gray-900">Users</h2>
+                <p class="text-sm text-gray-600 mt-1">Total users: {{ $users->total() }}</p>
             </div>
             
             @if($users->count() > 0)
@@ -67,8 +73,7 @@
                         <tr>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">User</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Times Booked</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Role</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ban</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
@@ -91,14 +96,23 @@
                                 </span>
                             </td>
                             <td class="px-6 py-4">
-                                <span class="px-2 py-1 text-xs rounded-full {{ $user->role == 'admin' ? 'bg-red-100 text-red-800' : ($user->role == 'hub_owner' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800') }}">
-                                    {{ ucfirst(str_replace('_', ' ', $user->role)) }}
-                                </span>
-                            </td>
-                            <td class="px-6 py-4">
-                                <span class="px-2 py-1 text-xs rounded-full {{ $user->status == 'active' ? 'bg-green-100 text-green-800' : ($user->status == 'inactive' ? 'bg-gray-100 text-gray-800' : 'bg-red-100 text-red-800') }}">
-                                    {{ ucfirst($user->status) }}
-                                </span>
+                                @if($user->id === auth()->id())
+                                    <span class="text-xs text-gray-400">—</span>
+                                @else
+                                    @php $isBanned = in_array($user->id, $bannedUserIds ?? [], true); @endphp
+                                    <form method="POST" action="{{ route('hub-owner.users.toggle-ban', $user) }}" class="inline">
+                                        @csrf
+                                        @if($isBanned)
+                                            <button type="submit" class="text-xs font-semibold px-3 py-1.5 rounded-md bg-gray-200 text-gray-800 hover:bg-gray-300">
+                                                Unban
+                                            </button>
+                                        @else
+                                            <button type="submit" class="text-xs font-semibold px-3 py-1.5 rounded-md bg-red-600 text-white hover:bg-red-700">
+                                                Ban
+                                            </button>
+                                        @endif
+                                    </form>
+                                @endif
                             </td>
                         </tr>
                         @endforeach

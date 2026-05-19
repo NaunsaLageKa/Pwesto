@@ -14,13 +14,15 @@
             <div class="workspace-review-card">
                 <div class="workspace-review-title">{{ $workspaceName }}</div>
                 <div class="workspace-review-meta">
-                    {{ number_format($stats['average_rating'], 1) }}/5
-                    • {{ $stats['review_count'] }} {{ $stats['review_count'] === 1 ? 'review' : 'reviews' }}
+                    @include('partials.rating-stars', ['rating' => $stats['average_rating'], 'size' => 'sm'])
+                    <span>{{ $stats['review_count'] }} {{ $stats['review_count'] === 1 ? 'review' : 'reviews' }}</span>
                 </div>
 
                 @foreach($workspaceReviews as $review)
                     <div class="review-item">
-                        <div class="review-rating">Rating: {{ $review['rating'] }}/5</div>
+                        <div class="review-rating">
+                            @include('partials.rating-stars', ['rating' => $review['rating'], 'size' => 'sm'])
+                        </div>
                         <div class="review-comment">{{ \Illuminate\Support\Str::limit($review['comment'], 120) }}</div>
                         <div class="review-footer">
                             By {{ $review['reviewer'] }} • {{ $review['created_at']->diffForHumans() }}
@@ -37,7 +39,7 @@
 
     @if(!empty($showReviewsLocationLink))
         <p class="public-reviews-more">
-            <a href="{{ route('location') }}">View map &amp; more reviews</a>
+            <a href="{{ route('location') }}">View workspace map</a>
         </p>
     @endif
 </div>

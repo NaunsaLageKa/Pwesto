@@ -21,11 +21,15 @@ class FeedbackSubmittedNotification extends Notification
 
     public function toArray(object $notifiable): array
     {
+        $isWorkspace = $this->review->feedback_type === 'workspace';
+
         return [
             'review_id' => $this->review->id,
-            'status' => 'pending',
+            'status' => $isWorkspace ? 'approved' : 'pending',
             'title' => 'Feedback submitted',
-            'message' => 'Your feedback is submitted.',
+            'message' => $isWorkspace
+                ? 'Your workspace feedback was shared with the venue and added to public reviews.'
+                : 'Your platform feedback is pending admin review.',
             'url' => route('profile.feedback'),
         ];
     }

@@ -19,7 +19,7 @@ class DisputeController extends Controller
             'booking_id' => 'required|exists:bookings,id',
             'type' => 'required|in:payment,service,behavior,other',
             'description' => 'required|string|min:10|max:2000',
-            'evidence' => 'nullable|string|max:2000',
+            'evidence' => 'required|string|min:10|max:400000',
         ]);
 
         $booking = Booking::where('id', $validated['booking_id'])
@@ -39,12 +39,13 @@ class DisputeController extends Controller
         }
 
         Dispute::create([
+            'title' => Dispute::summaryTitle($validated['type'], $validated['description']),
             'user_id' => Auth::id(),
             'hub_owner_id' => $booking->hub_owner_id,
             'booking_id' => $booking->id,
             'type' => $validated['type'],
             'description' => $validated['description'],
-            'evidence' => $validated['evidence'] ?? null,
+            'evidence' => $validated['evidence'],
             'status' => 'open',
             'created_by' => Auth::id(),
         ]);
@@ -61,15 +62,23 @@ class DisputeController extends Controller
             'booking_id' => 'required|exists:bookings,id',
             'type' => 'required|in:payment,service,behavior,other',
             'description' => 'required|string|min:10|max:2000',
-            'evidence' => 'nullable|string|max:2000',
+            'evidence' => 'required|string|min:10|max:400000',
         ]);
 
+        $hubOwner = Auth::user();
+
+        // Same access rule as hub-owner bookings: hub_owner_id match OR hub_name matches company.
         $booking = Booking::where('id', $validated['booking_id'])
-            ->where('hub_owner_id', Auth::id())
+            ->where(function ($q) use ($hubOwner) {
+                $q->where('hub_owner_id', $hubOwner->id);
+                if ($hubOwner->company) {
+                    $q->orWhereRaw('LOWER(hub_name) LIKE ?', ['%' . strtolower($hubOwner->company) . '%']);
+                }
+            })
             ->firstOrFail();
 
         $alreadyReported = Dispute::where('booking_id', $booking->id)
-            ->where('created_by', Auth::id())
+            ->where('created_by', $hubOwner->id)
             ->exists();
 
         if ($alreadyReported) {
@@ -77,14 +86,15 @@ class DisputeController extends Controller
         }
 
         Dispute::create([
+            'title' => Dispute::summaryTitle($validated['type'], $validated['description']),
             'user_id' => $booking->user_id,
-            'hub_owner_id' => Auth::id(),
+            'hub_owner_id' => $hubOwner->id,
             'booking_id' => $booking->id,
             'type' => $validated['type'],
             'description' => $validated['description'],
-            'evidence' => $validated['evidence'] ?? null,
+            'evidence' => $validated['evidence'],
             'status' => 'open',
-            'created_by' => Auth::id(),
+            'created_by' => $hubOwner->id,
         ]);
 
         return back()->with('success', 'Your report has been submitted. An admin will review it shortly.');

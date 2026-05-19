@@ -50,17 +50,7 @@ abstract class Controller
             ->first();
         }
 
-        // If still not found, return the first active floor plan as fallback
-        if (!$floorPlan) {
-            $floorPlan = FloorPlan::whereHas('hubOwner', function($query) {
-                $query->where('role', 'hub_owner')
-                    ->where('status', 'approved');
-            })
-            ->where('is_active', true)
-            ->whereNotNull('layout_data')
-            ->orderBy('updated_at', 'desc')
-            ->first();
-        }
+        // Do not fall back to another hub's floor plan — wrong venue layout breaks bookings.
 
         return $floorPlan;
     }

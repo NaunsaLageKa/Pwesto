@@ -3,7 +3,33 @@
 @section('content')
 <div class="container mx-auto py-8">
     <a href="{{ route('admin.dashboard') }}" class="inline-block mb-4 text-blue-600 hover:underline">&larr; Back to Dashboard</a>
-    <h1 class="text-3xl font-bold mb-6">Review Moderation</h1>
+    <h1 class="text-3xl font-bold mb-2">Review Moderation</h1>
+    <p class="text-sm text-gray-600 mb-6">Approved workspace reviews appear here and on the public home page. <strong>Trash:</strong> for approved workspace rows, removes them from this admin list and from the public home; hub owners still see them until they remove them from their dashboard. Other types are soft-deleted from moderation.</p>
+
+    @if(session('success'))
+        <div class="mb-4 rounded-lg bg-green-50 border border-green-200 text-green-800 px-4 py-3 text-sm">{{ session('success') }}</div>
+    @endif
+    @if(session('error'))
+        <div class="mb-4 rounded-lg bg-red-50 border border-red-200 text-red-800 px-4 py-3 text-sm">{{ session('error') }}</div>
+    @endif
+
+    @php
+        $reviewSortBy = $sortBy ?? '';
+        $reviewSortDir = $sortDir ?? 'desc';
+        $reviewSortUrl = function (string $column) use ($reviewSortBy, $reviewSortDir) {
+            $nextDir = ($reviewSortBy === $column && $reviewSortDir === 'asc') ? 'desc' : 'asc';
+            return request()->fullUrlWithQuery(array_merge(request()->except('page'), [
+                'sort' => $column,
+                'dir' => $nextDir,
+            ]));
+        };
+        $reviewSortIcon = function (string $column) use ($reviewSortBy, $reviewSortDir) {
+            if ($reviewSortBy !== $column) {
+                return '↕';
+            }
+            return $reviewSortDir === 'asc' ? '↑' : '↓';
+        };
+    @endphp
     
     <!-- Dashboard Stats -->
     @if(isset($stats))
@@ -27,42 +53,27 @@
     
     <!-- Filter Form -->
     <form method="GET" action="" class="flex flex-wrap gap-4 mb-6 items-center bg-white p-4 rounded-lg shadow">
+        @if($reviewSortBy)
+            <input type="hidden" name="sort" value="{{ $reviewSortBy }}">
+            <input type="hidden" name="dir" value="{{ $reviewSortDir }}">
+        @endif
         <input type="text" name="search" value="{{ request('search') }}" placeholder="Search reviews..." class="border rounded px-3 py-2 flex-1 min-w-[200px]" />
         <select name="status" class="border rounded px-3 py-2">
             <option value="">All Status</option>
-            <option value="pending" @if(request('status')=='pending') selected @endif>Pending</option>
-            <option value="approved" @if(request('status')=='approved') selected @endif>Approved</option>
-            <option value="rejected" @if(request('status')=='rejected') selected @endif>Rejected</option>
+            <option value="deleted" @if(request('status')=='deleted') selected @endif>Deleted</option>
         </select>
         <select name="priority" class="border rounded px-3 py-2">
             <option value="">All Priorities</option>
             <option value="1" @if(request('priority')=='1') selected @endif>High Priority</option>
             <option value="0" @if(request('priority')=='0') selected @endif>Normal</option>
         </select>
+        <select name="feedback_type" class="border rounded px-3 py-2">
+            <option value="">All types</option>
+            <option value="workspace" @if(request('feedback_type')=='workspace') selected @endif>Workspace</option>
+            <option value="platform" @if(request('feedback_type')=='platform') selected @endif>Platform</option>
+        </select>
         <button class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition" type="submit">Filter</button>
         <a href="{{ route('admin.reviews.index') }}" class="bg-gray-200 text-gray-700 px-4 py-2 rounded hover:bg-gray-300 transition">Clear</a>
-    </form>
-
-    <!-- Bulk Actions -->
-    <form id="bulk-action-form" method="POST" action="{{ route('admin.reviews.bulk-action') }}" class="mb-4 bg-white p-4 rounded-lg shadow">
-        @csrf
-        <div class="flex items-center gap-4 flex-wrap">
-            <div class="flex items-center gap-2">
-                <input type="checkbox" id="select-all" class="rounded">
-                <label for="select-all" class="font-medium">Select All</label>
-            </div>
-            <select name="action" id="bulk-action" class="border rounded px-3 py-2" required>
-                <option value="">Bulk Actions</option>
-                <option value="approve">Approve Selected</option>
-                <option value="reject">Reject Selected</option>
-                <option value="delete">Delete Selected</option>
-            </select>
-            <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition" onclick="return confirmBulkAction()">
-                Apply
-            </button>
-            <span id="selected-count" class="text-sm text-gray-600">0 selected</span>
-        </div>
-        <textarea name="moderation_notes" id="bulk-notes" placeholder="Moderation notes (optional)" class="mt-3 w-full border rounded px-3 py-2 hidden" rows="2"></textarea>
     </form>
 
     <!-- Reviews Table -->
@@ -70,24 +81,34 @@
         <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
                 <tr>
-                    <th class="py-3 px-4 text-left font-semibold text-gray-700 w-12">
-                        <input type="checkbox" id="select-all-checkbox" class="rounded">
+                    @foreach(['user' => 'User', 'hub_owner' => 'Hub Owner', 'rating' => 'Rating'] as $column => $label)
+                    <th class="py-3 px-4 text-left font-semibold text-gray-700">
+                        <a href="{{ $reviewSortUrl($column) }}" class="inline-flex items-center gap-1 hover:text-blue-600 {{ $reviewSortBy === $column ? 'text-blue-600' : '' }}">
+                            {{ $label }}
+                            <span class="text-xs opacity-70" aria-hidden="true">{{ $reviewSortIcon($column) }}</span>
+                        </a>
                     </th>
-                    <th class="py-3 px-4 text-left font-semibold text-gray-700">User</th>
-                    <th class="py-3 px-4 text-left font-semibold text-gray-700">Hub Owner</th>
-                    <th class="py-3 px-4 text-left font-semibold text-gray-700">Rating</th>
+                    @endforeach
                     <th class="py-3 px-4 text-left font-semibold text-gray-700">Comment</th>
-                    <th class="py-3 px-4 text-left font-semibold text-gray-700">Status</th>
-                    <th class="py-3 px-4 text-left font-semibold text-gray-700">Date</th>
+                    <th class="py-3 px-4 text-left font-semibold text-gray-700">
+                        <a href="{{ $reviewSortUrl('status') }}" class="inline-flex items-center gap-1 hover:text-blue-600 {{ $reviewSortBy === 'status' ? 'text-blue-600' : '' }}">
+                            Status
+                            <span class="text-xs opacity-70" aria-hidden="true">{{ $reviewSortIcon('status') }}</span>
+                        </a>
+                    </th>
+                    <th class="py-3 px-4 text-left font-semibold text-gray-700">Time ago</th>
+                    <th class="py-3 px-4 text-left font-semibold text-gray-700">
+                        <a href="{{ $reviewSortUrl('created_at') }}" class="inline-flex items-center gap-1 hover:text-blue-600 {{ $reviewSortBy === 'created_at' ? 'text-blue-600' : '' }}">
+                            Date
+                            <span class="text-xs opacity-70" aria-hidden="true">{{ $reviewSortIcon('created_at') }}</span>
+                        </a>
+                    </th>
                     <th class="py-3 px-4 text-left font-semibold text-gray-700">Actions</th>
                 </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-100" id="reviews-tbody">
                 @forelse ($reviews as $review)
                 <tr class="hover:bg-gray-50 transition {{ $review->is_flagged ? 'bg-red-50' : '' }} {{ $review->isHighPriority() ? 'border-l-4 border-orange-500' : '' }}">
-                    <td class="py-2 px-4">
-                        <input type="checkbox" name="review_ids[]" value="{{ $review->id }}" class="review-checkbox rounded">
-                    </td>
                     <td class="py-2 px-4">
                         <div class="text-sm font-medium text-gray-900">{{ $review->user->name }}</div>
                         <div class="text-sm text-gray-500">{{ $review->user->email }}</div>
@@ -128,7 +149,14 @@
                         </div>
                     </td>
                     <td class="py-2 px-4">
-                        @if($review->status == 'pending')
+                        @if($review->trashed() || (!empty($review->admin_archived_at)))
+                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-gray-200 text-gray-800">Deleted</span>
+                            @if($review->trashed() && $review->deleted_at)
+                                <div class="text-xs text-gray-500 mt-1">Removed {{ $review->deleted_at->diffForHumans() }}</div>
+                            @elseif(!empty($review->admin_archived_at))
+                                <div class="text-xs text-gray-500 mt-1">Removed from admin {{ $review->admin_archived_at->diffForHumans() }}</div>
+                            @endif
+                        @elseif($review->status == 'pending')
                             <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">Pending</span>
                         @elseif($review->status == 'approved')
                             <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Approved</span>
@@ -150,14 +178,19 @@
                         @if($review->moderation_notes)
                             <button onclick="showModerationHistory(@json($review->id), @json(json_decode($review->moderation_notes, true)))" class="text-xs text-blue-600 hover:underline mt-1">View History</button>
                         @endif
+                        <div class="text-xs text-gray-500 mt-1">Type: {{ ucfirst($review->feedback_type) }}</div>
                     </td>
-                    <td class="py-2 px-4 text-sm text-gray-500">
+                    <td class="py-2 px-4 text-sm text-gray-600">
                         {{ $review->created_at->diffForHumans() }}
-                        <div class="text-xs text-gray-400">{{ $review->created_at->format('M d, Y') }}</div>
+                    </td>
+                    <td class="py-2 px-4 text-sm text-gray-600">
+                        {{ $review->created_at->format('M d, Y') }}
                     </td>
                     <td class="py-2 px-4">
                         <div class="flex flex-col gap-1">
-                            @if($review->status == 'pending')
+                            @if($review->trashed() || !empty($review->admin_archived_at))
+                                <span class="text-xs text-gray-500">—</span>
+                            @elseif($review->status == 'pending')
                                 <form action="{{ route('admin.reviews.approve', $review->id) }}" method="POST" class="inline">
                                     @csrf
                                     <button class="bg-green-600 text-white px-2 py-1 rounded text-xs hover:bg-green-700 transition w-full" type="submit">Approve</button>
@@ -170,7 +203,17 @@
                                 <form action="{{ route('admin.reviews.delete', $review->id) }}" method="POST" class="inline">
                                     @csrf
                                     @method('DELETE')
-                                    <button class="bg-gray-600 text-white px-2 py-1 rounded text-xs hover:bg-gray-700 transition w-full" type="submit" onclick="return confirm('Are you sure you want to delete this review?')">Delete</button>
+                                    <button
+                                        type="submit"
+                                        class="inline-flex items-center justify-center rounded-md p-2 text-red-600 hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-1"
+                                        title="Approved workspace: remove from this list and public home (hub dashboard unchanged). Other types: delete."
+                                        aria-label="Remove review from admin list or delete"
+                                        onclick="return confirm('ARE YOU SURE YOU WANT TO DELETE?')"
+                                    >
+                                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                        </svg>
+                                    </button>
                                 </form>
                             @endif
                         </div>
@@ -178,7 +221,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="8" class="py-4 text-center text-gray-500">No reviews found.</td>
+                    <td colspan="9" class="py-4 text-center text-gray-500">No reviews found.</td>
                 </tr>
                 @endforelse
             </tbody>
@@ -226,70 +269,6 @@
 </div>
 
 <script>
-// Select All Functionality
-document.getElementById('select-all-checkbox').addEventListener('change', function() {
-    const checkboxes = document.querySelectorAll('.review-checkbox');
-    checkboxes.forEach(cb => cb.checked = this.checked);
-    updateSelectedCount();
-});
-
-document.getElementById('select-all').addEventListener('change', function() {
-    const checkboxes = document.querySelectorAll('.review-checkbox');
-    checkboxes.forEach(cb => cb.checked = this.checked);
-    document.getElementById('select-all-checkbox').checked = this.checked;
-    updateSelectedCount();
-});
-
-document.querySelectorAll('.review-checkbox').forEach(checkbox => {
-    checkbox.addEventListener('change', updateSelectedCount);
-});
-
-function updateSelectedCount() {
-    const selected = document.querySelectorAll('.review-checkbox:checked').length;
-    document.getElementById('selected-count').textContent = selected + ' selected';
-}
-
-// Bulk Action Notes
-document.getElementById('bulk-action').addEventListener('change', function() {
-    const notesField = document.getElementById('bulk-notes');
-    if (this.value === 'reject') {
-        notesField.classList.remove('hidden');
-    } else {
-        notesField.classList.add('hidden');
-    }
-});
-
-function confirmBulkAction() {
-    const action = document.getElementById('bulk-action').value;
-    const selected = document.querySelectorAll('.review-checkbox:checked');
-    
-    if (!action) {
-        alert('Please select an action');
-        return false;
-    }
-    
-    if (selected.length === 0) {
-        alert('Please select at least one review');
-        return false;
-    }
-    
-    // Collect all selected review IDs
-    const reviewIds = Array.from(selected).map(cb => cb.value);
-    const hiddenInputs = document.querySelectorAll('#bulk-action-form input[name="review_ids[]"]');
-    hiddenInputs.forEach(input => input.remove());
-    
-    reviewIds.forEach(id => {
-        const input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = 'review_ids[]';
-        input.value = id;
-        document.getElementById('bulk-action-form').appendChild(input);
-    });
-    
-    const actionText = action === 'approve' ? 'approve' : action === 'reject' ? 'reject' : 'delete';
-    return confirm(`Are you sure you want to ${actionText} ${selected.length} review(s)?`);
-}
-
 // Reject Modal
 function showRejectModal(reviewId) {
     const form = document.getElementById('reject-modal-form');
@@ -309,7 +288,10 @@ function showModerationHistory(reviewId, notes) {
     
     if (notes && Array.isArray(notes) && notes.length > 0) {
         historyContent.innerHTML = notes.map(note => {
-            const actionClass = note.action === 'approved' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
+            const actionClass = note.action === 'approved' ? 'bg-green-100 text-green-800'
+                : note.action === 'rejected' ? 'bg-red-100 text-red-800'
+                : (note.action === 'published_public' || note.action === 'removed_from_public_home') ? 'bg-slate-100 text-slate-800'
+                : 'bg-gray-100 text-gray-700';
             return `
                 <div class="border-l-4 border-blue-500 pl-4 py-2 bg-gray-50 rounded mb-2">
                     <div class="flex justify-between items-start">

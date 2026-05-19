@@ -6,15 +6,15 @@ use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use Illuminate\Support\Facades\Route;
 
-// Login page must stay reachable while authenticated (e.g. "Book Now" → login); guest middleware would redirect to dashboard.
+// Login/register views stay reachable while authenticated; guest middleware would redirect those GETs to dashboard.
 Route::get('login', [AuthenticatedSessionController::class, 'create'])
     ->name('login');
 
+Route::get('register', [RegisteredUserController::class, 'create'])
+    ->name('register');
+
 Route::middleware('guest')->group(function () {
     Route::post('login', [AuthenticatedSessionController::class, 'store']);
-
-    Route::get('register', [RegisteredUserController::class, 'create'])
-        ->name('register');
 
     Route::post('register', [RegisteredUserController::class, 'store']);
 

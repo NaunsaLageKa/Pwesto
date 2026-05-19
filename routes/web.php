@@ -43,6 +43,12 @@ Route::middleware(['auth'])->group(function () {
 Route::post('/booking-history/{id}/cancel', [App\Http\Controllers\BookingHistoryController::class, 'cancel'])
     ->middleware(['auth'])
     ->name('booking-history.cancel');
+Route::get('/booking-history/{booking}/invoice', [App\Http\Controllers\BookingHistoryController::class, 'invoice'])
+    ->middleware(['auth'])
+    ->name('booking-history.invoice');
+Route::get('/booking-history/{booking}/invoice/pdf', [App\Http\Controllers\BookingHistoryController::class, 'invoicePdf'])
+    ->middleware(['auth'])
+    ->name('booking-history.invoice.pdf');
 
 // Dispute Reporting (customers + hub owners)
 Route::post('/disputes/report-hub-owner', [App\Http\Controllers\DisputeController::class, 'reportHubOwner'])
@@ -87,6 +93,7 @@ Route::middleware(['auth', 'hub.owner'])->prefix('hub-owner')->name('hub-owner.'
     // Hub Owner Feedback Routes
     Route::get('/feedback', [App\Http\Controllers\HubOwner\FeedbackController::class, 'index'])->name('feedback.index');
     Route::post('/feedback/{review}/respond', [App\Http\Controllers\HubOwner\FeedbackController::class, 'respond'])->name('feedback.respond');
+    Route::post('/feedback/{review}/dismiss', [App\Http\Controllers\HubOwner\FeedbackController::class, 'dismiss'])->name('feedback.dismiss');
 });
 
 Route::middleware(['auth'])->group(function () {
@@ -104,6 +111,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/admin/reviews', [App\Http\Controllers\Admin\ReviewController::class, 'index'])->name('admin.reviews.index');
         Route::post('/admin/reviews/{id}/approve', [App\Http\Controllers\Admin\ReviewController::class, 'approve'])->name('admin.reviews.approve');
         Route::post('/admin/reviews/{id}/reject', [App\Http\Controllers\Admin\ReviewController::class, 'reject'])->name('admin.reviews.reject');
+        Route::post('/admin/reviews/{id}/publish-public', [App\Http\Controllers\Admin\ReviewController::class, 'publishPublic'])->name('admin.reviews.publish-public');
         Route::delete('/admin/reviews/{id}', [App\Http\Controllers\Admin\ReviewController::class, 'delete'])->name('admin.reviews.delete');
         Route::post('/admin/reviews/bulk-action', [App\Http\Controllers\Admin\ReviewController::class, 'bulkAction'])->name('admin.reviews.bulk-action');
         
@@ -120,32 +128,8 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/admin/disputes', [App\Http\Controllers\Admin\DisputeController::class, 'create'])->name('admin.disputes.create');
     });
     // Hub Owner Dashboard
-    Route::get('/hub-owner/dashboard', function () {
-        $hubOwner = auth()->user();
-
-        // Keep dashboard filters consistent with hub-owner booking pages.
-        $baseQuery = \App\Models\Booking::where(function ($q) use ($hubOwner) {
-            $q->where('hub_owner_id', $hubOwner->id);
-            if ($hubOwner->company) {
-                $q->orWhereRaw('LOWER(hub_name) LIKE ?', ['%' . strtolower($hubOwner->company) . '%']);
-            }
-        });
-
-        $totalBookings = (clone $baseQuery)->count();
-        $activeUsers = (clone $baseQuery)
-            ->whereIn('status', ['confirmed', 'completed'])
-            ->distinct()
-            ->count('user_id');
-        $revenue = (clone $baseQuery)
-            ->whereIn('status', ['confirmed', 'completed'])
-            ->sum('amount');
-        $recentBookings = (clone $baseQuery)
-            ->with('user')
-            ->orderBy('created_at', 'desc')
-            ->paginate(5);
-        
-        return view('hub-owner.dashboard', compact('totalBookings', 'activeUsers', 'revenue', 'recentBookings', 'hubOwner'));
-    })->name('hub-owner.dashboard');
+    Route::get('/hub-owner/dashboard', [App\Http\Controllers\HubOwner\DashboardController::class, 'index'])
+        ->name('hub-owner.dashboard');
 
     // Hub Owner Booking Management
     Route::get('/hub-owner/bookings', [App\Http\Controllers\HubOwner\BookingController::class, 'index'])->name('hub-owner.bookings.index');
@@ -158,6 +142,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/hub-owner/users', [App\Http\Controllers\HubOwnerUserController::class, 'index'])->name('hub-owner.users.index');
     Route::get('/hub-owner/users/{user}', [App\Http\Controllers\HubOwnerUserController::class, 'show'])->name('hub-owner.users.show');
     Route::post('/hub-owner/users/{user}/status', [App\Http\Controllers\HubOwnerUserController::class, 'updateStatus'])->name('hub-owner.users.update-status');
+    Route::post('/hub-owner/users/{user}/ban', [App\Http\Controllers\HubOwnerUserController::class, 'toggleBan'])->name('hub-owner.users.toggle-ban');
     Route::get('/hub-owner/users-analytics', [App\Http\Controllers\HubOwnerUserController::class, 'analytics'])->name('hub-owner.users.analytics');
     
 });

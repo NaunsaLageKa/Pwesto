@@ -212,6 +212,10 @@
         }
 
         .workspace-review-meta {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.4rem;
             font-size: 0.85rem;
             color: #4b5563;
             margin-bottom: 0.8rem;
@@ -230,9 +234,10 @@
         }
 
         .review-rating {
-            font-weight: 700;
-            color: #0f766e;
-            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            margin-bottom: 0.2rem;
         }
 
         .review-comment {

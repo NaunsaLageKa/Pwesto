@@ -3,81 +3,95 @@
 namespace App\Http\Controllers\HubOwner;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Models\HubOwnerReviewDismissal;
 use App\Models\Review;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
 
 class FeedbackController extends Controller
 {
-    
+    use AuthorizesRequests;
+
     private function maskName($name)
     {
-        if (!$name || trim($name) === '') {
+        if (! $name || trim($name) === '') {
             return 'Anonymous';
         }
-        
+
         $words = explode(' ', trim($name));
         $maskedParts = [];
-        
+
         foreach ($words as $word) {
             $word = trim($word);
-            if ($word === '') continue;
-            
-            // For each word, show first 2 characters in uppercase + ****
+            if ($word === '') {
+                continue;
+            }
+
             if (strlen($word) <= 2) {
                 $maskedParts[] = strtoupper(substr($word, 0, 1)) . '****';
             } else {
                 $maskedParts[] = strtoupper(substr($word, 0, 2)) . '****';
             }
         }
-        
+
         return implode(' ', $maskedParts);
     }
+
+    /**
+     * Approved workspace reviews for this hub, excluding rows this hub owner dismissed from their list.
+     */
+    private function hubOwnerReviewsBaseQuery()
+    {
+        $q = Review::approvedForHubOwner(Auth::id())
+            ->where('feedback_type', 'workspace');
+
+        if (Schema::hasTable('hub_owner_review_dismissals')) {
+            $q->whereDoesntHave('hubOwnerDismissals', function ($inner) {
+                $inner->where('user_id', Auth::id());
+            });
+        }
+
+        return $q;
+    }
+
     /**
      * Display all approved feedback for this hub owner's workspace
      */
     public function index(Request $request)
     {
-        $query = Review::approvedForHubOwner(Auth::id())
-            ->with('user', 'booking');
+        $query = $this->hubOwnerReviewsBaseQuery()->with('user', 'booking');
 
-        // Filter by feedback type
-        if ($request->filled('feedback_type')) {
-            $query->where('feedback_type', $request->input('feedback_type'));
-        }
-
-        // Filter by rating
         if ($request->filled('rating')) {
             $query->where('rating', $request->input('rating'));
         }
 
-        // Search
         if ($request->filled('search')) {
             $search = $request->input('search');
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('comment', 'like', "%$search%")
-                  ->orWhereHas('user', function($userQuery) use ($search) {
-                      $userQuery->where('name', 'like', "%$search%");
-                  });
+                    ->orWhereHas('user', function ($userQuery) use ($search) {
+                        $userQuery->where('name', 'like', "%$search%");
+                    });
             });
         }
 
         $reviews = $query->paginate(15)->withQueryString();
 
-        // Statistics
+        $statsBase = fn () => $this->hubOwnerReviewsBaseQuery();
+
         $stats = [
-            'total' => Review::approvedForHubOwner(Auth::id())->count(),
-            'average_rating' => Review::approvedForHubOwner(Auth::id())->avg('rating'),
-            'five_star' => Review::approvedForHubOwner(Auth::id())->where('rating', 5)->count(),
-            'recent_count' => Review::approvedForHubOwner(Auth::id())
+            'total' => $statsBase()->count(),
+            'average_rating' => $statsBase()->avg('rating'),
+            'five_star' => $statsBase()->where('rating', 5)->count(),
+            'recent_count' => $statsBase()
                 ->where('created_at', '>=', now()->subDays(7))
                 ->count(),
         ];
-        // Mask user information for privacy (mask names only)
+
         foreach ($reviews as $review) {
             if ($review->user) {
-                // Mask name if available, otherwise show Anonymous
                 if ($review->user->name && trim($review->user->name) !== '') {
                     $review->user->display_info = $this->maskName($review->user->name);
                 } else {
@@ -93,13 +107,34 @@ class FeedbackController extends Controller
         ]);
     }
 
+    public function dismiss(Review $review)
+    {
+        $this->authorize('dismiss', $review);
+
+        if (! Schema::hasTable('hub_owner_review_dismissals')) {
+            return redirect()->back()->with('error', 'Run database migrations to enable hiding feedback from your list.');
+        }
+
+        HubOwnerReviewDismissal::firstOrCreate([
+            'review_id' => $review->id,
+            'user_id' => Auth::id(),
+        ]);
+
+        return redirect()->back()->with('success', 'Feedback removed from your list.');
+    }
+
     public function respond(Request $request, Review $review)
     {
-        if ((int) $review->hub_owner_id !== (int) Auth::id() || $review->status !== 'approved') {
+        if (! $review->isOwnedByHubOwner((int) Auth::id()) || $review->status !== 'approved') {
             abort(403, 'Unauthorized review response.');
         }
 
-        if (!$this->hasResponseColumns()) {
+        if (Schema::hasTable('hub_owner_review_dismissals')
+            && HubOwnerReviewDismissal::where('review_id', $review->id)->where('user_id', Auth::id())->exists()) {
+            abort(403, 'This feedback is hidden from your list.');
+        }
+
+        if (! $this->hasResponseColumns()) {
             return redirect()->back()->with('error', 'Response feature is not ready yet.');
         }
 

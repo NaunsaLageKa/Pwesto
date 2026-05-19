@@ -4,8 +4,8 @@ namespace App\Http\Controllers\HubOwner;
 
 use App\Http\Controllers\Controller;
 use App\Models\FloorPlan;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 /**
  * FloorPlanController handles all floor plan operations for hub owners
@@ -16,60 +16,76 @@ class FloorPlanController extends Controller
     /**
      * Display the floor plan editor page
      * Loads the active floor plan for the current hub owner
-     * 
-     * @return \Illuminate\View\View
      */
     public function index()
     {
         $currentUser = auth()->user();
-        
-        // Get the active floor plan for this company (shared by all hub owners of the company)
+
         $floorPlan = $this->getActiveFloorPlanForCompany($currentUser->company);
-            
-        // Return the floor plan editor view with the floor plan data
+
         return view('hub-owner.floor-plan', compact('floorPlan'));
     }
 
     /**
-     * Save floor plan data to database
-     * Accepts layout data (items, positions, etc.) and stores it
-     * 
-     * @param Request $request Contains layout_data, name, and description
-     * @return JsonResponse Success or error response
+     * Save floor plan data to database (supports multiple floors per workspace).
      */
     public function save(Request $request): JsonResponse
     {
         try {
-            // Validate the incoming request data
             $request->validate([
-                'layout_data' => 'required|array',  // Array of floor plan items
-                'name' => 'nullable|string|max:255',  // floor plan name
-                'description' => 'nullable|string',  //  description
+                'layout_data' => 'nullable|array',
+                'floors' => 'nullable|array',
+                'floors.*.id' => 'required_with:floors|integer',
+                'floors.*.name' => 'required_with:floors|string|max:255',
+                'floors.*.items' => 'nullable|array',
+                'name' => 'nullable|string|max:255',
+                'description' => 'nullable|string',
             ]);
-
 
             $currentUser = auth()->user();
-            
-            // Get all hub owners for the same company
             $companyHubOwners = $this->getHubOwnersForCompany($currentUser->company);
-            
-            // First, deactivate all existing floor plans for ALL hub owners of this company
-            FloorPlan::whereIn('hub_owner_id', $companyHubOwners)->update(['is_active' => false]);
-            
-            
-            // Create new floor plan for only in the same company
-            $floorPlan = FloorPlan::create([
-                'hub_owner_id' => auth()->id(),
+
+            if ($request->filled('floors')) {
+                $layoutPayload = [
+                    'version' => 2,
+                    'floors' => collect($request->input('floors'))->map(function ($floor, $index) {
+                        return [
+                            'id' => (int) ($floor['id'] ?? ($index + 1)),
+                            'name' => (string) ($floor['name'] ?? FloorPlan::defaultFloorName($index + 1)),
+                            'items' => is_array($floor['items'] ?? null) ? $floor['items'] : [],
+                        ];
+                    })->values()->all(),
+                ];
+            } else {
+                $items = $request->input('layout_data', []);
+                $layoutPayload = FloorPlan::normalizeLayoutPayload($items);
+            }
+
+            $existing = FloorPlan::whereIn('hub_owner_id', $companyHubOwners)
+                ->where('is_active', true)
+                ->orderByDesc('updated_at')
+                ->first();
+
+            $attributes = [
                 'name' => $request->input('name', 'My Floor Plan'),
-                'layout_data' => $request->input('layout_data'),
+                'layout_data' => $layoutPayload,
                 'description' => $request->input('description'),
                 'is_active' => true,
-            ]);
+            ];
 
-            // Return success response with floor plan ID
+            if ($existing) {
+                $existing->update($attributes);
+                $floorPlan = $existing;
+            } else {
+                $floorPlan = FloorPlan::create(array_merge($attributes, [
+                    'hub_owner_id' => auth()->id(),
+                ]));
+            }
+
             return response()->json([
                 'success' => true,
                 'message' => 'Floor plan saved successfully!',
+                'floor_plan_id' => $floorPlan->id,
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -80,43 +96,44 @@ class FloorPlanController extends Controller
     }
 
     /**
-     * Load existing floor plan data from database
-     * Returns the layout data for the active floor plan
-     * 
-     * @return JsonResponse Floor plan data or empty if none found
+     * Load existing floor plan data from database (all floors).
      */
     public function load(): JsonResponse
     {
         try {
-            // Get the active floor plan for the current hub owner
-            $floorPlan = FloorPlan::where('hub_owner_id', auth()->id())
+            $currentUser = auth()->user();
+            $companyHubOwners = $this->getHubOwnersForCompany($currentUser->company);
+
+            $floorPlan = FloorPlan::whereIn('hub_owner_id', $companyHubOwners)
                 ->where('is_active', true)
+                ->orderByDesc('updated_at')
                 ->first();
 
-            // If no floor plan exists, return empty data
-            if (!$floorPlan) {
+            if (! $floorPlan) {
                 return response()->json([
                     'success' => false,
                     'message' => 'No floor plan found.',
+                    'floors' => FloorPlan::emptyMultiFloorPayload()['floors'],
                     'layout_data' => [],
                 ]);
             }
 
-            // Return the floor plan data including layout, name, and description
+            $normalized = FloorPlan::normalizeLayoutPayload($floorPlan->layout_data);
+
             return response()->json([
                 'success' => true,
-                'layout_data' => $floorPlan->layout_data,  // Array of floor plan items
+                'floors' => $normalized['floors'],
+                'layout_data' => $normalized['floors'][0]['items'] ?? [],
                 'name' => $floorPlan->name,
                 'description' => $floorPlan->description,
             ]);
         } catch (\Exception $e) {
-            // Return error response if loading fails
             return response()->json([
                 'success' => false,
                 'message' => 'No Floor plan found: ' . $e->getMessage(),
+                'floors' => FloorPlan::emptyMultiFloorPayload()['floors'],
                 'layout_data' => [],
             ], 500);
         }
     }
-
 }

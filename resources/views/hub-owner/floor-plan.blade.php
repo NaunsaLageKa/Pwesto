@@ -36,16 +36,10 @@
                     });
                 </script>
 
-
-                
-                </script>
-
-            
-            
-            <!-- Clear Storage Button -->
+            <!-- Add another floor level -->
             <div class="mb-4">
-                <button id="clear-storage-btn" class="w-full px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">
-                    Clear Browser Storage
+                <button type="button" id="add-floorplan-btn" class="w-full px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 font-semibold">
+                    ADD FLOORPLAN
                 </button>
             </div>
             
@@ -88,7 +82,7 @@
                             <div class="w-8 h-8 cursor-grab relative" style="background: transparent; border: none;">
                                 <svg width="32" height="32" viewBox="0 0 32 32" style="position: absolute; top: 0; left: 0;">
                                     <polygon points="16,2 20,12 30,12 22,20 26,30 16,24 6,30 10,20 2,12 12,12" 
-                                             fill="#8B5CF6" 
+                                             fill="#7C3AED" 
                                              stroke="#333" 
                                              stroke-width="2"/>
                                 </svg>
@@ -156,7 +150,9 @@
                     Clear All
                 </button>
             </div>
-            
+
+            <div id="floor-tabs" class="flex flex-wrap items-center justify-center gap-2 flex-1 px-4 min-h-[40px]"></div>
+
             <div class="flex items-center space-x-2">
                 <button id="zoom-out" class="px-3 py-1 bg-gray-200 rounded-md hover:bg-gray-300">-</button>
                 <span id="zoom-level" class="px-2">100%</span>
@@ -457,6 +453,28 @@
     visibility: visible !important;
     opacity: 1 !important;
 }
+
+.floor-tab {
+    padding: 0.35rem 0.85rem;
+    border-radius: 9999px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    border: 2px solid #d1d5db;
+    background: #fff;
+    color: #374151;
+    transition: all 0.15s ease;
+}
+
+.floor-tab:hover {
+    border-color: #16a34a;
+    color: #15803d;
+}
+
+.floor-tab.active {
+    background: #16a34a;
+    border-color: #16a34a;
+    color: #fff;
+}
 </style>
 
 <script>
@@ -475,6 +493,101 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentDragShape = null;
     let clipboard = null; // Store copied item data
     let isProcessingDrop = false; // Flag to prevent duplicate drops
+
+    let floorsState = [{ id: 1, name: '1st Floor', items: [] }];
+    let currentFloorIndex = 0;
+
+    function ordinalFloorName(number) {
+        const suffix = (number % 100 >= 11 && number % 100 <= 13)
+            ? 'th'
+            : ({ 1: 'st', 2: 'nd', 3: 'rd' }[number % 10] || 'th');
+        return number + suffix + ' Floor';
+    }
+
+    function serializeCanvasItems() {
+        const items = [];
+        document.querySelectorAll('.canvas-item').forEach(item => {
+            const shapeType = item.dataset.shape;
+            const shapeConfig = shapes[shapeType];
+            const itemLabel = shapeConfig ? shapeConfig.label : shapeType;
+
+            let actualRotation = parseInt(item.dataset.rotation || '0', 10);
+            if (item.style.transform && item.style.transform.includes('rotate')) {
+                const transformMatch = item.style.transform.match(/rotate\(([^)]+)deg\)/);
+                if (transformMatch) {
+                    actualRotation = parseInt(transformMatch[1], 10);
+                }
+            }
+
+            items.push({
+                shape: shapeType,
+                x: parseInt(item.style.left, 10),
+                y: parseInt(item.style.top, 10),
+                id: item.dataset.id,
+                rotation: actualRotation,
+                width: parseInt(item.style.width, 10),
+                height: parseInt(item.style.height, 10),
+                label: itemLabel,
+                backgroundColor: item.style.backgroundColor,
+            });
+        });
+        return items;
+    }
+
+    function persistCurrentFloorToState() {
+        if (!floorsState[currentFloorIndex]) {
+            return;
+        }
+        floorsState[currentFloorIndex].items = serializeCanvasItems();
+    }
+
+    function renderFloorTabs() {
+        const container = document.getElementById('floor-tabs');
+        if (!container) {
+            return;
+        }
+        container.innerHTML = '';
+        floorsState.forEach((floor, index) => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'floor-tab' + (index === currentFloorIndex ? ' active' : '');
+            btn.textContent = floor.name;
+            btn.dataset.index = String(index);
+            btn.addEventListener('click', function () {
+                switchToFloor(index);
+            });
+            container.appendChild(btn);
+        });
+    }
+
+    function switchToFloor(index) {
+        if (index < 0 || index >= floorsState.length || index === currentFloorIndex) {
+            return;
+        }
+        persistCurrentFloorToState();
+        currentFloorIndex = index;
+        selectedItem = null;
+        canvasItems.innerHTML = '';
+        itemCounter = 0;
+        loadItemsFromData(floorsState[currentFloorIndex].items || []);
+        renderFloorTabs();
+    }
+
+    function addNewFloorPlan() {
+        persistCurrentFloorToState();
+        const nextId = floorsState.reduce((max, floor) => Math.max(max, parseInt(floor.id, 10) || 0), 0) + 1;
+        const floorNumber = floorsState.length + 1;
+        floorsState.push({
+            id: nextId,
+            name: ordinalFloorName(floorNumber),
+            items: [],
+        });
+        currentFloorIndex = floorsState.length - 1;
+        selectedItem = null;
+        canvasItems.innerHTML = '';
+        itemCounter = 0;
+        renderFloorTabs();
+    }
     
     // Shape definitions
     const shapes = {
@@ -482,7 +595,7 @@ document.addEventListener('DOMContentLoaded', function() {
         chair: { width: 40, height: 40, bg: '#9CA3AF', type: 'chair', label: 'Chair' },
         table: { width: 80, height: 80, bg: '#A0522D', type: 'table', label: 'Table' },
         sofa: { width: 120, height: 60, bg: '#FBBF24', type: 'sofa', label: 'Sofa' },
-        star: { width: 60, height: 60, bg: '#8B5CF6', type: 'star', label: 'Star' },
+        star: { width: 60, height: 60, bg: '#7C3AED', type: 'star', label: 'Star' },
         wall: { width: 80, height: 20, bg: '#000000', type: 'drawing-wall', label: 'Wall' },
         door: { width: 60, height: 40, bg: '#D2691E', type: 'door', label: 'Door' },
         window: { width: 60, height: 30, bg: '#BFDBFE', type: 'window', label: 'Window' },
@@ -1027,41 +1140,10 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function saveFloorPlan() {
-        const items = [];
-        document.querySelectorAll('.canvas-item').forEach(item => {
-            // Get the proper label for the shape type
-            const shapeType = item.dataset.shape;
-            const shapeConfig = shapes[shapeType];
-            const itemLabel = shapeConfig ? shapeConfig.label : shapeType;
-            
-                    // Get the actual rotation from transform or dataset
-        let actualRotation = parseInt(item.dataset.rotation || '0');
-        
-        // Check if there's a CSS transform rotation (for walls)
-        if (item.style.transform && item.style.transform.includes('rotate')) {
-            const transformMatch = item.style.transform.match(/rotate\(([^)]+)deg\)/);
-            if (transformMatch) {
-                actualRotation = parseInt(transformMatch[1]);
-            }
-        }
-        
-        items.push({
-            shape: shapeType,
-            x: parseInt(item.style.left),
-            y: parseInt(item.style.top),
-            id: item.dataset.id,
-            rotation: actualRotation,
-            width: parseInt(item.style.width),
-            height: parseInt(item.style.height),
-            label: itemLabel,
-            backgroundColor: item.style.backgroundColor
-        });
-        });
-        
-        // Save to localStorage for immediate backup
-        localStorage.setItem('floorPlan', JSON.stringify(items));
-        
-        // Save to database
+        persistCurrentFloorToState();
+
+        localStorage.setItem('floorPlanMulti', JSON.stringify(floorsState));
+
         try {
             fetch('{{ route("hub-owner.floor-plan.save") }}', {
                 method: 'POST',
@@ -1070,7 +1152,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                 },
                 body: JSON.stringify({
-                    layout_data: items,
+                    floors: floorsState,
                     name: 'My Floor Plan',
                     description: 'Floor plan created on ' + new Date().toLocaleDateString()
                 })
@@ -1105,26 +1187,52 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .then(response => response.json())
         .then(data => {
-            if (data.success && data.layout_data && data.layout_data.length > 0) {
-                // Load from database
+            if (data.success && data.floors && data.floors.length > 0) {
+                floorsState = data.floors;
+                currentFloorIndex = 0;
+                renderFloorTabs();
+                loadItemsFromData(floorsState[0].items || []);
+            } else if (data.success && data.layout_data && data.layout_data.length > 0) {
+                floorsState = [{ id: 1, name: '1st Floor', items: data.layout_data }];
+                currentFloorIndex = 0;
+                renderFloorTabs();
                 loadItemsFromData(data.layout_data);
             } else {
-                // Try to load from localStorage as backup
-                const savedData = localStorage.getItem('floorPlan');
-                if (savedData) {
-                    const items = JSON.parse(savedData);
-                    loadItemsFromData(items);
-                }
+                loadFloorsFromLocalStorage();
             }
         })
         .catch(error => {
-            // Try to load from localStorage as backup
-            const savedData = localStorage.getItem('floorPlan');
-            if (savedData) {
-                const items = JSON.parse(savedData);
-                loadItemsFromData(items);
-            }
+            loadFloorsFromLocalStorage();
         });
+    }
+
+    function loadFloorsFromLocalStorage() {
+        const savedMulti = localStorage.getItem('floorPlanMulti');
+        if (savedMulti) {
+            try {
+                floorsState = JSON.parse(savedMulti);
+                currentFloorIndex = 0;
+                renderFloorTabs();
+                loadItemsFromData(floorsState[0].items || []);
+                return;
+            } catch (e) {
+                console.warn('Could not parse floorPlanMulti', e);
+            }
+        }
+        const savedData = localStorage.getItem('floorPlan');
+        if (savedData) {
+            try {
+                const items = JSON.parse(savedData);
+                floorsState = [{ id: 1, name: '1st Floor', items: items }];
+                currentFloorIndex = 0;
+                renderFloorTabs();
+                loadItemsFromData(items);
+            } catch (e) {
+                console.warn('Could not parse floorPlan', e);
+            }
+        } else {
+            renderFloorTabs();
+        }
     }
     
     function loadItemsFromData(items) {
@@ -1665,10 +1773,13 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function clearCanvas() {
-        if (confirm('Are you sure you want to clear the entire floor plan?')) {
+        const floorName = floorsState[currentFloorIndex]?.name || 'this floor';
+        if (confirm('Clear all items on ' + floorName + '?')) {
             canvasItems.innerHTML = '';
             itemCounter = 0;
-            localStorage.removeItem('floorPlan');
+            if (floorsState[currentFloorIndex]) {
+                floorsState[currentFloorIndex].items = [];
+            }
         }
     }
     
@@ -1894,13 +2005,9 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Clear storage button
-    document.getElementById('clear-storage-btn').addEventListener('click', function() {
-        if (confirm('Are you sure you want to clear all browser storage? This will remove any saved floor plans.')) {
-            localStorage.removeItem('floorPlan');
-            location.reload();
-        }
-    });
+    document.getElementById('add-floorplan-btn').addEventListener('click', addNewFloorPlan);
+
+    renderFloorTabs();
 
     // Load saved floor plan on page load (only once)
     if (!window.floorPlanLoaded) {

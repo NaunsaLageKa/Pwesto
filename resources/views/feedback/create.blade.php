@@ -37,6 +37,13 @@
                     @endforeach
                 </select>
                 <input type="hidden" name="hub_owner_id" id="hub_owner_id" value="{{ old('hub_owner_id', $hubOwnerId) }}" required>
+                <p style="font-size:0.9rem;color:#555;margin-top:0.5rem;line-height:1.4;">
+                    <strong>Workspace feedback</strong> is available only after that stay has been <strong>marked complete</strong> by the hub (completed booking).
+                    <strong>Platform feedback</strong> is for the Pwesto app itself and does not require a completed visit.
+                </p>
+                <p style="font-size:0.9rem;color:#444;margin-top:0.75rem;padding:0.75rem 1rem;background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;line-height:1.5;">
+                    <strong>Coworking space feedback:</strong> your hub and Pwesto admins see it as soon as you submit (after a completed visit). It can appear on our public home page. <strong>Pwesto admins</strong> can remove it from the public home only; your hub still sees it until you hide it from your hub list.
+                </p>
             </div>
 
             <!-- Feedback Type -->
@@ -192,38 +199,66 @@ commentTextarea.addEventListener('input', function() {
     }
 });
 
+const bookableWorkspaces = @json($bookableWorkspaceIds ?? []);
+
+function getFeedbackType() {
+    return document.querySelector('input[name="feedback_type"]:checked')?.value || 'workspace';
+}
+
+function applyWorkspaceRules() {
+    const type = getFeedbackType();
+    const sel = document.getElementById('workspace');
+    const hubOwnerInput = document.getElementById('hub_owner_id');
+    Array.from(sel.options).forEach(opt => {
+        if (!opt.value) return;
+        if (type === 'platform') {
+            opt.disabled = opt.value !== 'pwesto';
+        } else {
+            opt.disabled = opt.value === 'pwesto' || (['produktiv','nest','mesh-media'].includes(opt.value) && !bookableWorkspaces.includes(opt.value));
+        }
+    });
+    const cur = sel.value;
+    if (cur && ((type === 'platform' && cur !== 'pwesto') || (type === 'workspace' && (cur === 'pwesto' || (['produktiv','nest','mesh-media'].includes(cur) && !bookableWorkspaces.includes(cur)))))) {
+        sel.value = '';
+        hubOwnerInput.value = '';
+    }
+}
+
+document.querySelectorAll('input[name="feedback_type"]').forEach(r => {
+    r.addEventListener('change', () => {
+        applyWorkspaceRules();
+        document.getElementById('workspace').dispatchEvent(new Event('change'));
+    });
+});
+
 // Workspace selection handler to fetch hub owner
 document.getElementById('workspace').addEventListener('change', function() {
     const workspace = this.value;
     const hubOwnerInput = document.getElementById('hub_owner_id');
-    
+
     if (workspace) {
-        fetch(`/feedback/get-hub-owner?workspace=${workspace}`)
+        fetch(`/feedback/get-hub-owner?workspace=${encodeURIComponent(workspace)}`)
             .then(response => response.json())
             .then(data => {
                 if (data.hub_owner_id) {
                     hubOwnerInput.value = data.hub_owner_id;
-                    console.log('Hub owner found:', data.hub_owner_id);
                 } else {
-                    // For platform feedback (pwesto), this is okay
-                    if (workspace === 'pwesto') {
-                        // Get admin user as hub owner for platform feedback
-                        hubOwnerInput.value = '';
-                        console.log('Platform feedback - using admin as hub owner');
-                    } else {
-                        // Try to continue anyway - the backend will use a fallback
-                        console.warn('No specific hub owner found, but continuing...');
-                    }
+                    hubOwnerInput.value = '';
                 }
             })
-            .catch(error => {
-                console.error('Error fetching hub owner:', error);
-                // Don't block the user - allow them to continue
+            .catch(() => {
+                hubOwnerInput.value = '';
             });
     } else {
         hubOwnerInput.value = '';
     }
 });
+
+applyWorkspaceRules();
+const wsElInit = document.getElementById('workspace');
+if (wsElInit.value) {
+    wsElInit.dispatchEvent(new Event('change'));
+}
 
 // Initialize counts
 commentTextarea.dispatchEvent(new Event('input'));

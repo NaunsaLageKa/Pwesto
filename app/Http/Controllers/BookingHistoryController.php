@@ -84,4 +84,44 @@ class BookingHistoryController extends Controller
         return response()->json(['success' => false, 'message' => 'Cannot cancel this booking']);
     }
 
+    /**
+     * Printable booking receipt / invoice for the signed-in customer only.
+     */
+    public function invoice(Request $request, Booking $booking)
+    {
+        abort_if((int) $booking->user_id !== (int) Auth::id(), 403);
+
+        $booking->load(['hubOwner', 'user']);
+
+        if ($request->boolean('modal')) {
+            return view('booking-invoice-modal', compact('booking'));
+        }
+
+        return view('booking-invoice', compact('booking'));
+    }
+
+    /**
+     * Download booking invoice as PDF (signed-in customer only).
+     */
+    public function invoicePdf(Booking $booking)
+    {
+        abort_if((int) $booking->user_id !== (int) Auth::id(), 403);
+
+        $booking->load(['hubOwner', 'user']);
+
+        $filename = sprintf(
+            'INV-%d-%s.pdf',
+            $booking->id,
+            $booking->booking_date?->format('Ymd') ?? now()->format('Ymd')
+        );
+
+        if (! class_exists(\Barryvdh\DomPDF\Facade\Pdf::class)) {
+            abort(503, 'PDF export is not installed. Run: composer require barryvdh/laravel-dompdf');
+        }
+
+        return \Barryvdh\DomPDF\Facade\Pdf::loadView('booking-invoice-pdf', compact('booking'))
+            ->setPaper('a4', 'portrait')
+            ->download($filename);
+    }
+
 }

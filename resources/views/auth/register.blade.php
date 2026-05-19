@@ -30,8 +30,8 @@
                         <input type="hidden" name="role" id="roleInput" value="user">
                         <div id="userFields">
                             <div style="margin-bottom:1.25rem;text-align:left;">
-                                <label for="name" style="font-weight:500;">Full name</label>
-                                <input id="name" type="text" name="name" value="{{ old('name') }}" required autofocus placeholder="Enter your full name"
+                                <label for="name" style="font-weight:500;">First Name</label>
+                                <input id="name" type="text" name="name" value="{{ old('name') }}" required autofocus placeholder="Enter your first name"
                                     style="width:100%;padding:1rem 1.2rem;border:1px solid #e0e0e0;border-radius:10px;margin-top:0.25rem;background:#f3f6f9;font-size:1.1rem;">
                             </div>
                             <div style="margin-bottom:1.25rem;text-align:left;">
@@ -60,8 +60,8 @@
                         </div>
                         <div id="hubFields" style="display:none;">
                             <div style="margin-bottom:1.25rem;text-align:left;">
-                                <label for="name_hub" style="font-weight:500;">Full Name</label>
-                                <input id="name_hub" type="text" name="name" placeholder="Full Name" value="{{ old('name') }}"
+                                <label for="name_hub" style="font-weight:500;">First Name</label>
+                                <input id="name_hub" type="text" name="name" placeholder="First Name" value="{{ old('name') }}"
                                     style="width:100%;padding:1rem 1.2rem;border:1px solid #e0e0e0;border-radius:10px;margin-top:0.25rem;background:#f3f6f9;font-size:1.1rem;">
                             </div>
                             <div style="margin-bottom:1.25rem;text-align:left;">

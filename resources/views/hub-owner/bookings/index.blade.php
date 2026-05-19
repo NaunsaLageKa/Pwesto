@@ -220,6 +220,8 @@
                 </button>
             </div>
 
+            <div id="report-customer-form-errors" class="hidden mb-4 rounded-md border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert"></div>
+
             <div class="space-y-4">
                 <div>
                     <label for="report-customer-type" class="block text-sm font-medium text-gray-700 mb-1">Issue Type <span class="text-red-500">*</span></label>
@@ -239,12 +241,7 @@
                               class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500"></textarea>
                 </div>
 
-                <div>
-                    <label for="report-customer-evidence" class="block text-sm font-medium text-gray-700 mb-1">Evidence (optional)</label>
-                    <textarea name="evidence" id="report-customer-evidence" rows="2" maxlength="2000"
-                              placeholder="Paste links to photos, CCTV stills, repair invoices, or other supporting info."
-                              class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500"></textarea>
-                </div>
+                @include('partials.report-evidence-field', ['prefix' => 'report-customer-evidence', 'showServerErrors' => true])
 
                 <div class="bg-yellow-50 border border-yellow-200 rounded-md p-3 text-sm text-yellow-800">
                     <strong>Note:</strong> False or malicious reports may result in account penalties. Only file a report when there is a genuine issue.
@@ -265,10 +262,67 @@
     </div>
 </div>
 
+@include('partials.report-evidence-paste-script')
+
 <script>
+var REPORT_CUSTOMER_EVIDENCE_PREFIX = 'report-customer-evidence';
+
+function clearReportCustomerFormErrors() {
+    var box = document.getElementById('report-customer-form-errors');
+    if (box) {
+        box.classList.add('hidden');
+        box.innerHTML = '';
+    }
+    if (window.ReportEvidencePaste) {
+        ReportEvidencePaste.clearInvalid(REPORT_CUSTOMER_EVIDENCE_PREFIX);
+    }
+}
+
+function validateReportCustomerForm() {
+    clearReportCustomerFormErrors();
+    var errors = [];
+
+    var typeEl = document.getElementById('report-customer-type');
+    if (!typeEl || !typeEl.value) {
+        errors.push('Please select an issue type.');
+    }
+
+    var descEl = document.getElementById('report-customer-description');
+    var desc = descEl ? descEl.value.trim() : '';
+    if (!desc) {
+        errors.push('Please describe what happened.');
+    } else if (desc.length < 10) {
+        errors.push('Description must be at least 10 characters.');
+    }
+
+    var evidence = window.ReportEvidencePaste ? ReportEvidencePaste.getData(REPORT_CUSTOMER_EVIDENCE_PREFIX).trim() : '';
+    if (!evidence || evidence.length < 10) {
+        errors.push('Evidence is required. Paste a screenshot into the evidence box.');
+        if (window.ReportEvidencePaste) {
+            ReportEvidencePaste.markInvalid(REPORT_CUSTOMER_EVIDENCE_PREFIX);
+        }
+    }
+
+    if (errors.length === 0) {
+        return true;
+    }
+
+    var box = document.getElementById('report-customer-form-errors');
+    if (box) {
+        box.innerHTML = '<p class="font-semibold mb-1">Please fix the following:</p><ul class="list-disc list-inside">' +
+            errors.map(function (e) { return '<li>' + e + '</li>'; }).join('') + '</ul>';
+        box.classList.remove('hidden');
+    }
+    return false;
+}
+
 function showReportCustomerModal(bookingId, customerName) {
     document.getElementById('report-customer-booking-id').value = bookingId;
     document.getElementById('report-customer-name').textContent = customerName;
+    clearReportCustomerFormErrors();
+    if (window.ReportEvidencePaste) {
+        ReportEvidencePaste.reset(REPORT_CUSTOMER_EVIDENCE_PREFIX);
+    }
     document.getElementById('report-customer-modal').classList.remove('hidden');
 }
 
@@ -276,7 +330,47 @@ function hideReportCustomerModal() {
     document.getElementById('report-customer-modal').classList.add('hidden');
     document.getElementById('report-customer-type').value = '';
     document.getElementById('report-customer-description').value = '';
-    document.getElementById('report-customer-evidence').value = '';
+    if (window.ReportEvidencePaste) {
+        ReportEvidencePaste.reset(REPORT_CUSTOMER_EVIDENCE_PREFIX);
+    }
+    clearReportCustomerFormErrors();
 }
+
+document.addEventListener('DOMContentLoaded', function () {
+    if (window.ReportEvidencePaste) {
+        ReportEvidencePaste.init(REPORT_CUSTOMER_EVIDENCE_PREFIX);
+    }
+
+    var reportForm = document.querySelector('#report-customer-modal form');
+    if (reportForm) {
+        reportForm.addEventListener('submit', function (e) {
+            if (!validateReportCustomerForm()) {
+                e.preventDefault();
+                return;
+            }
+            if (window.ReportEvidencePaste) {
+                ReportEvidencePaste.syncHidden(REPORT_CUSTOMER_EVIDENCE_PREFIX);
+            }
+        });
+    }
+
+    @if($errors->any() && old('booking_id'))
+    showReportCustomerModal(@json(old('booking_id')), @json(old('customer_name', 'this customer')));
+    var typeEl = document.getElementById('report-customer-type');
+    if (typeEl) typeEl.value = @json(old('type', ''));
+    var descEl = document.getElementById('report-customer-description');
+    if (descEl) descEl.value = @json(old('description', ''));
+    @if($errors->has('evidence'))
+    var box = document.getElementById('report-customer-form-errors');
+    if (box) {
+        box.innerHTML = '<p class="font-semibold">{{ $errors->first('evidence') }}</p>';
+        box.classList.remove('hidden');
+    }
+    if (window.ReportEvidencePaste) {
+        ReportEvidencePaste.markInvalid(REPORT_CUSTOMER_EVIDENCE_PREFIX);
+    }
+    @endif
+    @endif
+});
 </script>
-@endsection 
+@endsection

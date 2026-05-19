@@ -4,14 +4,39 @@
 <div class="container mx-auto py-8">
     <a href="{{ route('admin.dashboard') }}" class="inline-block mb-4 text-blue-600 hover:underline">&larr; Back to Dashboard</a>
     <h1 class="text-3xl font-bold mb-6">Dispute Resolution</h1>
+
+    @php
+        $disputeSortUrl = function (string $column) use ($sortBy, $sortDir) {
+            $nextDir = ($sortBy === $column && $sortDir === 'asc') ? 'desc' : 'asc';
+            return request()->fullUrlWithQuery(array_merge(request()->except('page'), [
+                'sort' => $column,
+                'dir' => $nextDir,
+            ]));
+        };
+        $disputeSortIcon = function (string $column) use ($sortBy, $sortDir) {
+            if ($sortBy !== $column) {
+                return '↕';
+            }
+            return $sortDir === 'asc' ? '↑' : '↓';
+        };
+    @endphp
+
+    @if(session('success'))
+        <div class="mb-4 rounded-lg bg-green-50 border border-green-200 text-green-800 px-4 py-3 text-sm">{{ session('success') }}</div>
+    @endif
+    @if(session('error'))
+        <div class="mb-4 rounded-lg bg-red-50 border border-red-200 text-red-800 px-4 py-3 text-sm">{{ session('error') }}</div>
+    @endif
     
     <!-- Filter Form -->
     <form method="GET" action="" class="flex flex-wrap gap-4 mb-6 items-center bg-white p-4 rounded-lg shadow">
+        <input type="hidden" name="sort" value="{{ $sortBy }}">
+        <input type="hidden" name="dir" value="{{ $sortDir }}">
         <select name="status" class="border rounded px-3 py-2">
             <option value="">All Status</option>
             <option value="open" @if(request('status')=='open') selected @endif>Open</option>
             <option value="resolved" @if(request('status')=='resolved') selected @endif>Resolved</option>
-            <option value="escalated" @if(request('status')=='escalated') selected @endif>Escalated</option>
+            <option value="escalated" @if(request('status')=='escalated') selected @endif>Flagged</option>
         </select>
         <select name="type" class="border rounded px-3 py-2">
             <option value="">All Types</option>
@@ -29,25 +54,55 @@
         <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
                 <tr>
-                    <th class="py-3 px-4 text-left font-semibold text-gray-700">User</th>
-                    <th class="py-3 px-4 text-left font-semibold text-gray-700">Hub Owner</th>
-                    <th class="py-3 px-4 text-left font-semibold text-gray-700">Type</th>
+                    <th class="py-3 px-4 text-left font-semibold text-gray-700">Reported by</th>
+                    <th class="py-3 px-4 text-left font-semibold text-gray-700">Reported</th>
+                    @foreach(['type' => 'Type'] as $column => $label)
+                    <th class="py-3 px-4 text-left font-semibold text-gray-700">
+                        <a href="{{ $disputeSortUrl($column) }}" class="inline-flex items-center gap-1 hover:text-blue-600 {{ $sortBy === $column ? 'text-blue-600' : '' }}">
+                            {{ $label }}
+                            <span class="text-xs opacity-70" aria-hidden="true">{{ $disputeSortIcon($column) }}</span>
+                        </a>
+                    </th>
+                    @endforeach
                     <th class="py-3 px-4 text-left font-semibold text-gray-700">Description</th>
-                    <th class="py-3 px-4 text-left font-semibold text-gray-700">Status</th>
-                    <th class="py-3 px-4 text-left font-semibold text-gray-700">Date</th>
+                    <th class="py-3 px-4 text-left font-semibold text-gray-700">
+                        <a href="{{ $disputeSortUrl('status') }}" class="inline-flex items-center gap-1 hover:text-blue-600 {{ $sortBy === 'status' ? 'text-blue-600' : '' }}">
+                            Status
+                            <span class="text-xs opacity-70" aria-hidden="true">{{ $disputeSortIcon('status') }}</span>
+                        </a>
+                    </th>
+                    <th class="py-3 px-4 text-left font-semibold text-gray-700">
+                        <a href="{{ $disputeSortUrl('created_at') }}" class="inline-flex items-center gap-1 hover:text-blue-600 {{ $sortBy === 'created_at' ? 'text-blue-600' : '' }}">
+                            Date
+                            <span class="text-xs opacity-70" aria-hidden="true">{{ $disputeSortIcon('created_at') }}</span>
+                        </a>
+                    </th>
                     <th class="py-3 px-4 text-left font-semibold text-gray-700">Actions</th>
                 </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-100">
                 @forelse ($disputes as $dispute)
                 <tr class="hover:bg-gray-50 transition">
-                    <td class="py-2 px-4">
-                        <div class="text-sm font-medium text-gray-900">{{ $dispute->user->name }}</div>
-                        <div class="text-sm text-gray-500">{{ $dispute->user->email }}</div>
+                    <td class="py-2 px-4 align-top">
+                        @php $reporter = $dispute->reporter(); $reporterRole = $dispute->reporterRoleLabel(); @endphp
+                        @if($reporter && $reporterRole)
+                            <span class="inline-flex px-2 py-0.5 text-xs font-semibold rounded-full mb-1 {{ $reporterRole === 'customer' ? 'bg-sky-100 text-sky-800' : 'bg-amber-100 text-amber-900' }}">{{ $dispute->reporterByRoleLabel() }}</span>
+                            <div class="text-sm font-medium text-gray-900">{{ $dispute->reporterByDisplayName() }}</div>
+                            <div class="text-sm text-gray-500">{{ $dispute->reporterEmail() }}</div>
+                        @else
+                            <span class="text-sm text-gray-400">Unknown</span>
+                        @endif
                     </td>
-                    <td class="py-2 px-4">
-                        <div class="text-sm font-medium text-gray-900">{{ $dispute->hubOwner->name }}</div>
-                        <div class="text-sm text-gray-500">{{ $dispute->hubOwner->email }}</div>
+                    <td class="py-2 px-4 align-top">
+                        @if($dispute->reporterRoleLabel())
+                            <span class="inline-flex px-2 py-0.5 text-xs font-semibold rounded-full mb-1 bg-gray-100 text-gray-800">{{ $dispute->reportedAgainstRoleLabel() }}</span>
+                            <div class="text-sm font-medium text-gray-900">{{ $dispute->reportedAgainstDisplayName() }}</div>
+                            @if($dispute->reportedPartyEmail())
+                                <div class="text-sm text-gray-500">{{ $dispute->reportedPartyEmail() }}</div>
+                            @endif
+                        @else
+                            <span class="text-sm text-gray-400">—</span>
+                        @endif
                     </td>
                     <td class="py-2 px-4">
                         <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full 
@@ -70,20 +125,25 @@
                         @elseif($dispute->status == 'resolved')
                             <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Resolved</span>
                         @else
-                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">Escalated</span>
+                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">Flagged</span>
                         @endif
                     </td>
                     <td class="py-2 px-4 text-sm text-gray-500">
                         {{ $dispute->created_at->diffForHumans() }}
                     </td>
                     <td class="py-2 px-4">
-                        <a href="{{ route('admin.disputes.show', $dispute->id) }}" class="bg-blue-600 text-white px-2 py-1 rounded text-xs hover:bg-blue-700 transition">View</a>
-                        @if($dispute->status == 'open')
-                            <form action="{{ route('admin.disputes.escalate', $dispute->id) }}" method="POST" class="inline ml-2">
-                                @csrf
-                                <button class="bg-orange-600 text-white px-2 py-1 rounded text-xs hover:bg-orange-700 transition" type="submit">Escalated</button>
-                            </form>
-                        @endif
+                        <div class="flex flex-wrap items-center gap-2">
+                            <a href="{{ route('admin.disputes.show', $dispute->id) }}" class="bg-blue-600 text-white px-2 py-1 rounded text-xs hover:bg-blue-700 transition">View</a>
+                            @if(in_array($dispute->status, ['open', 'escalated'], true))
+                                <a href="{{ route('admin.disputes.show', $dispute->id) }}#resolve-dispute" class="bg-green-600 text-white px-2 py-1 rounded text-xs hover:bg-green-700 transition">Resolve</a>
+                            @endif
+                            @if($dispute->status == 'open')
+                                <form action="{{ route('admin.disputes.escalate', $dispute->id) }}" method="POST" class="inline">
+                                    @csrf
+                                    <button class="bg-orange-600 text-white px-2 py-1 rounded text-xs hover:bg-orange-700 transition" type="submit">Flag</button>
+                                </form>
+                            @endif
+                        </div>
                     </td>
                 </tr>
                 @empty

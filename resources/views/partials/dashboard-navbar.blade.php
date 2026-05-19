@@ -10,7 +10,6 @@
         <a href="{{ route('dashboard') }}" class="dash-link {{ ($active ?? '') === 'home' ? 'active' : '' }}">Home</a>
         <a href="{{ route('booking-history') }}" class="dash-link {{ ($active ?? '') === 'booking-history' ? 'active' : '' }}">Booking History</a>
         <a href="{{ route('services.index') }}" class="dash-link {{ ($active ?? '') === 'services' ? 'active' : '' }}">Services</a>
-        <a href="{{ route('about') }}" class="dash-link {{ ($active ?? '') === 'about' ? 'active' : '' }}">About</a>
         <a href="{{ route('location') }}" class="dash-link {{ ($active ?? '') === 'location' ? 'active' : '' }}">Location</a>
 
         @if(Auth::check())

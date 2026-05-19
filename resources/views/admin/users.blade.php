@@ -5,7 +5,25 @@
     <a href="{{ route('admin.dashboard') }}" class="inline-block mb-4 text-blue-600 hover:underline">&larr; Back to Dashboard</a>
     <h1 class="text-3xl font-bold mb-6">User Management</h1>
 
+    @php
+        $userSortUrl = function (string $column) use ($sortBy, $sortDir) {
+            $nextDir = ($sortBy === $column && $sortDir === 'asc') ? 'desc' : 'asc';
+            return request()->fullUrlWithQuery(array_merge(request()->except('page'), [
+                'sort' => $column,
+                'dir' => $nextDir,
+            ]));
+        };
+        $userSortIcon = function (string $column) use ($sortBy, $sortDir) {
+            if ($sortBy !== $column) {
+                return '↕';
+            }
+            return $sortDir === 'asc' ? '↑' : '↓';
+        };
+    @endphp
+
     <form method="GET" action="{{ route('admin.users') }}" class="flex flex-wrap gap-4 mb-6 items-center bg-white p-4 rounded-lg shadow">
+        <input type="hidden" name="sort" value="{{ $sortBy }}">
+        <input type="hidden" name="dir" value="{{ $sortDir }}">
         <input 
             type="text" 
             name="search" 
@@ -39,13 +57,32 @@
         <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
                 <tr>
-                    <th class="py-3 px-4 text-left font-semibold text-gray-700">Name</th>
-                    <th class="py-3 px-4 text-left font-semibold text-gray-700">Email</th>
-                    <th class="py-3 px-4 text-left font-semibold text-gray-700">Phone</th>
-                    <th class="py-3 px-4 text-left font-semibold text-gray-700">Company</th>
+                    @foreach([
+                        'name' => 'Name',
+                        'email' => 'Email',
+                        'phone' => 'Phone',
+                        'company' => 'Company',
+                    ] as $column => $label)
+                    <th class="py-3 px-4 text-left font-semibold text-gray-700">
+                        <a href="{{ $userSortUrl($column) }}" class="inline-flex items-center gap-1 hover:text-blue-600 {{ $sortBy === $column ? 'text-blue-600' : '' }}">
+                            {{ $label }}
+                            <span class="text-xs opacity-70" aria-hidden="true">{{ $userSortIcon($column) }}</span>
+                        </a>
+                    </th>
+                    @endforeach
                     <th class="py-3 px-4 text-left font-semibold text-gray-700">Company ID</th>
-                    <th class="py-3 px-4 text-left font-semibold text-gray-700">Role</th>
-                    <th class="py-3 px-4 text-left font-semibold text-gray-700">Status</th>
+                    <th class="py-3 px-4 text-left font-semibold text-gray-700">
+                        <a href="{{ $userSortUrl('role') }}" class="inline-flex items-center gap-1 hover:text-blue-600 {{ $sortBy === 'role' ? 'text-blue-600' : '' }}">
+                            Role
+                            <span class="text-xs opacity-70" aria-hidden="true">{{ $userSortIcon('role') }}</span>
+                        </a>
+                    </th>
+                    <th class="py-3 px-4 text-left font-semibold text-gray-700">
+                        <a href="{{ $userSortUrl('status') }}" class="inline-flex items-center gap-1 hover:text-blue-600 {{ $sortBy === 'status' ? 'text-blue-600' : '' }}">
+                            Status
+                            <span class="text-xs opacity-70" aria-hidden="true">{{ $userSortIcon('status') }}</span>
+                        </a>
+                    </th>
                     <th class="py-3 px-4 text-left font-semibold text-gray-700">Actions</th>
                 </tr>
             </thead>

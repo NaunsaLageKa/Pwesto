@@ -2,8 +2,11 @@
 
 @section('content')
 @php
-    $bookingAmount = $bookingAmount ?? 150;
+    $hourlyRate = $hourlyRate ?? 150;
     $bookingBackRoute = $bookingBackRoute ?? route('services.booking');
+    $floorPlanFloors = $floorPlanFloors ?? [];
+    $selectedFloorId = $selectedFloorId ?? ($floorPlanFloors[0]['id'] ?? 1);
+    $layoutItems = $layoutItems ?? [];
 @endphp
 <div class="min-h-screen bg-gray-800">
     @include('partials.dashboard-navbar', ['active' => 'services'])
@@ -11,7 +14,8 @@
     <!-- Main Content -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <!-- Header Section -->
-        <div class="flex items-center justify-between mb-8">
+        <div class="mb-8">
+        <div class="flex items-center justify-between">
             <div>
                 <h1 class="text-3xl font-bold text-yellow-500 mb-2">
                     {{ $floorPlan && $floorPlan->hubOwner ? strtoupper($floorPlan->hubOwner->company) : 'WORKSPACE' }}
@@ -73,14 +77,26 @@
                 </div>
             </div>
         </div>
+        </div>
 
         <!-- Floor Plan Container -->
         <div class="bg-white rounded-lg shadow-xl p-6 mb-8">
             <div class="text-center mb-6">
                 <h2 class="text-2xl font-bold text-gray-800 mb-2">Floor Plan</h2>
-                                 <p class="text-gray-600">Click on a <strong>chair</strong> to select it for booking</p>
+                <p class="text-gray-600">Click on a <strong>chair</strong> to select it for booking</p>
+                @if(count($floorPlanFloors) > 1)
+                    <div id="customer-floor-tabs" class="mt-4 flex flex-wrap justify-center gap-2">
+                        @foreach($floorPlanFloors as $floor)
+                            <button type="button"
+                                    class="customer-floor-tab px-4 py-2 rounded-full text-sm font-semibold border-2 transition-colors {{ (int) $selectedFloorId === (int) $floor['id'] ? 'bg-teal-600 border-teal-600 text-white' : 'bg-white border-gray-300 text-gray-700 hover:border-teal-500' }}"
+                                    data-floor-id="{{ $floor['id'] }}">
+                                {{ $floor['name'] }}
+                            </button>
+                        @endforeach
+                    </div>
+                @endif
             </div>
-            
+
                          <!-- Floor Plan Canvas -->
              <div class="flex justify-center">
                  <div id="floor-plan-canvas" class="bg-white border-2 border-gray-300 relative h-[3000px] w-[4000px] mx-auto overflow-auto" style="position: relative; padding: 200px;">
@@ -112,7 +128,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
                     </svg>
                     <div>
-                        <p class="text-gray-800 font-medium">₱{{ number_format($bookingAmount, 0) }}</p>
+                        <p id="selection-price-display" class="text-gray-800 font-medium">₱{{ number_format($hourlyRate, 0) }}</p>
                         <p id="selected-seat" class="text-gray-600">No seat selected</p>
                     </div>
                 </div>
@@ -135,8 +151,8 @@
         <div class="pm-modal-card">
             <div class="pm-modal-header">
                 <div>
-                    <h2>Add Payment Method</h2>
-                    <p>Choose your preferred way to pay securely.</p>
+                    <h2>Pay with GCash</h2>
+                    <p>Complete your booking using GCash secure checkout.</p>
                 </div>
                 <button id="payment-modal-close" type="button" aria-label="Close payment modal">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -145,44 +161,14 @@
                 </button>
             </div>
 
-            <div class="pm-payment-options">
-                <button id="method-paypal" type="button" class="pm-option-btn">PayPal</button>
-                <button id="method-applepay" type="button" class="pm-option-btn">Apple Pay</button>
-                <button id="method-gcash" type="button" class="pm-option-btn">GCash</button>
+            <div class="pm-gcash-panel" role="region" aria-label="GCash payment">
+                <p class="pm-gcash-title">GCash</p>
+                <p class="pm-gcash-desc">After you tap checkout, you&rsquo;ll be redirected to finish payment with GCash.</p>
             </div>
 
-            <div class="pm-separator">
-                <hr class="line">
-                <p>or pay using credit card</p>
-                <hr class="line">
-            </div>
+            <input type="hidden" id="payment-method-input" value="gcash">
 
-            <button id="method-card" type="button" class="pm-card-pill">Credit Card</button>
-
-            <div class="pm-credit-form">
-                <div class="pm-input-group">
-                    <label>Card holder full name</label>
-                    <input type="text" placeholder="Enter your full name" readonly>
-                </div>
-                <div class="pm-input-group">
-                    <label>Card Number</label>
-                    <input type="text" placeholder="0000 0000 0000 0000" readonly>
-                </div>
-                <div class="pm-split">
-                    <div class="pm-input-group">
-                        <label>Expiry Date</label>
-                        <input type="text" placeholder="01/30" readonly>
-                    </div>
-                    <div class="pm-input-group">
-                        <label>CVV</label>
-                        <input type="text" placeholder="CVV" readonly>
-                    </div>
-                </div>
-            </div>
-
-            <input type="hidden" id="payment-method-input" value="card">
-
-            <button id="payment-checkout-btn" class="pm-checkout-btn" type="button" data-amount="{{ number_format($bookingAmount, 2, '.', '') }}">Checkout - Php {{ number_format($bookingAmount, 2) }}</button>
+            <button id="payment-checkout-btn" class="pm-checkout-btn" type="button" data-amount="{{ number_format($hourlyRate, 2, '.', '') }}">Checkout - Php {{ number_format($hourlyRate, 2) }}</button>
         </div>
     </div>
 </div>
@@ -213,10 +199,11 @@
     user-select: none;
     z-index: 20;
     border: 2px solid #333;
-    transition: all 0.2s ease;
+    transition: box-shadow 0.2s ease, filter 0.2s ease;
     min-width: 20px;
     min-height: 20px;
     box-sizing: border-box;
+    overflow: visible;
 }
 
 #floor-plan-canvas {
@@ -234,8 +221,8 @@
 }
 
 .canvas-item:hover {
-    transform: scale(1.05);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    filter: brightness(1.03);
 }
 
 .canvas-item.selected {
@@ -263,6 +250,21 @@
     font-weight: bold;
     text-align: center;
     white-space: nowrap;
+}
+
+/* Label under furniture (same placement as hub editor; readable on white grid) */
+.floor-plan-item-label {
+    position: absolute;
+    bottom: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 10px;
+    font-weight: bold;
+    color: #111827;
+    text-shadow: 0 1px 0 #fff;
+    white-space: nowrap;
+    pointer-events: none;
+    z-index: 5;
 }
 
 .pm-modal-card {
@@ -306,95 +308,28 @@
     color: #9ca3af;
 }
 
-.pm-payment-options {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
-    margin-bottom: 16px;
-}
-
-.pm-option-btn {
-    height: 46px;
-    border: 1px solid #e5e7eb;
-    border-radius: 12px;
-    background: #f3f4f6;
-    font-weight: 700;
-    color: #4b5563;
-}
-
-.pm-option-btn.active {
-    border-color: #2563eb;
-    background: #eff6ff;
-    color: #1d4ed8;
-}
-
-.pm-separator {
-    display: grid;
-    grid-template-columns: 1fr auto 1fr;
-    gap: 10px;
-    align-items: center;
-    margin-bottom: 14px;
-}
-
-.pm-separator p {
-    font-size: 11px;
-    font-weight: 700;
-    color: #9ca3af;
-    text-transform: uppercase;
-}
-
-.pm-separator .line {
-    border: 0;
-    height: 1px;
-    background-color: #e5e7eb;
-}
-
-.pm-card-pill {
-    width: 100%;
-    height: 42px;
-    margin-bottom: 14px;
-    border-radius: 10px;
-    border: 1px solid #e5e7eb;
-    background: #f8fafc;
-    color: #374151;
-    font-weight: 700;
-}
-
-.pm-card-pill.active {
-    border-color: #2563eb;
-    background: #eff6ff;
-    color: #1d4ed8;
-}
-
-.pm-credit-form {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.pm-input-group label {
-    display: block;
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-    color: #6b7280;
+.pm-gcash-panel {
+    padding: 1.25rem 1rem;
+    border-radius: 16px;
+    border: 2px solid #3b82f6;
+    background: linear-gradient(180deg, #eff6ff 0%, #f8fafc 100%);
+    text-align: center;
     margin-bottom: 4px;
 }
 
-.pm-input-group input {
-    width: 100%;
-    height: 40px;
-    border-radius: 10px;
-    border: 1px solid #e5e7eb;
-    background: #f3f4f6;
-    padding: 0 12px;
-    color: #374151;
+.pm-gcash-title {
+    margin: 0 0 0.35rem;
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: #1d4ed8;
+    letter-spacing: -0.02em;
 }
 
-.pm-split {
-    display: grid;
-    grid-template-columns: 2fr 1fr;
-    gap: 10px;
+.pm-gcash-desc {
+    margin: 0;
+    font-size: 0.9rem;
+    line-height: 1.45;
+    color: #64748b;
 }
 
 .pm-checkout-btn {
@@ -410,6 +345,159 @@
 </style>
 
 <script>
+window.__bookingHourlyRatePhp = {{ json_encode((float) $hourlyRate) }};
+window.__serverTodayYmd = @json(now()->format('Y-m-d'));
+
+/**
+ * When the selected date is today, disable time options at or before the current clock
+ * (matches server rules for new bookings).
+ */
+function refreshTimeOptionsForPastDay() {
+    const dateInput = document.getElementById('booking-date');
+    const todayYmd = window.__serverTodayYmd;
+    const selected = dateInput?.value;
+    const startSelect = document.getElementById('booking-time');
+    const endSelect = document.getElementById('booking-end-time');
+    const now = new Date();
+    const isToday = !!(selected && todayYmd && selected === todayYmd);
+
+    function slotOnSelectedDate(hm) {
+        if (!selected || !hm) return null;
+        const hms = normalizeTimeToHms(hm);
+        return localDateTimeFromYmdAndHms(selected, hms);
+    }
+
+    if (startSelect) {
+        startSelect.querySelectorAll('option[value]').forEach((opt) => {
+            const v = opt.value;
+            if (!v) {
+                opt.disabled = false;
+                return;
+            }
+            if (!isToday) {
+                opt.disabled = false;
+                return;
+            }
+            const slot = slotOnSelectedDate(v);
+            opt.disabled = !!(slot && !isNaN(slot.getTime()) && slot <= now);
+        });
+        const so = startSelect.options[startSelect.selectedIndex];
+        if (startSelect.value && so && so.disabled) {
+            startSelect.value = '';
+        }
+    }
+
+    let startSlot = null;
+    if (startSelect?.value) {
+        const hms = normalizeTimeToHms(startSelect.value);
+        startSlot = localDateTimeFromYmdAndHms(selected, hms);
+    }
+
+    if (endSelect) {
+        endSelect.querySelectorAll('option[value]').forEach((opt) => {
+            const v = opt.value;
+            if (!v) {
+                opt.disabled = false;
+                return;
+            }
+            if (!isToday) {
+                opt.disabled = false;
+                return;
+            }
+            const endSlot = slotOnSelectedDate(v);
+            if (!endSlot || isNaN(endSlot.getTime())) {
+                opt.disabled = false;
+                return;
+            }
+            let dis = endSlot <= now;
+            if (!dis && startSlot && !isNaN(startSlot.getTime()) && endSlot <= startSlot) {
+                dis = true;
+            }
+            opt.disabled = dis;
+        });
+        const eo = endSelect.options[endSelect.selectedIndex];
+        if (endSelect.value && eo && eo.disabled) {
+            endSelect.value = '';
+        }
+    }
+}
+
+/**
+ * Match ServiceController::queryOccupancyInterval (default +1h when end missing or not after start).
+ */
+function normalizeTimeToHms(timeVal) {
+    const s = String(timeVal || '').trim();
+    if (!s) return '';
+    const parts = s.split(':');
+    const h = String(Math.max(0, Math.min(23, parseInt(parts[0], 10) || 0))).padStart(2, '0');
+    const m = String(Math.max(0, Math.min(59, parseInt(parts[1] ?? '0', 10) || 0))).padStart(2, '0');
+    const sec = String(Math.max(0, Math.min(59, parseInt(parts[2] ?? '0', 10) || 0))).padStart(2, '0');
+    return h + ':' + m + ':' + sec;
+}
+
+function localDateTimeFromYmdAndHms(dateYmd, hms) {
+    const dp = dateYmd.split('-').map((x) => parseInt(x, 10));
+    const tp = hms.split(':').map((x) => parseInt(x, 10));
+    if (dp.length < 3 || !Number.isFinite(dp[0])) return null;
+    return new Date(dp[0], dp[1] - 1, dp[2], tp[0] || 0, tp[1] || 0, tp[2] || 0, 0);
+}
+
+function bookingWindowHoursAndTotal() {
+    const hourly = Number(window.__bookingHourlyRatePhp) || 0;
+    const dateStr = document.getElementById('booking-date')?.value;
+    const startRaw = document.getElementById('booking-time')?.value;
+    const endRaw = document.getElementById('booking-end-time')?.value;
+
+    if (!hourly) {
+        return { hours: 0, total: 0 };
+    }
+
+    if (!dateStr || !startRaw) {
+        const t = Math.round(hourly * 100) / 100;
+        return { hours: 1, total: t };
+    }
+
+    const startHms = normalizeTimeToHms(startRaw);
+    const startDt = localDateTimeFromYmdAndHms(dateStr, startHms);
+    if (!startDt || isNaN(startDt.getTime())) {
+        const t = Math.round(hourly * 100) / 100;
+        return { hours: 1, total: t };
+    }
+
+    let endDt = null;
+    if (endRaw) {
+        const endHms = normalizeTimeToHms(endRaw);
+        endDt = localDateTimeFromYmdAndHms(dateStr, endHms);
+    }
+
+    if (!endDt || isNaN(endDt.getTime()) || endDt <= startDt) {
+        endDt = new Date(startDt.getTime());
+        endDt.setHours(endDt.getHours() + 1);
+    }
+
+    const ms = endDt - startDt;
+    const hours = Math.max(ms / 3600000, 1 / 60);
+    const total = Math.round(hours * hourly * 100) / 100;
+    return { hours, total };
+}
+
+function updateBookingPriceUi() {
+    const { total } = bookingWindowHoursAndTotal();
+    const priceEl = document.getElementById('selection-price-display');
+    if (priceEl) {
+        const rounded = Math.round(total);
+        priceEl.textContent = '₱' + rounded.toLocaleString('en-PH');
+    }
+    const btn = document.getElementById('payment-checkout-btn');
+    if (btn) {
+        const formatted = total.toFixed(2);
+        btn.setAttribute('data-amount', formatted);
+        btn.textContent =
+            'Checkout - Php ' +
+            Number(total).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+}
+
 // Load floor plan from hub owner's database
 document.addEventListener('DOMContentLoaded', function() {
     
@@ -432,17 +520,39 @@ document.addEventListener('DOMContentLoaded', function() {
     loadFloorPlanFromDatabase();
 });
 
+    window.__floorPlanFloors = @json($floorPlanFloors);
+    window.__selectedFloorId = {{ (int) $selectedFloorId }};
+
+    function loadCustomerFloor(floorId) {
+        const floor = (window.__floorPlanFloors || []).find(function (f) {
+            return parseInt(f.id, 10) === parseInt(floorId, 10);
+        });
+        const items = floor && Array.isArray(floor.items) ? floor.items : [];
+        if (items.length > 0) {
+            createFloorPlanItems(items);
+        } else {
+            createDefaultFloorPlan();
+        }
+        window.__selectedFloorId = parseInt(floorId, 10);
+        document.querySelectorAll('.customer-floor-tab').forEach(function (btn) {
+            const active = parseInt(btn.dataset.floorId, 10) === parseInt(floorId, 10);
+            btn.classList.toggle('bg-teal-600', active);
+            btn.classList.toggle('border-teal-600', active);
+            btn.classList.toggle('text-white', active);
+            btn.classList.toggle('bg-white', !active);
+            btn.classList.toggle('border-gray-300', !active);
+            btn.classList.toggle('text-gray-700', !active);
+        });
+        if (typeof updateChairColors === 'function') {
+            updateChairColors();
+        }
+    }
+
     // Load floor plan from database
     function loadFloorPlanFromDatabase() {
-        const canvasItems = document.getElementById('canvas-items');
-        
-        
-        // Check if we have floor plan data from the controller
-        @if($floorPlan && $floorPlan->layout_data)
-            const floorPlanData = @json($floorPlan->layout_data);
-            
-            if (floorPlanData && floorPlanData.length > 0) {
-                createFloorPlanItems(floorPlanData);
+        @if($floorPlan && (count($layoutItems) > 0 || count($floorPlanFloors) > 0))
+            if (window.__floorPlanFloors && window.__floorPlanFloors.length > 0) {
+                loadCustomerFloor(window.__selectedFloorId);
             } else {
                 createDefaultFloorPlan();
             }
@@ -451,188 +561,301 @@ document.addEventListener('DOMContentLoaded', function() {
         @endif
     }
 
+    document.querySelectorAll('.customer-floor-tab').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            loadCustomerFloor(btn.dataset.floorId);
+        });
+    });
+
+function bookingStatusForItem(bookingStatuses, id) {
+    if (bookingStatuses[id] !== undefined && bookingStatuses[id] !== null) {
+        return bookingStatuses[id];
+    }
+    const key = String(id);
+    if (bookingStatuses[key] !== undefined && bookingStatuses[key] !== null) {
+        return bookingStatuses[key];
+    }
+    return 'available';
+}
+
+function appendFloorPlanLabel(el, text) {
+    const lab = document.createElement('div');
+    lab.className = 'floor-plan-item-label';
+    lab.textContent = text;
+    el.appendChild(lab);
+}
+
+function addTableLegs(itemEl) {
+    const legs = [
+        { left: '6px', top: '0' },
+        { right: '6px', top: '0' },
+        { left: '6px', bottom: '-14px' },
+        { right: '6px', bottom: '-14px' },
+    ];
+    legs.forEach((pos) => {
+        const leg = document.createElement('div');
+        const posStr = Object.entries(pos).map(([k, v]) => k + ':' + v).join(';');
+        leg.style.cssText = 'position:absolute;width:5px;height:14px;background:#8B4513;border:1px solid #654321;' + posStr;
+        itemEl.appendChild(leg);
+    });
+}
+
+function addSofaDecor(itemEl, sofaBg) {
+    const sofaBack = document.createElement('div');
+    sofaBack.style.cssText = 'position:absolute;top:-14px;left:0;right:0;height:14px;background-color:' + sofaBg + ';border:2px solid #333;border-radius:8px 8px 0 0';
+    itemEl.appendChild(sofaBack);
+    const leftArm = document.createElement('div');
+    leftArm.style.cssText = 'position:absolute;left:-8px;top:0;width:8px;height:100%;background-color:' + sofaBg + ';border:2px solid #333;border-radius:8px 0 0 8px';
+    itemEl.appendChild(leftArm);
+    const rightArm = document.createElement('div');
+    rightArm.style.cssText = 'position:absolute;right:-8px;top:0;width:8px;height:100%;background-color:' + sofaBg + ';border:2px solid #333;border-radius:0 8px 8px 0';
+    itemEl.appendChild(rightArm);
+}
+
+/** Booking UI star color (violet), kept in sync with hub floor plan `shapes.star.bg`. */
+const FLOOR_PLAN_STAR_VIOLET = '#7C3AED';
+
+/** Match hub-owner floor plan editor visuals (star clip-path, table legs, sofa back/arms). */
+function decorateNonChairViewer(el, item) {
+    const shape = item.shape;
+    const sc = getShapeConfig(shape);
+    const fill = item.backgroundColor || sc.bg;
+
+    if (shape === 'star') {
+        el.style.backgroundColor = 'transparent';
+        el.style.border = 'none';
+        el.style.boxSizing = 'border-box';
+        // SVG scales with the container (same polygon as hub editor sidebar); clip-path was unreliable at tiny sizes.
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.setAttribute('viewBox', '0 0 32 32');
+        svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+        svg.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;display:block;pointer-events:none';
+        const poly = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+        poly.setAttribute('points', '16,2 20,12 30,12 22,20 26,30 16,24 6,30 10,20 2,12 12,12');
+        poly.setAttribute('fill', FLOOR_PLAN_STAR_VIOLET);
+        poly.setAttribute('stroke', '#333');
+        poly.setAttribute('stroke-width', '2');
+        svg.appendChild(poly);
+        el.appendChild(svg);
+        return;
+    }
+
+    el.style.border = '2px solid #333';
+
+    if (shape === 'table') {
+        el.style.backgroundColor = fill;
+        addTableLegs(el);
+        return;
+    }
+
+    if (shape === 'sofa') {
+        el.style.backgroundColor = fill;
+        addSofaDecor(el, fill);
+        return;
+    }
+
+    if (shape === 'desk') {
+        el.style.backgroundColor = fill;
+        return;
+    }
+
+    if (shape === 'door') {
+        el.style.backgroundColor = fill;
+        const handle = document.createElement('div');
+        handle.style.cssText = 'position:absolute;right:6px;top:50%;transform:translateY(-50%);width:8px;height:8px;background:#FFD700;border:1px solid #333;border-radius:50%';
+        el.appendChild(handle);
+        return;
+    }
+
+    if (shape === 'window') {
+        el.style.border = '3px solid #1F2937';
+        el.style.backgroundColor = '#BFDBFE';
+        const pane = document.createElement('div');
+        pane.style.cssText = 'position:absolute;top:3px;left:3px;right:3px;bottom:3px;background:#E0F2FE;border:1px solid #1F2937';
+        el.appendChild(pane);
+        return;
+    }
+
+    if (shape === 'toilet') {
+        el.style.backgroundColor = '#FFFFFF';
+        const seat = document.createElement('div');
+        seat.style.cssText = 'position:absolute;top:5px;left:5px;right:5px;bottom:14px;background:#FFF;border:2px solid #6B7280;border-radius:50%';
+        el.appendChild(seat);
+        return;
+    }
+
+    if (shape === 'wall') {
+        el.style.backgroundColor = '#000000';
+        return;
+    }
+
+    el.style.backgroundColor = fill;
+}
+
+function applyChairSeatStyle(el, status) {
+    el.classList.remove('available', 'booked', 'confirmed', 'pending');
+    switch (status) {
+        case 'available':
+            el.style.backgroundColor = '#10B981';
+            el.classList.add('available');
+            el.onclick = function () { selectSeat(el); };
+            el.style.cursor = 'pointer';
+            el.style.pointerEvents = 'auto';
+            el.style.opacity = '1';
+            el.style.boxShadow = '0 2px 4px rgba(0,0,0,0.2)';
+            el.title = 'Click to book this chair';
+            break;
+        case 'confirmed':
+            el.style.backgroundColor = '#DC2626';
+            el.classList.add('booked', 'confirmed');
+            el.onclick = null;
+            el.style.cursor = 'not-allowed';
+            el.style.pointerEvents = 'none';
+            el.style.opacity = '0.7';
+            el.title = 'This chair is confirmed';
+            break;
+        case 'pending':
+            el.style.backgroundColor = '#DC2626';
+            el.classList.add('booked', 'pending');
+            el.onclick = null;
+            el.style.cursor = 'not-allowed';
+            el.style.pointerEvents = 'none';
+            el.style.opacity = '0.7';
+            el.title = 'This chair is not available';
+            break;
+        default:
+            el.style.backgroundColor = '#10B981';
+            el.classList.add('available');
+            el.onclick = function () { selectSeat(el); };
+            el.style.cursor = 'pointer';
+            el.style.pointerEvents = 'auto';
+            el.style.opacity = '1';
+            el.style.boxShadow = '0 2px 4px rgba(0,0,0,0.2)';
+            el.title = 'Click to book this chair';
+    }
+    const back = el.querySelector('.chair-seat-back');
+    if (back) {
+        back.style.backgroundColor = el.style.backgroundColor;
+    }
+}
+
 // Create floor plan items from database data
 function createFloorPlanItems(items) {
     const canvasItems = document.getElementById('canvas-items');
-    
-    // Clear existing items
+
     canvasItems.innerHTML = '';
-    
-    
-    // Get booking statuses from the controller
+
     const bookingStatuses = @json($bookingStatuses ?? []);
-    
-    items.forEach((item, index) => {
-        // Show ALL items from the floor plan
+
+    items.forEach((item) => {
         const newItem = document.createElement('div');
-        newItem.className = 'canvas-item available';
+        newItem.className = 'canvas-item';
         newItem.dataset.id = item.id;
         newItem.dataset.seatNumber = item.label || `Seat ${item.id}`;
         newItem.dataset.shape = item.shape;
-        
-        // Set styles based on shape type
+        newItem.setAttribute('data-id', item.id);
+
         const shapeConfig = getShapeConfig(item.shape);
-        
+
         newItem.style.position = 'absolute';
-        // Use the exact original positions from the database
         newItem.style.left = item.x + 'px';
         newItem.style.top = item.y + 'px';
-        
-        
-        // ALWAYS use the dimensions from the database to preserve exact orientation
-        if (item.width && item.height) {
-            newItem.style.width = item.width + 'px';
-            newItem.style.height = item.height + 'px';
-        } else {
-            // Fallback to shape config only if no dimensions in database
-            newItem.style.width = shapeConfig.width + 'px';
-            newItem.style.height = shapeConfig.height + 'px';
+
+        let dw = parseFloat(item.width);
+        let dh = parseFloat(item.height);
+        if (!Number.isFinite(dw) || !Number.isFinite(dh) || dw <= 0 || dh <= 0) {
+            dw = shapeConfig.width;
+            dh = shapeConfig.height;
         }
-        
-        // Apply color coding based on booking status for chairs only
-        if (item.shape === 'chair') {
-            // Initially set chairs as available (will be updated when date/time is selected)
-            newItem.style.backgroundColor = '#10B981'; // Green for available
-            newItem.classList.add('available');
-        } else {
-            // For non-chair items (desks, tables, etc.), always use their original colors
-            if (item.backgroundColor) {
-                newItem.style.backgroundColor = item.backgroundColor;
-            } else {
-                newItem.style.backgroundColor = shapeConfig.bg;
-            }
+        // Saved JSON sometimes has tiny dimensions; stars vanish if box is only a few px.
+        if (item.shape === 'star') {
+            const starMin = 44;
+            dw = Math.max(dw, starMin);
+            dh = Math.max(dh, starMin);
         }
-        
-        newItem.style.border = '2px solid #333';
-        newItem.style.cursor = 'pointer';
-        newItem.style.zIndex = '10';
-        newItem.style.display = 'flex';
-        newItem.style.alignItems = 'center';
-        newItem.style.justifyContent = 'center';
-        newItem.style.color = 'white';
-        newItem.style.fontSize = '10px';
-        newItem.style.fontWeight = 'bold';
-        newItem.style.textAlign = 'center';
-        
-        // Apply rotation if the item has rotation data
+        newItem.style.width = dw + 'px';
+        newItem.style.height = dh + 'px';
+
         if (item.rotation) {
             newItem.style.transform = `rotate(${item.rotation}deg)`;
         }
-        
-        // Add label text - use the proper label from database
-        newItem.textContent = item.label || `Seat ${item.id}`;
-        
-        // Add data-id attribute for booking status lookup
-        newItem.setAttribute('data-id', item.id);
-        
-        // Add click handler for chairs only (chairs are the only bookable items)
+
+        newItem.style.zIndex = '10';
+        newItem.style.display = 'block';
+        newItem.style.overflow = 'visible';
+
+        const labelText = item.label || (item.shape === 'chair' ? `Seat ${item.id}` : shapeConfig.label);
+
         if (item.shape === 'chair') {
-            const bookingStatus = bookingStatuses[item.id] || 'available';
-            
-            // Apply initial color based on booking status
-            switch (bookingStatus) {
-                case 'available':
-                    newItem.style.backgroundColor = '#10B981'; // Green
-                    newItem.classList.add('available');
-                    newItem.onclick = function() {
-                        selectSeat(newItem);
-                    };
-                    newItem.style.cursor = 'pointer';
-                    newItem.style.pointerEvents = 'auto';
-                    newItem.style.boxShadow = '0 2px 4px rgba(0,0,0,0.2)';
-                    newItem.title = 'Click to book this chair';
-                    break;
-                case 'confirmed':
-                    newItem.style.backgroundColor = '#DC2626'; // Dark red - very distinct from orange
-                    newItem.classList.add('booked', 'confirmed');
-                    newItem.onclick = null;
-                    newItem.style.cursor = 'not-allowed';
-                    newItem.style.pointerEvents = 'none';
-                    newItem.style.opacity = '0.7';
-                    newItem.title = 'This chair is confirmed';
-                    break;
-                case 'pending':
-                    newItem.style.backgroundColor = '#DC2626'; // Unavailable seats should be red
-                    newItem.classList.add('booked', 'pending');
-                    newItem.onclick = null;
-                    newItem.style.cursor = 'not-allowed';
-                    newItem.style.pointerEvents = 'none';
-                    newItem.style.opacity = '0.7';
-                    newItem.title = 'This chair is not available';
-                    break;
-                default:
-                    newItem.style.backgroundColor = '#10B981'; // Treat unknown as available
-                    newItem.classList.add('available');
-                    newItem.onclick = function() {
-                        selectSeat(newItem);
-                    };
-                    newItem.style.cursor = 'pointer';
-                    newItem.style.pointerEvents = 'auto';
-                    newItem.style.boxShadow = '0 2px 4px rgba(0,0,0,0.2)';
-                    newItem.title = 'Click to book this chair';
-                    break;
-                }
-            } else {
-                // For non-chair items, use original colors and make them non-clickable
-                newItem.style.cursor = 'default';
-                newItem.style.opacity = '1';
-                newItem.title = '';
-                
-                // Use original colors based on shape
-                switch (item.shape) {
-                    case 'desk':
-                        newItem.style.backgroundColor = '#8B4513'; // Brown
-                        break;
-                    case 'table':
-                        newItem.style.backgroundColor = '#A0522D'; // Brown
-                        break;
-                    case 'sofa':
-                        newItem.style.backgroundColor = '#FBBF24'; // Yellow
-                        break;
-                    case 'wall':
-                        newItem.style.backgroundColor = '#000000'; // Black
-                        break;
-                    case 'window':
-                        newItem.style.backgroundColor = '#BFDBFE'; // Light blue
-                        break;
-                    case 'toilet':
-                        newItem.style.backgroundColor = '#FFFFFF'; // White
-                        break;
-                    default:
-                        newItem.style.backgroundColor = '#6B7280'; // Gray
-                        break;
-                }
-            }
-        
-        // Add to canvas
+            const status = bookingStatusForItem(bookingStatuses, item.id);
+            applyChairSeatStyle(newItem, status);
+
+            newItem.style.borderRadius = '50%';
+            const w = parseInt(newItem.style.width, 10) || 40;
+            const backW = Math.max(14, Math.min(22, Math.round(w * 0.45)));
+            const backH = Math.max(6, Math.round(backW * 0.45));
+
+            const chairBack = document.createElement('div');
+            chairBack.className = 'chair-seat-back';
+            chairBack.style.cssText =
+                'position:absolute;top:-' +
+                backH +
+                'px;left:50%;transform:translateX(-50%);width:' +
+                backW +
+                'px;height:' +
+                backH +
+                'px;background-color:' +
+                newItem.style.backgroundColor +
+                ';border:2px solid #333;border-radius:' +
+                backW +
+                'px ' +
+                backW +
+                'px 0 0;pointer-events:none';
+            newItem.appendChild(chairBack);
+
+            appendFloorPlanLabel(newItem, labelText);
+        } else {
+            decorateNonChairViewer(newItem, item);
+            newItem.style.cursor = 'default';
+            newItem.style.pointerEvents = 'none';
+            newItem.title = '';
+            appendFloorPlanLabel(newItem, labelText);
+        }
+
         canvasItems.appendChild(newItem);
-        
-        
-        
     });
-    
-    
-    // Initialize seat selection functionality
+
     initializeSeatSelection();
 }
 
-// Create default floor plan if no database data
+// Create default floor plan if no database data (matches hub-owner editor reference layout; chairs stay green on render)
 function createDefaultFloorPlan() {
     const canvasItems = document.getElementById('canvas-items');
     
     // Clear existing items
     canvasItems.innerHTML = '';
     
-    // Default items
     const defaultItems = [
-        { shape: 'desk', x: 50, y: 50, id: 1, width: 80, height: 60, label: 'Desk 1' },
-        { shape: 'desk', x: 150, y: 50, id: 2, width: 80, height: 60, label: 'Desk 2' },
-        { shape: 'desk', x: 250, y: 50, id: 3, width: 80, height: 60, label: 'Desk 3' },
-        { shape: 'desk', x: 350, y: 50, id: 4, width: 80, height: 60, label: 'Desk 4' },
-        { shape: 'chair', x: 70, y: 70, id: 5, width: 40, height: 40, label: 'Chair 1' },
-        { shape: 'chair', x: 170, y: 70, id: 6, width: 40, height: 40, label: 'Chair 2' },
-        { shape: 'chair', x: 270, y: 70, id: 7, width: 40, height: 40, label: 'Chair 3' },
-        { shape: 'chair', x: 370, y: 70, id: 8, width: 40, height: 40, label: 'Chair 4' }
+        { shape: 'desk', id: 'desk-1', x: 80, y: 60, width: 80, height: 60, label: 'Desk' },
+        { shape: 'table', id: 'table-1', x: 360, y: 50, width: 100, height: 100, label: 'Table' },
+        { shape: 'chair', id: 1, x: 90, y: 140, width: 40, height: 40, label: 'Chair' },
+        { shape: 'chair', id: 2, x: 150, y: 140, width: 40, height: 40, label: 'Chair' },
+        { shape: 'chair', id: 3, x: 330, y: 170, width: 40, height: 40, label: 'Chair' },
+        { shape: 'chair', id: 4, x: 450, y: 170, width: 40, height: 40, label: 'Chair' },
+        { shape: 'chair', id: 5, x: 60, y: 280, width: 40, height: 40, label: 'Chair' },
+        { shape: 'chair', id: 6, x: 120, y: 420, width: 40, height: 40, label: 'Chair' },
+        { shape: 'chair', id: 7, x: 280, y: 320, width: 40, height: 40, label: 'Chair' },
+        { shape: 'chair', id: 8, x: 300, y: 500, width: 40, height: 40, label: 'Chair' },
+        { shape: 'chair', id: 9, x: 580, y: 240, width: 40, height: 40, label: 'Chair' },
+        { shape: 'chair', id: 10, x: 640, y: 400, width: 40, height: 40, label: 'Chair' },
+        { shape: 'sofa', id: 'sofa-1', x: 220, y: 240, width: 60, height: 120, label: 'Sofa' },
+        { shape: 'sofa', id: 'sofa-2', x: 140, y: 480, width: 120, height: 60, label: 'Sofa' },
+        { shape: 'sofa', id: 'sofa-3', x: 300, y: 480, width: 120, height: 60, label: 'Sofa' },
+        { shape: 'sofa', id: 'sofa-4', x: 200, y: 560, width: 120, height: 60, label: 'Sofa' },
+        { shape: 'star', id: 'star-1', x: 40, y: 200, width: 60, height: 60, label: 'Star' },
+        { shape: 'star', id: 'star-2', x: 240, y: 420, width: 60, height: 60, label: 'Star' },
+        { shape: 'wall', id: 'wall-1', x: 520, y: 200, width: 220, height: 20, label: 'Wall' },
+        { shape: 'wall', id: 'wall-2', x: 180, y: 360, width: 120, height: 20, label: 'Wall' },
     ];
     
     createFloorPlanItems(defaultItems);
@@ -645,6 +868,7 @@ function getShapeConfig(shapeType) {
         chair: { width: 40, height: 40, bg: '#9CA3AF', label: 'Chair' },
         table: { width: 80, height: 80, bg: '#A0522D', label: 'Table' },
         sofa: { width: 120, height: 60, bg: '#FBBF24', label: 'Sofa' },
+        star: { width: 60, height: 60, bg: '#7C3AED', label: 'Star' },
         wall: { width: 80, height: 20, bg: '#000000', label: 'Wall' },
         door: { width: 60, height: 40, bg: '#D2691E', label: 'Door' },
         window: { width: 60, height: 30, bg: '#BFDBFE', label: 'Window' },
@@ -768,6 +992,7 @@ function initializeSeatSelection() {
 
     // Payment modal functions
     function showPaymentModal() {
+        updateBookingPriceUi();
         document.getElementById('payment-modal').classList.remove('hidden');
     }
 
@@ -789,54 +1014,12 @@ function initializeSeatSelection() {
         });
     }
 
-    const methodCardBtn = document.getElementById('method-card');
-    const methodGcashBtn = document.getElementById('method-gcash');
-    const methodPaypalBtn = document.getElementById('method-paypal');
-    const methodApplePayBtn = document.getElementById('method-applepay');
     const paymentMethodInput = document.getElementById('payment-method-input');
-
-    function setPaymentMethod(method) {
-        if (!paymentMethodInput) {
-            return;
-        }
-
-        paymentMethodInput.value = method;
-        methodCardBtn?.classList.remove('active');
-        methodGcashBtn?.classList.remove('active');
-        methodPaypalBtn?.classList.remove('active');
-        methodApplePayBtn?.classList.remove('active');
-
-        if (method === 'card') {
-            methodCardBtn?.classList.add('active');
-        } else if (method === 'gcash') {
-            methodGcashBtn?.classList.add('active');
-        }
+    if (paymentMethodInput) {
+        paymentMethodInput.value = 'gcash';
     }
 
-    methodCardBtn?.addEventListener('click', function() {
-        setPaymentMethod('card');
-    });
-
-    methodGcashBtn?.addEventListener('click', function() {
-        setPaymentMethod('gcash');
-    });
-
-    methodPaypalBtn?.addEventListener('click', function() {
-        methodPaypalBtn.classList.add('active');
-        alert('PayPal is not available yet. Please use Card or GCash.');
-        setPaymentMethod('card');
-    });
-
-    methodApplePayBtn?.addEventListener('click', function() {
-        methodApplePayBtn.classList.add('active');
-        alert('Apple Pay is not available yet. Please use Card or GCash.');
-        setPaymentMethod('card');
-    });
-
-    setPaymentMethod('card');
-
     const paymentCheckoutBtn = document.getElementById('payment-checkout-btn');
-    const defaultCheckoutBtnLabel = paymentCheckoutBtn ? paymentCheckoutBtn.textContent.trim() : '';
     if (paymentCheckoutBtn) {
         paymentCheckoutBtn.addEventListener('click', function() {
             if (!selectedSeat) {
@@ -853,7 +1036,7 @@ function initializeSeatSelection() {
                 return;
             }
 
-            const selectedPaymentMethod = paymentMethodInput?.value || 'card';
+            const selectedPaymentMethod = paymentMethodInput?.value || 'gcash';
             const bookingData = {
                 service_type: '{{ $serviceType }}',
                 seat_id: selectedSeat.dataset.id,
@@ -896,33 +1079,43 @@ function initializeSeatSelection() {
                 }
 
                 paymentCheckoutBtn.disabled = false;
-                paymentCheckoutBtn.textContent = defaultCheckoutBtnLabel;
+                updateBookingPriceUi();
                 const detailedError = data?.details?.errors?.[0]?.detail || data?.error || data?.details;
                 alert('Unable to start payment: ' + (detailedError || data.message || 'Unknown error'));
             })
             .catch(error => {
                 console.error('Error:', error);
                 paymentCheckoutBtn.disabled = false;
-                paymentCheckoutBtn.textContent = defaultCheckoutBtnLabel;
+                updateBookingPriceUi();
                 alert('Error starting payment. Please try again.');
             });
         });
     }
 
+    function onBookingWindowInputsChange() {
+        refreshTimeOptionsForPastDay();
+        updateBookingPriceUi();
+        updateChairColors();
+    }
+
     // Add event listeners for date and time changes
     if (dateInput) {
-        dateInput.addEventListener('change', updateChairColors);
+        dateInput.addEventListener('change', onBookingWindowInputsChange);
+        dateInput.addEventListener('input', onBookingWindowInputsChange);
     }
     
     const timeSelect = document.getElementById('booking-time');
     if (timeSelect) {
-        timeSelect.addEventListener('change', updateChairColors);
+        timeSelect.addEventListener('change', onBookingWindowInputsChange);
     }
     
     const endTimeSelect = document.getElementById('booking-end-time');
     if (endTimeSelect) {
-        endTimeSelect.addEventListener('change', updateChairColors);
+        endTimeSelect.addEventListener('change', onBookingWindowInputsChange);
     }
+
+    refreshTimeOptionsForPastDay();
+    updateBookingPriceUi();
 
     // Function to update chair colors based on selected date and time
     function updateChairColors() {
@@ -944,7 +1137,9 @@ function initializeSeatSelection() {
             body: JSON.stringify({
                 date: selectedDate,
                 time: selectedTime,
-                service_type: '{{ $serviceType }}'
+                end_time: document.getElementById('booking-end-time')?.value || null,
+                service_type: '{{ $serviceType }}',
+                floor: window.__selectedFloorId || null
             })
         })
         .then(response => response.json())
@@ -969,51 +1164,9 @@ function initializeSeatSelection() {
             
             // Only apply booking statuses to chairs
             if (itemShape === 'chair') {
-                const status = bookingStatuses[itemId];
-                
-                // Remove existing status classes
-                item.classList.remove('available', 'booked', 'confirmed', 'pending');
-                
-                // Apply new status
-                switch (status) {
-                    case 'available':
-                        item.style.backgroundColor = '#10B981'; // Green
-                        item.classList.add('available');
-                        item.onclick = function() { selectSeat(item); };
-                        item.style.cursor = 'pointer';
-                        item.style.pointerEvents = 'auto';
-                        item.style.opacity = '1';
-                        item.title = 'Click to book this chair';
-                        break;
-                    case 'confirmed':
-                        item.style.backgroundColor = '#DC2626'; // Dark red - very distinct from orange
-                        item.classList.add('booked', 'confirmed');
-                        item.onclick = null;
-                        item.style.cursor = 'not-allowed';
-                        item.style.pointerEvents = 'none';
-                        item.style.opacity = '0.7';
-                        item.title = 'This chair is confirmed';
-                        break;
-                    case 'pending':
-                        item.style.backgroundColor = '#DC2626'; // Unavailable seats should be red
-                        item.classList.add('booked', 'pending');
-                        item.onclick = null;
-                        item.style.cursor = 'not-allowed';
-                        item.style.pointerEvents = 'none';
-                        item.style.opacity = '0.7';
-                        item.title = 'This chair is not available';
-                        break;
-                    default:
-                        // If status is missing/unknown, keep it available
-                        item.style.backgroundColor = '#10B981';
-                        item.classList.add('available');
-                        item.onclick = function() { selectSeat(item); };
-                        item.style.cursor = 'pointer';
-                        item.style.pointerEvents = 'auto';
-                        item.style.opacity = '1';
-                        item.title = 'Click to book this chair';
-                        break;
-                }
+                const status = bookingStatusForItem(bookingStatuses, itemId);
+
+                applyChairSeatStyle(item, status);
 
                 // If currently selected chair becomes unavailable, clear selection immediately.
                 if (item.classList.contains('selected') && (status === 'confirmed' || status === 'pending')) {
@@ -1034,8 +1187,10 @@ function initializeSeatSelection() {
                 item.style.opacity = '1';
                 item.title = '';
                 
-                // Restore original colors based on shape
+                // Restore original colors based on shape (skip star: clip-path child holds color)
                 switch (itemShape) {
+                    case 'star':
+                        break;
                     case 'desk':
                         item.style.backgroundColor = '#8B4513'; // Brown
                         break;
@@ -1047,6 +1202,9 @@ function initializeSeatSelection() {
                         break;
                     case 'wall':
                         item.style.backgroundColor = '#000000'; // Black
+                        break;
+                    case 'door':
+                        item.style.backgroundColor = '#D2691E';
                         break;
                     case 'window':
                         item.style.backgroundColor = '#BFDBFE'; // Light blue

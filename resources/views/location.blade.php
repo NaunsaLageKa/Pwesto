@@ -195,106 +195,6 @@
             transform: translateY(-2px);
         }
 
-        .public-reviews-wrap {
-            background: #fff;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            padding: 2rem;
-            margin-bottom: 2rem;
-        }
-
-        .public-reviews-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 1.25rem;
-        }
-
-        .workspace-review-card {
-            border: 1px solid #e5e7eb;
-            border-radius: 10px;
-            padding: 1rem;
-            background: #f9fafb;
-        }
-
-        .workspace-review-title {
-            font-size: 1.05rem;
-            font-weight: 700;
-            color: #1f2937;
-            margin-bottom: 0.35rem;
-        }
-
-        .workspace-review-meta {
-            font-size: 0.85rem;
-            color: #4b5563;
-            margin-bottom: 0.8rem;
-        }
-
-        .review-item {
-            border-top: 1px dashed #d1d5db;
-            padding-top: 0.7rem;
-            margin-top: 0.7rem;
-        }
-
-        .review-item:first-child {
-            border-top: none;
-            padding-top: 0;
-            margin-top: 0;
-        }
-
-        .review-rating {
-            font-weight: 700;
-            color: #0f766e;
-            font-size: 0.9rem;
-        }
-
-        .review-comment {
-            font-size: 0.9rem;
-            color: #374151;
-            line-height: 1.4;
-            margin-top: 0.25rem;
-        }
-
-        .review-footer {
-            font-size: 0.78rem;
-            color: #6b7280;
-            margin-top: 0.3rem;
-        }
-
-        .public-reviews-title {
-            text-align: center;
-            margin: 0 0 0.5rem;
-            color: #222;
-            font-size: 2rem;
-        }
-
-        .public-reviews-sub {
-            text-align: center;
-            color: #6b7280;
-            margin: 0 0 1.5rem;
-        }
-
-        .public-reviews-more {
-            text-align: center;
-            margin: 1.25rem 0 0;
-        }
-
-        .public-reviews-more a {
-            color: #19c2b8;
-            font-weight: 600;
-            text-decoration: none;
-        }
-
-        .public-reviews-more a:hover {
-            text-decoration: underline;
-        }
-
-        .public-reviews-empty {
-            grid-column: 1 / -1;
-            text-align: center;
-            color: #6b7280;
-            padding: 1.5rem 0;
-        }
-        
         @media (max-width: 768px) {
             .nav-container {
                 flex-direction: column;
@@ -399,10 +299,6 @@
                 
             </div>
         </div>
-
-        @if(($reviewsByWorkspace ?? collect())->isNotEmpty())
-            @include('partials.public-workspace-reviews')
-        @endif
 
         <div class="cta-section">
             <h2 class="cta-title">Ready to Book Your Workspace?</h2>

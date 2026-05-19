@@ -31,7 +31,7 @@ class DisputeEscalatedNotification extends Notification
 
         $title = $this->recipientRole === 'reporter'
             ? 'Your dispute was escalated'
-            : 'Dispute escalated for senior review';
+            : 'Report Escalated';
 
         $message = $this->recipientRole === 'reporter'
             ? 'An admin has escalated your dispute report to senior management for further review.'

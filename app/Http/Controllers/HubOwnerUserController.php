@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\Booking;
+use App\Models\HubUserBan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
@@ -62,16 +63,20 @@ class HubOwnerUserController extends Controller
                     ->orderBy('name')
                     ->paginate(15);
 
+        $bannedUserIds = HubUserBan::where('hub_owner_id', $hubOwner->id)
+            ->whereIn('user_id', $users->pluck('id'))
+            ->pluck('user_id')
+            ->all();
+
         // Get analytics data
         $analytics = $this->getUserAnalytics();
 
-        return view('hub-owner.users.index', compact('users', 'analytics'));
+        return view('hub-owner.users.index', compact('users', 'analytics', 'bannedUserIds'));
     }
 
     public function show(User $user)
     {
-        // Ensure this user has bookings with the current hub owner
-        if (!$user->bookings()->where('hub_owner_id', auth()->id())->exists()) {
+        if (!$this->userHasBookedThisHub(auth()->user(), $user)) {
             abort(403, 'Unauthorized access to this user.');
         }
         
@@ -111,6 +116,46 @@ class HubOwnerUserController extends Controller
         ]);
 
         return redirect()->back()->with('success', 'User status updated successfully.');
+    }
+
+    public function toggleBan(User $user)
+    {
+        $hubOwner = auth()->user();
+
+        if ($user->id === $hubOwner->id) {
+            abort(403);
+        }
+
+        if (!$this->userHasBookedThisHub($hubOwner, $user)) {
+            abort(403, 'This user has no bookings with your workspace.');
+        }
+
+        $existing = HubUserBan::where('hub_owner_id', $hubOwner->id)
+            ->where('user_id', $user->id)
+            ->first();
+
+        if ($existing) {
+            $existing->delete();
+            $message = 'User unbanned. They can book your workspace again.';
+        } else {
+            HubUserBan::create([
+                'hub_owner_id' => $hubOwner->id,
+                'user_id' => $user->id,
+            ]);
+            $message = 'User banned from booking your workspace.';
+        }
+
+        return redirect()->back()->with('success', $message);
+    }
+
+    private function userHasBookedThisHub(User $hubOwner, User $target): bool
+    {
+        return $target->bookings()->where(function ($q) use ($hubOwner) {
+            $q->where('hub_owner_id', $hubOwner->id);
+            if ($hubOwner->company) {
+                $q->orWhereRaw('LOWER(hub_name) LIKE ?', ['%' . strtolower($hubOwner->company) . '%']);
+            }
+        })->exists();
     }
 
     public function analytics()

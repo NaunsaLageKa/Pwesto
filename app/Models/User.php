@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -82,5 +83,20 @@ class User extends Authenticatable
     public function hubReviews()
     {
         return $this->hasMany(Review::class, 'hub_owner_id');
+    }
+
+    /**
+     * Hub bans issued by this workspace (hub owner).
+     */
+    public function hubUserBansIssued(): HasMany
+    {
+        return $this->hasMany(HubUserBan::class, 'hub_owner_id');
+    }
+
+    public function isBannedFromHubOwner(int $hubOwnerId): bool
+    {
+        return HubUserBan::where('hub_owner_id', $hubOwnerId)
+            ->where('user_id', $this->id)
+            ->exists();
     }
 }

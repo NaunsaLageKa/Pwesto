@@ -109,12 +109,20 @@ class UserController extends Controller
             $query->whereRaw('LOWER(TRIM(company)) LIKE ?', ['%' . strtolower($company) . '%']);
         }
 
-    
-        $users = $query->orderBy('created_at', 'desc')
-                       ->paginate(15)
-                       ->withQueryString();
+        $allowedSorts = ['name', 'email', 'phone', 'company', 'role', 'status', 'created_at'];
+        $sortBy = $request->input('sort', 'created_at');
+        $sortDir = strtolower((string) $request->input('dir', 'desc')) === 'asc' ? 'asc' : 'desc';
 
-        return view('admin.users', compact('users'));
+        if (! in_array($sortBy, $allowedSorts, true)) {
+            $sortBy = 'created_at';
+            $sortDir = 'desc';
+        }
+
+        $users = $query->orderBy($sortBy, $sortDir)
+            ->paginate(15)
+            ->withQueryString();
+
+        return view('admin.users', compact('users', 'sortBy', 'sortDir'));
     }
 
     /**

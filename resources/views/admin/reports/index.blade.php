@@ -64,6 +64,24 @@
         </div>
     </div>
 
+    <!-- Trends (last 30 days) -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <div class="bg-white p-6 rounded-lg shadow border">
+            <h2 class="text-xl font-semibold mb-1">User sign-ups by role</h2>
+            <p class="text-sm text-gray-500 mb-4">Daily sign-ups stacked by role (last 30 days)</p>
+            <div class="h-64">
+                <canvas id="userSignupsChart" aria-label="User sign-ups by role over the last 30 days"></canvas>
+            </div>
+        </div>
+        <div class="bg-white p-6 rounded-lg shadow border">
+            <h2 class="text-xl font-semibold mb-1">High-demand hubs</h2>
+            <p class="text-sm text-gray-500 mb-4">Most booked workspaces, highest first (last 30 days)</p>
+            <div class="h-64">
+                <canvas id="hubDemandChart" aria-label="Bookings by hub for the last 30 days"></canvas>
+            </div>
+        </div>
+    </div>
+
     <!-- Export Buttons -->
     <div class="bg-white p-6 rounded-lg shadow border mb-8">
         <h2 class="text-xl font-semibold mb-4">Export Data</h2>
@@ -87,6 +105,7 @@
     @if(isset($userActivity) && $userActivity->count() > 0)
     <div class="bg-white p-6 rounded-lg shadow border mb-8">
         <h2 class="text-xl font-semibold mb-4">User Activity by Role</h2>
+        <p class="text-sm text-gray-500 mb-4">Sorted by count (highest first)</p>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             @foreach($userActivity as $activity)
             <div class="text-center p-4 bg-gray-50 rounded">
@@ -143,4 +162,87 @@
         @endif
     </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+(function () {
+    const formatLabels = (dates) => dates.map((d) => {
+        const date = new Date(d + 'T12:00:00');
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    });
+
+    const userSignups = @json($userSignupsChart ?? ['labels' => [], 'datasets' => []]);
+    const hubDemand = @json($hubDemandChart ?? ['labels' => [], 'data' => []]);
+
+    const userCanvas = document.getElementById('userSignupsChart');
+    if (userCanvas && userSignups.datasets.length) {
+        new Chart(userCanvas.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: formatLabels(userSignups.labels),
+                datasets: userSignups.datasets,
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom' },
+                    tooltip: { mode: 'index', intersect: false },
+                },
+                scales: {
+                    x: {
+                        stacked: true,
+                        ticks: { maxRotation: 45, minRotation: 0, autoSkip: true, maxTicksLimit: 10 },
+                    },
+                    y: {
+                        stacked: true,
+                        beginAtZero: true,
+                        ticks: { stepSize: 1, precision: 0 },
+                    },
+                },
+            },
+        });
+    } else if (userCanvas) {
+        userCanvas.parentElement.innerHTML = '<p class="text-sm text-gray-500 text-center py-16">No sign-ups in the last 30 days.</p>';
+    }
+
+    const hubCanvas = document.getElementById('hubDemandChart');
+    if (hubCanvas && hubDemand.labels.length) {
+        new Chart(hubCanvas.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: hubDemand.labels,
+                datasets: [{
+                    label: 'Bookings',
+                    data: hubDemand.data,
+                    backgroundColor: 'rgba(16, 185, 129, 0.75)',
+                    borderColor: 'rgb(16, 185, 129)',
+                    borderWidth: 1,
+                    borderRadius: 4,
+                }],
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: (ctx) => `${ctx.parsed.x} booking${ctx.parsed.x === 1 ? '' : 's'}`,
+                        },
+                    },
+                },
+                scales: {
+                    x: { beginAtZero: true, ticks: { stepSize: 1, precision: 0 } },
+                    y: { ticks: { autoSkip: false } },
+                },
+            },
+        });
+    } else if (hubCanvas) {
+        hubCanvas.parentElement.innerHTML = '<p class="text-sm text-gray-500 text-center py-16">No hub bookings in the last 30 days.</p>';
+    }
+
+})();
+</script>
 @endsection

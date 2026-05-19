@@ -4,6 +4,14 @@
 <div class="min-h-screen bg-professional">
     @include('partials.dashboard-navbar', ['active' => 'services'])
 
+    @if(session('error'))
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 flex justify-center">
+            <div class="w-full max-w-xl rounded-lg bg-red-50 border border-red-200 text-red-800 px-4 py-3 text-sm text-center">
+                {{ session('error') }}
+            </div>
+        </div>
+    @endif
+
     <!-- Main Content -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <!-- Header Section -->

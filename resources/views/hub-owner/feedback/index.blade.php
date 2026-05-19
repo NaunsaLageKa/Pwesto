@@ -43,7 +43,7 @@
         <main class="flex-1 p-8 bg-gray-50">
             <div class="mb-8">
                 <h1 class="text-3xl font-bold text-gray-900 mb-2">Customer Reviews</h1>
-                <p class="text-gray-600">View approved feedback from your customers</p>
+                <p class="text-gray-600">User Feedbacks</p>
             </div>
 
         @if(session('success'))
@@ -92,11 +92,6 @@
                             {{ $i }} Star{{ $i > 1 ? 's' : '' }}
                         </option>
                     @endfor
-                </select>
-                <select name="feedback_type" class="border rounded px-3 py-2">
-                    <option value="">All Types</option>
-                    <option value="workspace" {{ request('feedback_type') == 'workspace' ? 'selected' : '' }}>Workspace</option>
-                    <option value="platform" {{ request('feedback_type') == 'platform' ? 'selected' : '' }}>Platform</option>
                 </select>
                 <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Filter</button>
                 <a href="{{ route('hub-owner.feedback.index') }}" class="bg-gray-200 text-gray-700 px-4 py-2 rounded hover:bg-gray-300">Clear</a>
@@ -158,31 +153,48 @@
                                 <p class="mt-1 text-xs text-blue-700">Posted {{ $review->hub_owner_responded_at->diffForHumans() }}</p>
                             @endif
                         </div>
-                    @elseif($canRespond ?? false)
-                        <form action="{{ route('hub-owner.feedback.respond', $review->id) }}" method="POST" class="mt-4">
-                            @csrf
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">Respond</label>
-                            <textarea
-                                name="hub_owner_response"
-                                rows="3"
-                                maxlength="500"
-                                required
-                                class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                                placeholder="Thank the customer and address their feedback."
-                            ></textarea>
-                            <div class="mt-2 flex justify-end">
-                                <button type="submit" class="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">
-                                    Post Response
-                                </button>
+                    @else
+                        @php
+                            $replyFormId = 'hub-owner-reply-'.$review->id;
+                        @endphp
+                        @if($canRespond ?? false)
+                            <form id="{{ $replyFormId }}" action="{{ route('hub-owner.feedback.respond', $review->id) }}" method="POST" class="mt-4">
+                                @csrf
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Respond</label>
+                                <textarea
+                                    name="hub_owner_response"
+                                    rows="3"
+                                    maxlength="500"
+                                    required
+                                    class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                    placeholder="Thank the customer and address their feedback."
+                                ></textarea>
+                            </form>
+                        @endif
+                        @if(($canRespond ?? false) || Gate::allows('dismiss', $review))
+                            <div class="{{ ($canRespond ?? false) ? 'mt-2' : 'mt-4' }} flex flex-wrap justify-end gap-2">
+                                @can('dismiss', $review)
+                                    <form action="{{ route('hub-owner.feedback.dismiss', $review) }}" method="POST" class="inline" onsubmit="return confirm('Delete this feedback from your list?');">
+                                        @csrf
+                                        <button type="submit" class="rounded-md border border-red-200 bg-white px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-50">
+                                            Delete
+                                        </button>
+                                    </form>
+                                @endcan
+                                @if($canRespond ?? false)
+                                    <button type="submit" form="{{ $replyFormId }}" class="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">
+                                        Send reply
+                                    </button>
+                                @endif
                             </div>
-                        </form>
+                        @endif
                     @endif
 
                 </div>
             @empty
                 <div class="p-12 text-center">
-                    <p class="text-gray-500 text-lg">No approved feedback yet.</p>
-                    <p class="text-gray-400 text-sm mt-2">Feedback will appear here once approved by admin.</p>
+                    <p class="text-gray-500 text-lg">No guest feedback yet.</p>
+                    <p class="text-gray-400 text-sm mt-2">Feedback will show up here after guests complete a visit.</p>
                 </div>
             @endforelse
 

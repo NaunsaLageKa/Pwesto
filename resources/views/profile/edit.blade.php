@@ -19,7 +19,6 @@
             <a href="{{ route('dashboard') }}" style="font-weight:700; color:#111; text-decoration:none;">Home</a>
             <a href="#" style="color:#222; text-decoration:none;">Booking History</a>
             <a href="#" style="color:#222; text-decoration:none;">Services</a>
-            <a href="{{ route('about') }}" style="color:#222; text-decoration:none;">About</a>
             <a href="{{ route('location') }}" style="color:#222; text-decoration:none;">Location</a>
             @if(Auth::user()->role === 'user')
             <div style="display:inline-flex; align-items:center; gap:12px;">

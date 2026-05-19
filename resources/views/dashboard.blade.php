@@ -42,27 +42,33 @@
             </div>
         </div>
     </div>
+
+    <section class="dashboard-about bg-gray-800" aria-labelledby="about-pwesto-main-heading">
+        @include('partials.about-content')
+    </section>
 </div>
 
 <style>
 .dashboard-page {
     background: #ffffff;
-    height: 100vh;
-    overflow: hidden;
+    min-height: 100vh;
+    overflow-x: hidden;
+    overflow-y: auto;
 }
 .dashboard-hero-wrapper {
     width: 100%;
     margin: 0;
     overflow: hidden;
-    height: calc(100vh - 72px);
+    min-height: calc(100vh - 72px);
 }
 .dashboard-hero {
     position: relative;
-    height: calc(100vh - 72px);
+    min-height: calc(100vh - 72px);
 }
 .dashboard-hero-bg {
     width: 100%;
     height: 100%;
+    min-height: calc(100vh - 72px);
     object-fit: cover;
 }
 .dashboard-hero-overlay {
@@ -164,15 +170,17 @@
     font-weight: 700;
 }
 
+.dashboard-about {
+    border-top: 1px solid rgba(55, 65, 81, 0.6);
+}
+
 @media (max-width: 1024px) {
-    .dashboard-page {
-        height: 100vh;
-        overflow: hidden;
-    }
     .dashboard-hero-wrapper,
-    .dashboard-hero,
+    .dashboard-hero {
+        min-height: calc(100vh - 72px);
+    }
     .dashboard-hero-bg {
-        height: calc(100vh - 72px);
+        min-height: calc(100vh - 72px);
     }
 }
 </style>
